@@ -78,6 +78,22 @@ svg{display:block;width:100%;height:auto;max-width:100%}
 #indInfo .ir{display:grid;grid-template-columns:92px 1fr auto;gap:8px;align-items:start;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2)}
 #indInfo .ir b{font:700 12px var(--f-display);color:var(--ink)}
 #indInfo .ir em{font:700 10.5px var(--f-mono);font-style:normal;color:var(--ink-3)}
+.seg.s3{grid-template-columns:repeat(3,1fr)}
+.navin{overflow-x:auto;scrollbar-width:none;grid-auto-columns:minmax(46px,1fr)!important}.navin::-webkit-scrollbar{display:none}
+.oc{padding:10px 8px}.oc-h,.oc-r{display:grid;grid-template-columns:1.25fr .8fr .95fr .8fr 1.25fr;gap:4px;align-items:center}
+.oc-h{font:600 9.5px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);text-align:center;padding:0 2px 6px}
+.oc-r{padding:6px 2px;border-top:1px solid var(--line);font:600 12px var(--f-mono);text-align:center;cursor:pointer}
+.oc-r.atm{background:#EEF4FF;border-radius:8px;border-top-color:transparent}
+.oc-r .oi{position:relative;display:flex;flex-direction:column;align-items:center;padding:2px 4px;border-radius:6px;overflow:hidden;line-height:1.15}
+.oc-r .oi::before{content:"";position:absolute;top:0;bottom:0;width:var(--w);background:#12A87426;z-index:0}
+.oc-r .oi.c::before{right:0;background:#E5566A30}.oc-r .oi.p::before{left:0}
+.oc-r .oi b,.oc-r .oi em{position:relative;z-index:1}.oc-r .oi em{font:500 9px var(--f-mono);font-style:normal}
+.oc-r .itm{background-color:#F2F8F4}.oc-r .lt.itm{background:#F2F8F4;border-radius:6px}
+.oc-r .kk{font-weight:700;color:var(--ink);position:relative}
+.rt{font:700 8px var(--f-mono);font-style:normal;margin-left:3px;padding:1px 3px;border-radius:4px;background:var(--surface-2)}
+.cmp{overflow-x:auto}.cmp-h,.cmp-r{display:grid;grid-template-columns:1.1fr repeat(4,1fr);gap:4px;font:600 10.5px/1.3 var(--f-mono);text-align:center;padding:6px 0;border-top:1px solid var(--line);min-width:330px}
+.cmp-h{border-top:0;color:var(--ink-3);font-size:9.5px}.cmp-r span:first-child,.cmp-h span:first-child{text-align:left;color:var(--ink-3)}
+.ir2{padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--ink-3);font-size:11px;margin-top:8px}
 .legend i{display:inline-block;vertical-align:middle;margin-right:5px}
 .lg-line{width:14px;height:0;border-top:2px solid var(--a)}
@@ -445,6 +461,8 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
   </section>
 
   <!-- BTST -->
+  <section id="v-chain" hidden><div id="chBody" style="display:flex;flex-direction:column;gap:12px"></div></section>
+
   <section id="v-btst" hidden>
     <div class="seg idea-seg" role="group" aria-label="Idea chuno">
       <button type="button" data-idea="btst" aria-pressed="true">BTST</button>
@@ -561,6 +579,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     <a href="#live" data-t="live"><svg viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>Live</a>
     <a href="#mood" data-t="mood"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.8l3 2"/></svg>Mood</a>
     <a href="#scorecard" data-t="scorecard"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Score</a>
+    <a href="#chain" data-t="chain"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M3.5 14.5h17M12 4.5v15"/></svg>Chain</a>
     <a href="#ideas" data-t="ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Ideas</a>
     <a href="#paper" data-t="paper"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M16 14.5h2"/></svg>Paper</a>
     <a href="#guru" data-t="guru"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></svg>Guru</a>
@@ -731,7 +750,7 @@ const nf=(v,d=2)=>v.toLocaleString('en-IN',{minimumFractionDigits:d,maximumFract
 const sg=(v,d=2)=>(v>=0?'+':'')+v.toFixed(d);
 const Kf=v=>v>=1000?(v/1000).toFixed(1)+'K':String(v);
 const tm=t=>new Date(t).toLocaleTimeString('en-GB',{timeZone:'Asia/Kolkata',hour12:false});
-const TABS=['learn','live','mood','scorecard','ideas','paper','guru','risk'];
+const TABS=['learn','live','mood','scorecard','chain','ideas','paper','guru','risk'];
 function G(ev,d){if(typeof guruOn==='function'){try{guruOn(ev,d)}catch(e){}}}
 const state={ix:'nifty',side:'buy',sel:null,tab:'live',idea:'btst',ev:null,cap:500000,rp:2,dp:4};
 const S={},EV=[],unseen={};
@@ -1206,7 +1225,238 @@ function updatePaperLive(){
 function refreshPaper(){if(pSigNow()!==pSig)renderPaper();else updatePaperLive()}
 
 /* ---------- router and events ---------- */
-const SECS=['live','mood','scorecard','btst','zero-hero','paper','guru','learn','risk'];
+/* ================= Option Chain + Hedge Lab + BTST % ================= */
+const CHX={tk:0,sub:'chain',mode:'single',side:'P',d:null,w:2,mv:0,dte:3,snap:{},pick:null,dk:null};
+const VOLX=.138;
+function ncdf(z){const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2),p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p}
+function cxCtx(k,spOv){
+  const sp=spOv||S[k].price,st=STEP[k],atm=Math.round(sp/st)*st,sgm=VOLX*Math.sqrt(CHX.dte/365),a0=.4*sp*sgm;
+  const prem=(K,t)=>{const intr=t==='C'?Math.max(0,sp-K):Math.max(0,K-sp),dd=Math.abs(K-sp),tv=a0*Math.exp(-1.1*Math.pow(dd/(sp*sgm),2));return Math.max(.5,Math.round((intr+tv)*20)/20)};
+  return{k,sp,st,atm,sgm,prem,lot:INDICES[k].lot,sig:sp*sgm};
+}
+const lk=v=>(v/1e5).toFixed(1)+'L';
+function chainRows(c){
+  const ch=chainFor(c.k),m=new Map(ch.rows.map(r=>[r.K,r])),base=INDICES[c.k].oiBase*.012,rows=[];
+  for(let i=-8;i<=8;i++){
+    const K=c.atm+i*c.st;let r=m.get(K);
+    if(!r){const g=mulberry32(hash('oi2|'+c.k+'|'+K));r={K,c:Math.round(base*(K>=c.atm?.5:.15)*(.5+g())),p:Math.round(base*(K<=c.atm?.5:.15)*(.5+g()))}}
+    const g2=mulberry32(hash('chg|'+c.k+'|'+K));
+    rows.push({K,coi:r.c,poi:r.p,cch:Math.round((g2()-.45)*24),pch:Math.round((g2()-.45)*24),cl:c.prem(K,'C'),pl:c.prem(K,'P')});
+  }
+  return rows;
+}
+/* ---------- strategies ---------- */
+function defD(c){return clamp(Math.round(c.sig/c.st),1,10)}
+function legsFor(c,kind,side){
+  const d=CHX.d==null?defD(c):CHX.d,w=CHX.w,st=c.st,P=c.prem;
+  const Kc=c.atm+d*st,Kp=c.atm-d*st,Hc=Kc+w*st,Hp=Kp-w*st,L=[];
+  const sc=()=>L.push([-1,'C',Kc,P(Kc,'C')]),sp=()=>L.push([-1,'P',Kp,P(Kp,'P')]),hc=()=>L.push([1,'C',Hc,P(Hc,'C')]),hp=()=>L.push([1,'P',Hp,P(Hp,'P')]);
+  if(kind==='naked'){side==='C'?sc():sp()}
+  else if(kind==='strangle'){sc();sp()}
+  else if(kind==='single'){if(side==='C'){sc();hc()}else{sp();hp()}}
+  else{sc();hc();sp();hp()}
+  return L;
+}
+function pnlAt(legs,X,lot){let t=0;legs.forEach(l=>{const pay=l[1]==='C'?Math.max(0,X-l[2]):Math.max(0,l[2]-X);t+=l[0]*(pay-l[3])});return t*lot}
+function calcStrat(c,kind,side){
+  const legs=legsFor(c,kind,side),lot=c.lot,sp=c.sp;
+  let credit=0,sellP=0,buyP=0;legs.forEach(l=>{credit-=l[0]*l[3];if(l[0]<0)sellP+=l[3];else buyP+=l[3]});
+  const N=600,x0=sp*.7,x1=sp*1.3,pts=[];let mx=-1e18,mn=1e18,pop=0,prevZ=null;
+  for(let i=0;i<=N;i++){const X=x0+(x1-x0)*i/N,v=pnlAt(legs,X,lot);pts.push([X,v]);mx=Math.max(mx,v);mn=Math.min(mn,v)}
+  for(let i=1;i<=N;i++){const a=pts[i-1],b=pts[i],mid=(a[1]+b[1])/2;if(mid>0)pop+=ncdf(Math.log(b[0]/sp)/c.sgm)-ncdf(Math.log(a[0]/sp)/c.sgm)}
+  const be=[];for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];if((a[1]<0&&b[1]>=0)||(a[1]>=0&&b[1]<0))be.push(a[0]+(b[0]-a[0])*(0-a[1])/(b[1]-a[1]))}
+  const shortC=legs.some(l=>l[1]==='C'&&l[0]<0)&&!legs.some(l=>l[1]==='C'&&l[0]>0);
+  const shortP=legs.some(l=>l[1]==='P'&&l[0]<0)&&!legs.some(l=>l[1]==='P'&&l[0]>0);
+  const notional=sp*lot;let margin;
+  if(kind==='naked')margin=notional*.09;else if(kind==='strangle')margin=notional*.1;
+  else margin=Math.abs(Math.min(0,mn))+notional*.005;
+  const unl=shortC,big=shortP&&!unl;
+  const maxP=credit*lot;
+  return{legs,credit:credit*lot,creditPts:credit,maxP,maxL:Math.min(0,mn),unl,big,be,pop:pop*100,margin,roi:maxP/margin*100,pts,cost:sellP?buyP/sellP*100:0,
+    s3d:pnlAt(legs,sp*.97,lot),s3u:pnlAt(legs,sp*1.03,lot),s5d:pnlAt(legs,sp*.95,lot),s5u:pnlAt(legs,sp*1.05,lot),shortC,shortP};
+}
+const HL_N={naked:'Bina hedge (naked sell)',strangle:'Short strangle (dono taraf bina hedge)',single:'Single hedge (credit spread)',double:'Double hedge (iron condor)'};
+const HL_NOTE={
+  naked:'Sirf ek option becha, koi hedge nahi. Premium chhota milta hai par risk bahut bada: call becha to upar ka nuksaan asimit, put becha to neeche ka nuksaan bahut bada. Margin bhi sabse zyada lagta hai. Beginner ke liye ye sabse khatarnak raasta hai.',
+  strangle:'Call aur put dono becha, koi hedge nahi. Premium zyada milta hai par bazaar kisi bhi taraf bhaage to nuksaan khula rehta hai. Ye comparison ke liye hai, shuru mein mat karo.',
+  single:'Becha hua option ke aage ka option kharid kar ek taraf ka hedge lagaya. Credit thoda ghata par max nuksaan pehle se tay ho gaya aur margin bahut kam. Call side ho to Bear Call Spread, put side ho to Bull Put Spread.',
+  double:'Dono taraf becha aur dono taraf hedge kharida. Bazaar range mein rahe to poora premium aapka. Max nuksaan sirf ek hi taraf hota hai, wo bhi tay. Isse Iron Condor kehte hain. Margin kam, risk seemit.'
+};
+/* ---------- chart ---------- */
+function hlChartSvg(r,c,mv){
+  const W=320,H=176,pL=6,pR=6,pT=12,pB=22,x0=c.sp*.94,x1=c.sp*1.06,pts=[];
+  for(let i=0;i<=80;i++){const X=x0+(x1-x0)*i/80;pts.push([X,pnlAt(r.legs,X,c.lot)])}
+  const lo=Math.min(0,...pts.map(p=>p[1])),hi=Math.max(0,...pts.map(p=>p[1])),spn=(hi-lo)||1;
+  const px=X=>pL+(W-pL-pR)*(X-x0)/(x1-x0),py=v=>pT+(H-pT-pB)*(1-(v-lo)/spn),yz=py(0);
+  const line=pts.map(p=>px(p[0]).toFixed(1)+','+py(p[1]).toFixed(1)).join(' ');
+  const area='M'+px(x0).toFixed(1)+','+yz.toFixed(1)+' L'+line.replace(/ /g,' L')+' L'+px(x1).toFixed(1)+','+yz.toFixed(1)+' Z';
+  const X=c.sp*(1+mv/100),pl=pnlAt(r.legs,X,c.lot),mx=px(X),my=py(pl);
+  let ks='';r.legs.forEach(l=>{ks+='<line x1="'+px(l[2]).toFixed(1)+'" x2="'+px(l[2]).toFixed(1)+'" y1="'+pT+'" y2="'+(H-pB)+'" stroke="'+(l[0]<0?'#D92D43':'#087A52')+'" stroke-opacity=".35" stroke-dasharray="2 3"/>'});
+  return '<defs><clipPath id="hU"><rect x="0" y="0" width="'+W+'" height="'+yz.toFixed(1)+'"/></clipPath><clipPath id="hD"><rect x="0" y="'+yz.toFixed(1)+'" width="'+W+'" height="'+H+'"/></clipPath></defs>'
+   +'<path d="'+area+'" fill="#087A52" fill-opacity=".18" clip-path="url(#hU)"/><path d="'+area+'" fill="#D92D43" fill-opacity=".18" clip-path="url(#hD)"/>'
+   +ks+'<line x1="'+pL+'" x2="'+(W-pR)+'" y1="'+yz.toFixed(1)+'" y2="'+yz.toFixed(1)+'" stroke="#8A99AD" stroke-dasharray="3 3"/>'
+   +'<polyline points="'+line+'" fill="none" stroke="#1D4ED8" stroke-width="2.2" stroke-linejoin="round"/>'
+   +'<line x1="'+mx.toFixed(1)+'" x2="'+mx.toFixed(1)+'" y1="'+pT+'" y2="'+(H-pB)+'" stroke="#0891B2" stroke-width="1.5"/><circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="5" fill="#fff" stroke="#0891B2" stroke-width="2"/>'
+   +'<text x="'+pL+'" y="'+(H-6)+'" font-size="9" fill="#8A99AD" font-family="IBM Plex Mono,monospace">'+nfi(x0)+'</text><text x="'+(W-pR)+'" y="'+(H-6)+'" font-size="9" text-anchor="end" fill="#8A99AD" font-family="IBM Plex Mono,monospace">'+nfi(x1)+'</text>';
+}
+/* ---------- sub views ---------- */
+const cxc=()=>cxCtx(state.ix);
+function cxSeg(){return '<div class="seg s3" role="group">'+[['chain','Option Chain'],['hedge','Hedge Lab'],['btst','BTST %']].map(x=>'<button type="button" data-cx="sub" data-v="'+x[0]+'" aria-pressed="'+(CHX.sub===x[0])+'">'+x[1]+'</button>').join('')+'</div>'}
+function vChain(){
+  const c=cxCtx(state.ix),rows=chainRows(c),ch=chainFor(state.ix);
+  const mx=Math.max(...rows.map(r=>Math.max(r.coi,r.poi))),tc=rows.reduce((a,r)=>a+r.coi,0),tp=rows.reduce((a,r)=>a+r.poi,0);
+  const atmC=c.prem(c.atm,'C'),atmP=c.prem(c.atm,'P'),strad=atmC+atmP;
+  let best=1e30,pain=rows[0].K;rows.forEach(t=>{let s=0;rows.forEach(x=>{s+=Math.max(0,t.K-x.K)*x.coi+Math.max(0,x.K-t.K)*x.poi});if(s<best){best=s;pain=t.K}});
+  const R=rows.reduce((a,b)=>b.coi>a.coi?b:a).K,Sx=rows.reduce((a,b)=>b.poi>a.poi?b:a).K;
+  let h='<div class="card"><div class="eyebrow">Option chain · '+INDICES[state.ix].name+' · demo · '+CHX.dte+' din expiry</div>'
+   +'<div class="lab-g" style="margin-top:8px"><div><small>PCR</small><b class="num">'+(tp/tc).toFixed(2)+'</b></div><div><small>Max pain</small><b class="num">'+nfi(pain)+'</b></div>'
+   +'<div><small>Support (max Put OI)</small><b class="num up">'+nfi(Sx)+'</b></div><div><small>Resistance (max Call OI)</small><b class="num down">'+nfi(R)+'</b></div>'
+   +'<div><small>ATM straddle</small><b class="num">₹'+nfi(strad)+'</b></div><div><small>Market ka expected move</small><b class="num">±'+(strad/c.sp*100).toFixed(2)+'%</b></div></div>'
+   +'<p class="hint" style="margin:8px 0 0">Straddle ka premium bazaar ka andaza hai ki expiry tak kitna hil sakta hai. Ye guarantee nahi.</p></div>';
+  h+='<div class="card oc"><div class="oc-h"><span>Call OI</span><span>Call ₹</span><span>Strike</span><span>Put ₹</span><span>Put OI</span></div>';
+  rows.forEach(r=>{
+    const itmC=r.K<c.sp,itmP=r.K>c.sp,atm=r.K===c.atm;
+    h+='<div class="oc-r'+(atm?' atm':'')+'" data-cx="pick" data-k="'+r.K+'">'
+     +'<span class="oi c'+(itmC?' itm':'')+'" style="--w:'+(r.coi/mx*100).toFixed(0)+'%"><b>'+lk(r.coi)+'</b><em class="'+(r.cch>=0?'up':'down')+'">'+sg(r.cch,0)+'%</em></span>'
+     +'<span class="lt'+(itmC?' itm':'')+'">'+r.cl.toFixed(1)+'</span>'
+     +'<span class="kk">'+nfi(r.K)+(r.K===R?'<i class="rt down">R</i>':'')+(r.K===Sx?'<i class="rt up">S</i>':'')+'</span>'
+     +'<span class="lt'+(itmP?' itm':'')+'">'+r.pl.toFixed(1)+'</span>'
+     +'<span class="oi p'+(itmP?' itm':'')+'" style="--w:'+(r.poi/mx*100).toFixed(0)+'%"><b>'+lk(r.poi)+'</b><em class="'+(r.pch>=0?'up':'down')+'">'+sg(r.pch,0)+'%</em></span></div>';
+  });
+  h+='<p class="hint">OI = open interest (lakh). Neeche chhota % = OI mein badlav. Highlighted row = ATM. Hare shade = in-the-money. Kisi strike par tap karo.</p></div>';
+  if(CHX.pick!=null){
+    const K=CHX.pick,r=rows.find(x=>x.K===K);
+    if(r){const cb=K+r.cl,pb=K-r.pl;
+      h+='<div class="card"><div class="eyebrow">Strike '+nfi(K)+'</div><div class="lab-g" style="margin-top:8px"><div><small>Call ₹ / break-even</small><b class="num">'+r.cl.toFixed(1)+' / '+nfi(cb)+'</b></div><div><small>Put ₹ / break-even</small><b class="num">'+r.pl.toFixed(1)+' / '+nfi(pb)+'</b></div>'
+       +'<div><small>Call becho to credit (1 lot)</small><b class="num up">₹'+nfi(r.cl*c.lot)+'</b></div><div><small>Put becho to credit (1 lot)</small><b class="num up">₹'+nfi(r.pl*c.lot)+'</b></div></div>'
+       +'<p class="hint">Yahi strike Hedge Lab mein becha hua strike ban sakta hai. Bina hedge ke becha to risk khula rehta hai.</p>'
+       +'<button class="btn" type="button" data-cx="tolab" data-k="'+K+'" style="width:100%;margin-top:8px">Is strike ko Hedge Lab mein kholo</button></div>'}
+  }
+  return h+'<p class="disc">Chain demo data hai: premium ek simple model se bana hai aur OI random pattern hai. Live hone par Upstox ka asli chain aayega. Ye investment advice nahi hai.</p>';
+}
+function hlSnap(){const k=state.ix;if(!CHX.snap[k])CHX.snap[k]=S[k].price;return CHX.snap[k]}
+function hlMain(){
+  const c=cxCtx(state.ix,hlSnap()),kind=CHX.mode,side=CHX.side,r=calcStrat(c,kind,side);return{c,r,kind,side}
+}
+function hlInfoHtml(c,r,kind){
+  const X=c.sp*(1+CHX.mv/100),pl=pnlAt(r.legs,X,c.lot),cap=state.cap;
+  const be=r.be.length?r.be.map(nfi).join(' aur '):'range mein nahi';
+  const ml=r.unl?'Asimit':r.big?'Bahut bada':rss(r.maxL);
+  const mlp=(r.unl||r.big)?'':'<small>Capital ka '+(Math.abs(r.maxL)/cap*100).toFixed(1)+'%</small>';
+  return '<div class="lab-g">'
+   +'<div><small>Expiry par bhaav</small><b class="num">'+nfi(X)+'</b></div><div><small>Is bhaav par P&amp;L</small><b class="num '+(pl>=0?'up':'down')+'">'+rss(pl)+'</b></div>'
+   +'<div><small>Credit milega (1 lot)</small><b class="num up">'+rss(r.credit)+'</b></div><div><small>Max nuksaan</small><b class="num down">'+ml+'</b>'+mlp+'</div>'
+   +'<div><small>Margin (andaza)</small><b class="num">₹'+nfi(r.margin)+'</b></div><div><small>Margin par max return</small><b class="num">'+r.roi.toFixed(1)+'%</b></div>'
+   +'<div><small>Profit ki sambhavna</small><b class="num">'+r.pop.toFixed(0)+'%</b></div><div><small>Hedge ki keemat</small><b class="num">'+(r.cost?r.cost.toFixed(0)+'% credit ka':'Koi hedge nahi')+'</b></div></div>'
+   +'<p class="hint" style="margin:10px 0 0">Break-even: '+be+'. 1 lot = '+c.lot+' quantity. Sambhavna ek simple model (IV 13.8%, '+CHX.dte+' din) se nikli hai, asli bazaar mein tail risk isse zyada hota hai.</p>';
+}
+function hlCmpHtml(c,side){
+  const ks=['naked','strangle','single','double'];
+  const rs=ks.map(k=>calcStrat(c,k,side));
+  const f=(r,k)=>({cr:rss(r.credit),ml:r.unl?'Asimit':r.big?'Bahut bada':rss(r.maxL),mg:'₹'+nfi(r.margin),roi:r.roi.toFixed(1)+'%',pop:r.pop.toFixed(0)+'%',s:rss(r.s3d)+' / '+rss(r.s3u)});
+  const rows=[['Credit','cr'],['Max nuksaan','ml'],['Margin','mg'],['Return/margin','roi'],['Profit chance','pop'],['Index -3% / +3%','s']];
+  const nm=['Naked','Strangle','Single hedge','Double hedge'];
+  let h='<div class="cmp"><div class="cmp-h"><span></span>'+nm.map(n=>'<span>'+n+'</span>').join('')+'</div>';
+  rows.forEach(rw=>{h+='<div class="cmp-r"><span>'+rw[0]+'</span>'+rs.map((r,i)=>{const v=f(r,ks[i])[rw[1]];return '<span class="'+(rw[1]==='ml'||rw[1]==='s'?'down':'')+'">'+v+'</span>'}).join('')+'</div>'});
+  return h+'</div>';
+}
+function hlBody(){
+  const{c,r,kind}=hlMain(),d=CHX.d==null?defD(c):CHX.d;
+  const modes=[['naked','Bina hedge'],['single','Single hedge'],['double','Double hedge'],['strangle','Strangle']];
+  const needSide=kind==='naked'||kind==='single';
+  const Kc=c.atm+d*c.st,Kp=c.atm-d*c.st;
+  return '<div class="card"><div class="eyebrow">Hedge Lab · '+INDICES[state.ix].name+' · bhaav '+nfi(c.sp)+'</div><h2 style="font-size:18px;margin:4px 0 10px">'+HL_N[kind]+'</h2>'
+   +'<div class="lab-pills">'+modes.map(m=>'<button type="button" class="'+(m[0]===kind?'on':'')+'" data-cx="mode" data-v="'+m[0]+'">'+m[1]+'</button>').join('')+'</div>'
+   +(needSide?'<div class="lab-pills" style="margin-top:8px"><button type="button" class="'+(CHX.side==='C'?'on':'')+'" data-cx="side" data-v="C">Call becho</button><button type="button" class="'+(CHX.side==='P'?'on':'')+'" data-cx="side" data-v="P">Put becho</button></div>':'')
+   +'<svg id="hlChart" viewBox="0 0 320 176" style="width:100%;height:auto;margin-top:10px" role="img" aria-label="Strategy payoff chart">'+hlChartSvg(r,c,CHX.mv)+'</svg>'
+   +'<div class="lab-sl"><span>Expiry par index ka move</span><b class="num" id="hlMv">'+sg(CHX.mv,1)+'%</b></div><input id="hlR" type="range" min="-6" max="6" step="0.1" value="'+CHX.mv+'" aria-label="Expiry move">'
+   +'<div id="hlInfo">'+hlInfoHtml(c,r,kind)+'</div>'
+   +'<div class="lab-sl" style="margin-top:12px"><span>Becha hua strike kitna door (ATM se)</span><b class="num" id="hlD">'+d+' step</b></div><input id="hlDr" type="range" min="1" max="10" step="1" value="'+d+'" aria-label="Strike distance">'
+   +(kind==='naked'||kind==='strangle'?'':'<div class="lab-sl"><span>Hedge kitna door</span><b class="num" id="hlW">'+CHX.w+' step</b></div><input id="hlWr" type="range" min="1" max="8" step="1" value="'+CHX.w+'" aria-label="Hedge width">')
+   +'<p class="hint" id="hlK" style="margin:8px 0 0">'+hlStrikes(c,kind,Kc,Kp)+'</p>'
+   +'<div class="note" style="margin-top:12px">'+HL_NOTE[kind]+'</div>'
+   +'<button class="btn ghost" type="button" data-cx="snap" style="width:100%;margin-top:10px">Naya bhaav lo</button></div>'
+   +'<div class="card"><h2 style="font-size:16px;margin:0 0 4px">Teeno ka muqabla</h2><p class="hint" style="margin:0 0 8px">Wahi strike, wahi lot. Dekho hedge se risk aur margin kitna ghat-ta hai aur credit kitna.</p><div id="hlCmp">'+hlCmpHtml(c,CHX.side)+'</div></div>'
+   +'<p class="disc">Margin sirf andaza hai, asli margin broker ke SPAN par depend karta hai. Sambhavna aur P&amp;L model par based hain, guarantee nahi. Option selling mein hedge ke bina nuksaan bahut bada ho sakta hai. Ye investment advice nahi hai.</p>';
+}
+function hlStrikes(c,kind,Kc,Kp){
+  const w=CHX.w*c.st;
+  if(kind==='naked')return CHX.side==='C'?'Call becha '+nfi(Kc)+' @ '+c.prem(Kc,'C').toFixed(1):'Put becha '+nfi(Kp)+' @ '+c.prem(Kp,'P').toFixed(1);
+  if(kind==='strangle')return 'Call becha '+nfi(Kc)+' aur Put becha '+nfi(Kp);
+  if(kind==='single')return CHX.side==='C'?'Call becha '+nfi(Kc)+', hedge mein '+nfi(Kc+w)+' kharida':'Put becha '+nfi(Kp)+', hedge mein '+nfi(Kp-w)+' kharida';
+  return 'Call becha '+nfi(Kc)+' (hedge '+nfi(Kc+w)+'), Put becha '+nfi(Kp)+' (hedge '+nfi(Kp-w)+')';
+}
+function hlUpdate(){
+  const{c,r,kind}=hlMain(),d=CHX.d==null?defD(c):CHX.d;
+  $('hlChart').innerHTML=hlChartSvg(r,c,CHX.mv);$('hlInfo').innerHTML=hlInfoHtml(c,r,kind);$('hlCmp').innerHTML=hlCmpHtml(c,CHX.side);
+  $('hlMv').textContent=sg(CHX.mv,1)+'%';$('hlD').textContent=d+' step';if($('hlW'))$('hlW').textContent=CHX.w+' step';
+  $('hlK').textContent=hlStrikes(c,kind,c.atm+d*c.st,c.atm-d*c.st);
+}
+/* ---------- BTST % ---------- */
+function btstIdx(k){
+  const s=S[k],T=s.ticks,n=T.length,last=T[n-1],p=last.p,w=T.slice(-600);
+  let hi=-1e18,lo=1e18;w.forEach(t=>{if(t.p>hi)hi=t.p;if(t.p<lo)lo=t.p});
+  const closeStr=(p-lo)/((hi-lo)||1)*100;
+  let b=0,sl=0;T.slice(-60).forEach(t=>{b+=t.buy;sl+=t.sell});const buyP=b/(b+sl)*100;
+  const sig=p*VOLX*Math.sqrt(1/365),vw=clamp(50+(p-last.vwap)/(sig*.15)*50,0,100);
+  const ref=T[Math.max(0,n-300)],up=p>=ref.p,oiUp=last.oi>=ref.oi,oiS=oiUp?(up?80:20):(up?55:45);
+  const score=Math.round(.3*closeStr+.25*buyP+.25*vw+.2*oiS);
+  return{k,score,closeStr:Math.round(closeStr),buyP:Math.round(buyP),vw:Math.round(vw),oiS,up,oiUp,sp:p};
+}
+function btstTrade(k,bull){
+  const c=cxCtx(k),dd=Math.max(1,Math.round(c.sig*.8/c.st)),old=CHX.d,ow=CHX.w;CHX.d=dd;CHX.w=2;
+  const r=calcStrat(c,'single',bull?'P':'C');CHX.d=old;CHX.w=ow;
+  const Ks=bull?c.atm-dd*c.st:c.atm+dd*c.st;
+  return{r,c,txt:bull?'Bull Put Spread: '+nfi(Ks)+' put becho, '+nfi(Ks-2*c.st)+' put kharido':'Bear Call Spread: '+nfi(Ks)+' call becho, '+nfi(Ks+2*c.st)+' call kharido'};
+}
+function vBtst(){
+  const k=state.ix,b=btstIdx(k),bull=b.score>=50,pct=bull?b.score:100-b.score;
+  const strong=b.score>=68||b.score<=32,mid=b.score>=58||b.score<=42;
+  const verdict=strong?(bull?'BTST bullish ban raha hai':'BTST bearish ban raha hai'):mid?(bull?'Halka bullish jhukav':'Halka bearish jhukav'):'Abhi koi saaf BTST nahi';
+  const t=btstTrade(k,bull),bar=(l,v,d)=>'<div class="rep-row"><span>'+l+'</span><b class="num">'+v+'%</b><i><s style="width:'+v+'%"></s></i><small>'+d+'</small></div>';
+  const dsig=b.sp*VOLX/Math.sqrt(252);
+  let h='<div class="card"><div class="eyebrow">BTST score · '+INDICES[k].name+' · demo</div><div style="display:flex;align-items:baseline;gap:10px;margin:6px 0"><span class="rep-score num '+(bull?'up':'down')+'">'+pct+'%</span><b style="font-size:16px">'+verdict+'</b></div>'
+   +'<div class="meter"><div class="m-buy" style="flex-basis:'+b.score+'%"></div><div class="m-sell" style="flex-basis:'+(100-b.score)+'%"></div></div><div class="meter-labels"><span class="b">Bullish '+b.score+'%</span><span class="s">Bearish '+(100-b.score)+'%</span></div>'
+   +bar('Close din ki range mein kitna upar',b.closeStr,'100% matlab din ke high ke paas band hone wala hai.')
+   +bar('Pichle 60 second ka buy dabaav',b.buyP,'50% se upar to kharidar zyada.')
+   +bar('VWAP ke mukable bhaav',b.vw,'Bhaav VWAP ke upar to zyada percent.')
+   +bar('OI + bhaav ka mel',b.oiS,(b.up?'Bhaav upar':'Bhaav neeche')+', OI '+(b.oiUp?'badh raha':'ghat raha')+(b.up&&b.oiUp?': long buildup.':!b.up&&b.oiUp?': short buildup.':b.up?': short covering.':': long unwinding.'))
+   +'<p class="hint">Score = 30% close position + 25% buy dabaav + 25% VWAP + 20% OI mel. Ye simple demo formula hai, sambhavna ya prediction nahi.</p></div>';
+  h+='<div class="card"><div class="eyebrow">Hedge ke saath BTST idea</div><h2 style="font-size:16px;margin:4px 0 6px">'+t.txt+'</h2>'
+   +'<div class="lab-g"><div><small>Credit (1 lot)</small><b class="num up">'+rss(t.r.credit)+'</b></div><div><small>Max nuksaan</small><b class="num down">'+rss(t.r.maxL)+'</b></div>'
+   +'<div><small>Profit ki sambhavna</small><b class="num">'+t.r.pop.toFixed(0)+'%</b></div><div><small>Margin (andaza)</small><b class="num">₹'+nfi(t.r.margin)+'</b></div></div>'
+   +'<p class="hint">Bina hedge ke BTST mein raat ka gap stop-loss ko paar kar sakta hai. Isliye credit spread jaisa hedged trade dikhaya hai. Agle din ka normal 1σ move lagbhag ±'+(dsig/b.sp*100).toFixed(2)+'% (±'+nfi(dsig)+' points) hai.</p>'
+   +'<button class="btn" type="button" data-cx="tolab2" style="width:100%;margin-top:6px">Is idea ko Hedge Lab mein dekho</button></div>';
+  h+='<div class="card"><h2 style="font-size:15px;margin:0 0 6px">BTST se pehle checklist</h2><div class="ir2">Entry 3:00 se 3:25 PM ke beech, close ke paas.</div><div class="ir2">Global khabar aur gap ka risk dekho. Raat ko kuch bhi ho sakta hai.</div><div class="ir2">Hedge lagao ya sirf itna risk lo jitna gap mein jaane par bhi sahan ho.</div><div class="ir2">Subah 9:15 par jaldbaazi mat karo, pehle 10 minute dekho.</div>'
+   +'<a class="btn ghost" href="#btst" style="display:block;text-align:center;text-decoration:none;margin-top:8px">Stock BTST scanner dekho</a></div>'
+   +'<p class="disc">Score demo data se bana hai aur ye prediction ya salah nahi hai. Aage ka koi guarantee nahi. Ye investment advice nahi hai.</p>';
+  return h;
+}
+function renderChainTab(){
+  const el=$('chBody');
+  if(CHX.sub==='hedge'){hlSnap()}
+  el.innerHTML=cxSeg()+(CHX.sub==='chain'?vChain():CHX.sub==='hedge'?hlBody():vBtst());
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-cx]');if(!b||!$('v-chain')||!$('v-chain').contains(b))return;
+  const a=b.dataset.cx;
+  if(a==='sub'){CHX.sub=b.dataset.v}
+  else if(a==='pick'){CHX.pick=CHX.pick===+b.dataset.k?null:+b.dataset.k}
+  else if(a==='mode'){CHX.mode=b.dataset.v}
+  else if(a==='side'){CHX.side=b.dataset.v}
+  else if(a==='snap'){CHX.snap[state.ix]=S[state.ix].price}
+  else if(a==='tolab'){const c=cxCtx(state.ix),K=+b.dataset.k;CHX.d=clamp(Math.round(Math.abs(K-c.atm)/c.st),1,10);CHX.side=K>=c.atm?'C':'P';CHX.mode='single';CHX.snap[state.ix]=S[state.ix].price;CHX.sub='hedge'}
+  else if(a==='tolab2'){const bu=btstIdx(state.ix).score>=50,c=cxCtx(state.ix);CHX.d=Math.max(1,Math.round(c.sig*.8/c.st));CHX.w=2;CHX.side=bu?'P':'C';CHX.mode='single';CHX.snap[state.ix]=S[state.ix].price;CHX.sub='hedge'}
+  renderChainTab();if(a==='sub'||a==='tolab'||a==='tolab2')window.scrollTo(0,0);
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='hlR'){CHX.mv=+t.value;hlUpdate()}
+  else if(t.id==='hlDr'){CHX.d=+t.value;hlUpdate()}
+  else if(t.id==='hlWr'){CHX.w=+t.value;hlUpdate()}
+});
+
+const SECS=['live','mood','scorecard','chain','btst','zero-hero','paper','guru','learn','risk'];
 function curSec(){return state.tab==='ideas'?state.idea:state.tab}
 function renderCur(){
   const c=curSec();
@@ -1214,6 +1464,7 @@ function renderCur(){
   if(c==='mood')renderMood();
   if(c==='scorecard')renderScore();
   if(c==='btst')renderBtst();
+  if(c==='chain')renderChainTab();
   if(c==='zero-hero')renderZH();
   if(c==='paper')renderPaper();
   if(c==='learn'&&typeof lnRender==='function')lnRender();
@@ -1229,8 +1480,9 @@ function route(){
   SECS.forEach(t=>{$('v-'+t).hidden=t!==c});
   document.querySelectorAll('#nav a').forEach(a=>{if(a.dataset.t===h)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
   document.querySelectorAll('.idea-seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.idea===state.idea)));
-  $('idxRow').hidden=!['live','mood','scorecard','zero-hero'].includes(c);
+  $('idxRow').hidden=!['live','mood','scorecard','zero-hero','chain'].includes(c);
   if(c==='live')unseen[state.ix]=false;
+  {const ac=document.querySelector('#nav a[aria-current]');if(ac&&ac.scrollIntoView)try{ac.scrollIntoView({inline:'center',block:'nearest'})}catch(x){}}
   if(c==='risk'){$('rIx').value=state.ix;$('rLot').value=INDICES[state.ix].lot;calcRisk()}
   else renderCur();
   updateChips();window.scrollTo(0,0);G('tab',c);
@@ -1305,6 +1557,7 @@ function tickAll(){
   if(state.tab==='live')renderLive();
   if(state.tab==='mood')renderMood();
   if(state.tab==='paper')refreshPaper();
+  if(state.tab==='chain'&&CHX.sub!=='hedge'&&(++CHX.tk%3===0))renderChainTab();
 }
 setInterval(tickAll,1000);
 function bestPick(keys){
