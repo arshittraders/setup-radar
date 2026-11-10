@@ -677,9 +677,11 @@ const STEP={nifty:50,banknifty:100,sensex:100};
 const VIXD=13.8;
 const IVX={nifty:1,banknifty:1.22,sensex:.98};
 const DTE=3;
-function oneSigma(k,p){return p*VIXD*IVX[k]/100/Math.sqrt(252)}
+function ivPct(k){return (LIVE.on&&LIVE.chain[k])?cxCtx(k).vol*100:VIXD*IVX[k]}
+function oneSigma(k,p){return p*ivPct(k)/100/Math.sqrt(252)}
 const _ch={};
 function chainFor(k){
+  if(LIVE.on&&LIVE.chain[k])return liveChainFor(k);
   if(_ch[k])return _ch[k];
   const ix=INDICES[k],st=STEP[k],atm=Math.round(ix.base/st)*st,r=mulberry32(hash('chain|'+k));
   const wc=atm+st*(2+Math.floor(r()*3)),wp=atm-st*(2+Math.floor(r()*3)),base=ix.oiBase*.012,rows=[];
@@ -721,7 +723,7 @@ function scoreSetup(k,s,bias,hour){
   return{score,checks};
 }
 function tradePlan(k,bias,p,cap,rp){
-  const st=STEP[k],ix=INDICES[k],iv=VIXD*IVX[k]/100,strike=Math.round(p/st)*st;
+  const st=STEP[k],ix=INDICES[k],iv=ivPct(k)/100,strike=Math.round(p/st)*st;
   const prem=.4*p*iv*Math.sqrt(DTE/365),delta=.5,theta=prem/(2*DTE),daily=p*iv/Math.sqrt(252);
   const slD=.2*daily,t1D=1.5*slD,t2D=3*slD,sl=prem-delta*slD,t1=prem+delta*t1D,t2=prem+delta*t2D;
   const lossLot=(prem-sl)*ix.lot,oneLot=prem*ix.lot,dir=bias==='bull'?1:-1;
@@ -754,6 +756,7 @@ const TABS=['learn','live','mood','scorecard','chain','ideas','paper','guru','ri
 function G(ev,d){if(typeof guruOn==='function'){try{guruOn(ev,d)}catch(e){}}}
 const state={ix:'nifty',side:'buy',sel:null,tab:'live',idea:'btst',ev:null,cap:500000,rp:2,dp:4};
 const S={},EV=[],unseen={};
+var LIVE={on:false,chain:{},chainAt:{},hist:{},fail:0,last:0};
 let soundOn=false,voiceOn=false,audioCtx=null,evSeq=0;
 const DISC='Ye pichle 100 setups ka average hai. Aage ka koi prediction ya guarantee nahi hai. Ye investment advice nahi hai, sirf data hai. Options mein poori premium doob sakti hai.';
 
@@ -799,9 +802,10 @@ function sparkSvg(s){
 /* ---------- chart indicators (1-click, TradingView style) ---------- */
 const CHK='sr_chart_v1';
 const CH=(function(){let d={};try{d=JSON.parse(localStorage.getItem(CHK)||'{}')}catch(e){}
-  return Object.assign({type:'candle',tf:5,ind:{vwap:1,ema9:1,ema21:1,vol:1}},d,{curId:null})})();
-function chSave(){try{localStorage.setItem(CHK,JSON.stringify({type:CH.type,tf:CH.tf,ind:CH.ind}))}catch(e){}}
+  return Object.assign({type:'candle',tf:5,ltf:5,ind:{vwap:1,ema9:1,ema21:1,vol:1}},d,{curId:null})})();
+function chSave(){try{localStorage.setItem(CHK,JSON.stringify({type:CH.type,tf:CH.tf,ltf:CH.ltf,ind:CH.ind}))}catch(e){}}
 function candlesOf(s,tf){
+  if(LIVE.on&&LIVE.hist[s.ix.key])return liveCandles(s,tf);
   const out=[];let cur=null;
   for(const k of s.ticks){
     const id=Math.floor(k.n/tf);
@@ -839,14 +843,14 @@ function chCtlHtml(){
   const b=(k,t,on,extra)=>`<button class="cb" type="button" data-ck="${k}" aria-pressed="${on?'true':'false'}">${t}</button>`;
   return `<div class="ctl" id="chCtl">`
    +b('t:candle','Candles',CH.type==='candle')+b('t:line','Line',CH.type==='line')+'<i class="cdiv"></i>'
-   +[5,15,30].map(x=>b('f:'+x,x+'s',CH.tf===x)).join('')+'<i class="cdiv"></i>'
+   +(LIVE.on?[1,5,15].map(x=>b('g:'+x,x+'m',CH.ltf===x)):[5,15,30].map(x=>b('f:'+x,x+'s',CH.tf===x))).join('')+'<i class="cdiv"></i>'
    +IND_DEF.map(d=>b('i:'+d.k,d.t,!!CH.ind[d.k])).join('')
    +`<button class="cb ghost" type="button" data-ck="x:clear">Sab hatao</button></div>`;
 }
 function chRefreshCtl(){const el=document.getElementById('chCtl');if(!el)return;el.outerHTML=chCtlHtml()}
 let chLast=null;
 function renderChart(s){
-  const all=candlesOf(s,CH.tf),N=Math.min(48,all.length),off=all.length-N,V=all.slice(off),I=CH.ind;
+  const all=candlesOf(s,LIVE.on?CH.ltf:CH.tf),N=Math.min(48,all.length),off=all.length-N,V=all.slice(off),I=CH.ind;
   const cl=all.map(c=>c.c);
   const ema9=I.ema9?emaA(cl,9):null,ema21=I.ema21?emaA(cl,21):null,bb=I.bb?bbA(cl,20,2):null,st=I.st?stA(all,10,3):null,rsi=I.rsi?rsiA(cl,14):null,mc=I.macd?macdA(cl):null;
   const W=320,pL=6,pR=46,pT=8,mH=150,sH=52,gp=8;
@@ -874,7 +878,7 @@ function renderChart(s){
   if(ema21)body+=`<path d="${pathOf(j=>ema21[j])}" class="c-ln" stroke="#EA580C"/>`;
   if(st)body+=`<path d="${pathOf(j=>st[j]&&st[j].d===1?st[j].v:null)}" class="c-ln" stroke="#12A874" stroke-width="2"/><path d="${pathOf(j=>st[j]&&st[j].d===-1?st[j].v:null)}" class="c-ln" stroke="#E5566A" stroke-width="2"/>`;
   // setup markers
-  EV.filter(e=>e.k===s.ix.key&&e.n>=V[0].n-CH.tf&&e.n<=all[all.length-1].n).forEach(e=>{let i=V.findIndex(c=>e.n<=c.n);if(i<0)i=N-1;body+=`<circle class="s-mark" cx="${xc(i).toFixed(1)}" cy="${(y(V[i].h)-8).toFixed(1)}" r="5"/>`});
+  (LIVE.on?[]:EV).filter(e=>e.k===s.ix.key&&e.n>=V[0].n-CH.tf&&e.n<=all[all.length-1].n).forEach(e=>{let i=V.findIndex(c=>e.n<=c.n);if(i<0)i=N-1;body+=`<circle class="s-mark" cx="${xc(i).toFixed(1)}" cy="${(y(V[i].h)-8).toFixed(1)}" r="5"/>`});
   // last price tag
   const lc=all[all.length-1],ly=y(lc.c),upL=lc.c>=lc.o;
   body+=`<line x1="${pL}" x2="${W-pR+4}" y1="${ly.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="${upL?'#12A874':'#E5566A'}" stroke-dasharray="2 3" stroke-width="1"/><rect x="${W-pR+3}" y="${(ly-7).toFixed(1)}" width="${pR-3}" height="14" rx="3" fill="${upL?'#12A874':'#E5566A'}"/><text x="${W-pR/2+1.5}" y="${(ly+3.5).toFixed(1)}" text-anchor="middle" style="font:600 9px var(--f-mono);fill:#fff">${nf(lc.c,0)}</text>`;
@@ -906,7 +910,7 @@ function renderChart(s){
   // crosshair
   let ci=-1;if(CH.curId!=null)ci=V.findIndex(c=>c.id===CH.curId);
   if(ci>=0)body+=`<line x1="${xc(ci).toFixed(1)}" x2="${xc(ci).toFixed(1)}" y1="${pT}" y2="${H-14}" stroke="#44566C" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>`;
-  const secs=N*CH.tf;
+  const secs=N*(LIVE.on?CH.ltf*60:CH.tf);
   body+=`<text class="s-text" x="${pL}" y="${H-3}">${secs>=120?Math.round(secs/60)+' min':secs+' sec'} pehle</text><text class="s-text" x="${W-pR}" y="${H-3}" text-anchor="end">abhi</text>`;
   const sv=$('spark');sv.setAttribute('viewBox','0 0 '+W+' '+H);sv.innerHTML=g+body;
   chLast={V,off,w,pL,all,ema9,ema21,bb,st,rsi,mc};
@@ -940,7 +944,7 @@ function renderIndInfo(all,A){
 document.addEventListener('click',e=>{
   const b=e.target.closest('#chCtl [data-ck]');if(!b)return;
   const [a,v]=b.dataset.ck.split(':');
-  if(a==='t')CH.type=v;else if(a==='f')CH.tf=+v;else if(a==='i')CH.ind[v]=CH.ind[v]?0:1;else if(a==='x')CH.ind={};
+  if(a==='t')CH.type=v;else if(a==='f')CH.tf=+v;else if(a==='g')CH.ltf=+v;else if(a==='i')CH.ind[v]=CH.ind[v]?0:1;else if(a==='x')CH.ind={};
   chSave();CH.curId=null;chRefreshCtl();renderChart(S[state.ix]);
 });
 (function(){
@@ -1020,7 +1024,7 @@ function renderMood(){
   const lo=s.open-2.5*m,span=5*m,pos=v=>+clamp((v-lo)/span*100,0,100).toFixed(1);
   const used=Math.abs(p-s.open)/m*100;
   const usedTxt=used<50?'Abhi range mein kaafi jagah hai.':used<100?'Aadhi se zyada move ho chuka. Option buyers theta aur thakan ka dhyan rakhein.':'Normal range paar ho chuki. Aise din mein ulta move bhi tez ho sakta hai.';
-  $('moodRange').innerHTML=`<div class="eyebrow">Aaj ki expected range · ${ix.name}</div><div class="rng num">${nfi(s.open-m)} <span>se</span> ${nfi(s.open+m)}</div><p class="lead">VIX ${(VIXD*IVX[k]).toFixed(1)} (demo) ke hisaab se din ka 1σ move ±${Math.round(m)} points. Price lagbhag 68% din is range mein rehta hai.</p><div class="rbar" role="img" aria-label="Expected range bar"><i class="r2" style="left:${pos(s.open-2*m)}%;width:${(pos(s.open+2*m)-pos(s.open-2*m)).toFixed(1)}%"></i><i class="r1" style="left:${pos(s.open-m)}%;width:${(pos(s.open+m)-pos(s.open-m)).toFixed(1)}%"></i><i class="op" style="left:${pos(s.open)}%"></i><b class="pm" style="left:${pos(p)}%"></b></div><div class="rlab"><span style="left:10%">-2σ</span><span style="left:30%">-1σ</span><span style="left:50%">Open</span><span style="left:70%">+1σ</span><span style="left:90%">+2σ</span></div><p style="margin-top:12px"><b class="num">${Math.round(used)}%</b> 1σ move ho chuka. ${usedTxt}</p><p class="hint">Ye VIX se nikla math hai, kal ka forecast nahi.</p>`;
+  $('moodRange').innerHTML=`<div class="eyebrow">Aaj ki expected range · ${ix.name}</div><div class="rng num">${nfi(s.open-m)} <span>se</span> ${nfi(s.open+m)}</div><p class="lead">${LIVE.on?'ATM IV':'VIX'} ${ivPct(k).toFixed(1)}${LIVE.on?'':' (demo)'} ke hisaab se din ka 1σ move ±${Math.round(m)} points. Price lagbhag 68% din is range mein rehta hai.</p><div class="rbar" role="img" aria-label="Expected range bar"><i class="r2" style="left:${pos(s.open-2*m)}%;width:${(pos(s.open+2*m)-pos(s.open-2*m)).toFixed(1)}%"></i><i class="r1" style="left:${pos(s.open-m)}%;width:${(pos(s.open+m)-pos(s.open-m)).toFixed(1)}%"></i><i class="op" style="left:${pos(s.open)}%"></i><b class="pm" style="left:${pos(p)}%"></b></div><div class="rlab"><span style="left:10%">-2σ</span><span style="left:30%">-1σ</span><span style="left:50%">Open</span><span style="left:70%">+1σ</span><span style="left:90%">+2σ</span></div><p style="margin-top:12px"><b class="num">${Math.round(used)}%</b> 1σ move ho chuka. ${usedTxt}</p><p class="hint">Ye VIX se nikla math hai, kal ka forecast nahi.</p>`;
   const near=ch.rows.reduce((a,b)=>Math.abs(b.K-p)<Math.abs(a.K-p)?b:a).K;
   const rows=ch.rows.slice().reverse().map(r=>`<div class="lr${r.K===near?' near':''}"><div class="pb"><i style="width:${(r.p/ch.maxOi*100).toFixed(1)}%"></i><em class="num">${fOi(r.p)}</em></div><div class="ks num${r.K===ch.sup?' s':''}${r.K===ch.res?' r':''}">${nfi(r.K)}${r.K===ch.sup?'<small>SUPPORT</small>':''}${r.K===ch.res?'<small>RESISTANCE</small>':''}</div><div class="cb"><i style="width:${(r.c/ch.maxOi*100).toFixed(1)}%"></i><em class="num">${fOi(r.c)}</em></div></div>`).join('');
   const pr=ch.pcr>1.2?'Put-heavy':ch.pcr<.8?'Call-heavy':'Neutral';
@@ -1230,12 +1234,22 @@ const CHX={tk:0,sub:'chain',mode:'single',side:'P',d:null,w:2,mv:0,dte:3,snap:{}
 const VOLX=.138;
 function ncdf(z){const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2),p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p}
 function cxCtx(k,spOv){
-  const sp=spOv||S[k].price,st=STEP[k],atm=Math.round(sp/st)*st,sgm=VOLX*Math.sqrt(CHX.dte/365),a0=.4*sp*sgm;
-  const prem=(K,t)=>{const intr=t==='C'?Math.max(0,sp-K):Math.max(0,K-sp),dd=Math.abs(K-sp),tv=a0*Math.exp(-1.1*Math.pow(dd/(sp*sgm),2));return Math.max(.5,Math.round((intr+tv)*20)/20)};
-  return{k,sp,st,atm,sgm,prem,lot:INDICES[k].lot,sig:sp*sgm};
+  const L=LIVE.on&&LIVE.chain[k],sp=spOv||S[k].price,st=STEP[k],atm=Math.round(sp/st)*st;
+  let dte=CHX.dte,vol=VOLX,map=null;
+  if(L){
+    dte=Math.max(.25,(Date.parse(L.expiry+'T15:30:00+05:30')-Date.now())/86400e3);
+    map=new Map(L.rows.map(r=>[r.K,r]));
+    const a=map.get(atm),iv=a?[a.civ,a.piv].filter(x=>x>0):[];
+    if(iv.length)vol=iv.reduce((x,y)=>x+y,0)/iv.length/100;
+  }
+  const sgm=vol*Math.sqrt(dte/365),a0=.4*sp*sgm;
+  const model=(K,t)=>{const intr=t==='C'?Math.max(0,sp-K):Math.max(0,K-sp),dd=Math.abs(K-sp),tv=a0*Math.exp(-1.1*Math.pow(dd/(sp*sgm),2));return Math.max(.5,Math.round((intr+tv)*20)/20)};
+  const prem=(K,t)=>{if(map){const r=map.get(K),v=r&&(t==='C'?r.cl:r.pl);if(v>0)return v}return model(K,t)};
+  return{k,sp,st,atm,sgm,prem,lot:INDICES[k].lot,sig:sp*sgm,dte:dte,vol:vol,live:!!L,expiry:L&&L.expiry};
 }
 const lk=v=>(v/1e5).toFixed(1)+'L';
 function chainRows(c){
+  if(c.live){const L=LIVE.chain[c.k],out=[];L.rows.forEach(r=>{if(Math.abs(r.K-c.atm)<=8*c.st)out.push({K:r.K,coi:r.coi||0,poi:r.poi||0,cch:r.cprev>0?Math.round((r.coi-r.cprev)/r.cprev*100):0,pch:r.pprev>0?Math.round((r.poi-r.pprev)/r.pprev*100):0,cl:r.cl||c.prem(r.K,'C'),pl:r.pl||c.prem(r.K,'P')})});if(out.length>=3)return out}
   const ch=chainFor(c.k),m=new Map(ch.rows.map(r=>[r.K,r])),base=INDICES[c.k].oiBase*.012,rows=[];
   for(let i=-8;i<=8;i++){
     const K=c.atm+i*c.st;let r=m.get(K);
@@ -1308,7 +1322,7 @@ function vChain(){
   const atmC=c.prem(c.atm,'C'),atmP=c.prem(c.atm,'P'),strad=atmC+atmP;
   let best=1e30,pain=rows[0].K;rows.forEach(t=>{let s=0;rows.forEach(x=>{s+=Math.max(0,t.K-x.K)*x.coi+Math.max(0,x.K-t.K)*x.poi});if(s<best){best=s;pain=t.K}});
   const R=rows.reduce((a,b)=>b.coi>a.coi?b:a).K,Sx=rows.reduce((a,b)=>b.poi>a.poi?b:a).K;
-  let h='<div class="card"><div class="eyebrow">Option chain · '+INDICES[state.ix].name+' · demo · '+CHX.dte+' din expiry</div>'
+  let h='<div class="card"><div class="eyebrow">Option chain · '+INDICES[state.ix].name+(c.live?' · LIVE Upstox · expiry '+c.expiry+' · ATM IV '+(c.vol*100).toFixed(1)+'%':' · demo · '+CHX.dte+' din expiry')+'</div>'
    +'<div class="lab-g" style="margin-top:8px"><div><small>PCR</small><b class="num">'+(tp/tc).toFixed(2)+'</b></div><div><small>Max pain</small><b class="num">'+nfi(pain)+'</b></div>'
    +'<div><small>Support (max Put OI)</small><b class="num up">'+nfi(Sx)+'</b></div><div><small>Resistance (max Call OI)</small><b class="num down">'+nfi(R)+'</b></div>'
    +'<div><small>ATM straddle</small><b class="num">₹'+nfi(strad)+'</b></div><div><small>Market ka expected move</small><b class="num">±'+(strad/c.sp*100).toFixed(2)+'%</b></div></div>'
@@ -1332,7 +1346,7 @@ function vChain(){
        +'<p class="hint">Yahi strike Hedge Lab mein becha hua strike ban sakta hai. Bina hedge ke becha to risk khula rehta hai.</p>'
        +'<button class="btn" type="button" data-cx="tolab" data-k="'+K+'" style="width:100%;margin-top:8px">Is strike ko Hedge Lab mein kholo</button></div>'}
   }
-  return h+'<p class="disc">Chain demo data hai: premium ek simple model se bana hai aur OI random pattern hai. Live hone par Upstox ka asli chain aayega. Ye investment advice nahi hai.</p>';
+  return h+''+(c.live?'<p class="disc">Chain Upstox ka live data hai. Ye investment advice nahi hai.</p>':'<p class="disc">Chain demo data hai: premium ek simple model se bana hai aur OI random pattern hai. Live hone par Upstox ka asli chain aayega. Ye investment advice nahi hai.</p>')+'';
 }
 function hlSnap(){const k=state.ix;if(!CHX.snap[k])CHX.snap[k]=S[k].price;return CHX.snap[k]}
 function hlMain(){
@@ -1348,7 +1362,7 @@ function hlInfoHtml(c,r,kind){
    +'<div><small>Credit milega (1 lot)</small><b class="num up">'+rss(r.credit)+'</b></div><div><small>Max nuksaan</small><b class="num down">'+ml+'</b>'+mlp+'</div>'
    +'<div><small>Margin (andaza)</small><b class="num">₹'+nfi(r.margin)+'</b></div><div><small>Margin par max return</small><b class="num">'+r.roi.toFixed(1)+'%</b></div>'
    +'<div><small>Profit ki sambhavna</small><b class="num">'+r.pop.toFixed(0)+'%</b></div><div><small>Hedge ki keemat</small><b class="num">'+(r.cost?r.cost.toFixed(0)+'% credit ka':'Koi hedge nahi')+'</b></div></div>'
-   +'<p class="hint" style="margin:10px 0 0">Break-even: '+be+'. 1 lot = '+c.lot+' quantity. Sambhavna ek simple model (IV 13.8%, '+CHX.dte+' din) se nikli hai, asli bazaar mein tail risk isse zyada hota hai.</p>';
+   +'<p class="hint" style="margin:10px 0 0">Break-even: '+be+'. 1 lot = '+c.lot+' quantity. Sambhavna ek simple model (IV '+(c.vol*100).toFixed(1)+'%, '+c.dte.toFixed(1)+' din) se nikli hai, asli bazaar mein tail risk isse zyada hota hai.</p>';
 }
 function hlCmpHtml(c,side){
   const ks=['naked','strangle','single','double'];
@@ -1456,6 +1470,83 @@ document.addEventListener('input',e=>{
   else if(t.id==='hlWr'){CHX.w=+t.value;hlUpdate()}
 });
 
+/* ========== LIVE MODE: real Upstox data through our own /api (token stays on server) ========== */
+async function api(p){const r=await fetch('/api/'+p,{cache:'no-store'});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
+function liveBadge(err){
+  const el=document.querySelector('.demo-chip');if(!el)return;
+  if(!LIVE.on)return;
+  if(err&&LIVE.fail>=3){el.textContent='LIVE · ERROR';el.style.background='#FCE8EB';el.style.color='#D92D43';el.title=err;return}
+  const age=(Date.now()-LIVE.last)/1000,t=new Date(LIVE.last).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  el.textContent='LIVE '+t;el.style.background='#E2F5EC';el.style.color='#087A52';el.title='Upstox data, '+Math.round(age)+'s pehle';
+}
+function liveMapHist(cs){return cs.map(c=>{const t=Date.parse(c.t),id=Math.floor(t/60000);return{id:id,t:t,o:c.o,h:c.h,l:c.l,c:c.c,bu:c.c>=c.o?(c.v||0):0,se:c.c<c.o?(c.v||0):0,n:id,vw:c.vw!=null?c.vw:c.c,oi:c.oi||0,v:c.v||0}})}
+async function liveLoadHist(k){const j=await api('candles?ix='+k);LIVE.hist[k]=liveMapHist(j.candles||[])}
+async function liveChainLoad(k){const j=await api('chain?ix='+k);if(j.rows&&j.rows.length){LIVE.chain[k]=j;LIVE.chainAt[k]=Date.now();delete _ch[k]}}
+function liveSeed(k,q){
+  const s=S[k],h=LIVE.hist[k]||[];
+  s.ticks=[];s.n=0;
+  h.forEach(c=>{s.n++;s.ticks.push({n:s.n,p:c.c,buy:Math.max(1,(c.v||2)/2),sell:Math.max(1,(c.v||2)/2),oi:c.oi||(q&&q.fut?q.fut.oi:0)||s.oi,vwap:c.vw||c.c,t:c.t})});
+  const sp=q?q.spot:(h.length?h[h.length-1].c:s.price);
+  while(s.ticks.length<130){s.n++;s.ticks.unshift({n:0,p:h.length?h[0].c:sp,buy:1,sell:1,oi:s.oi,vwap:sp,t:Date.now()})}
+  s.ticks.forEach((t,i)=>t.n=i+1);s.n=s.ticks.length;
+  s.price=sp;s.open=(q&&q.open)||(h.length?h[0].o:sp);if(q&&q.fut&&q.fut.oi)s.oi=q.fut.oi;
+  s.cool=s.n+100;
+}
+function liveApply(k,q){
+  const s=S[k],f=q.fut,last=s.ticks[s.ticks.length-1];
+  s.n++;s.price=q.spot;if(q.open)s.open=q.open;
+  const tk={n:s.n,p:q.spot,buy:f&&f.tbq?f.tbq:last.buy,sell:f&&f.tsq?f.tsq:last.sell,oi:f&&f.oi?f.oi:last.oi,vwap:f&&f.avg?f.avg-(f.ltp-q.spot):q.spot,t:Date.now()};
+  s.oi=tk.oi;s.ticks.push(tk);if(s.ticks.length>2400)s.ticks.shift();
+  const d=detect(s);if(d)fire(k,d.id,d.bias);
+}
+function liveCandles(s,tf){
+  const h=LIVE.hist[s.ix.key]||[],out=[];let cur=null;
+  for(const c of h){
+    const id=Math.floor(c.id/tf);
+    if(!cur||cur.id!==id){cur={id:id,o:c.o,h:c.h,l:c.l,c:c.c,bu:0,se:0,n:id,vw:c.vw};out.push(cur)}
+    if(c.h>cur.h)cur.h=c.h;if(c.l<cur.l)cur.l=c.l;cur.c=c.c;cur.bu+=c.bu;cur.se+=c.se;cur.vw=c.vw;
+  }
+  if(!out.length){const p=s.price;out.push({id:0,o:p,h:p,l:p,c:p,bu:0,se:0,n:0,vw:p})}
+  const L=out[out.length-1];L.c=s.price;if(s.price>L.h)L.h=s.price;if(s.price<L.l)L.l=s.price;
+  return out;
+}
+function liveChainFor(k){
+  const L=LIVE.chain[k],st=STEP[k],sp=S[k].price,atm=Math.round(sp/st)*st,all=L.rows;
+  const rows=all.filter(r=>Math.abs(r.K-atm)<=8*st).map(r=>({K:r.K,c:r.coi||0,p:r.poi||0}));
+  const use=rows.length>=3?rows:all.map(r=>({K:r.K,c:r.coi||0,p:r.poi||0}));
+  let cT=0,pT=0,R=use[0],Sx=use[0];use.forEach(x=>{cT+=x.c;pT+=x.p;if(x.c>R.c)R=x;if(x.p>Sx.p)Sx=x});
+  let best=Infinity,pain=use[0].K;use.forEach(t=>{let s2=0;use.forEach(x=>{s2+=Math.max(0,t.K-x.K)*x.c+Math.max(0,x.K-t.K)*x.p});if(s2<best){best=s2;pain=t.K}});
+  return{rows:use,pcr:L.pcr||(pT/(cT||1)),res:R.K,sup:Sx.K,pain:pain,maxOi:Math.max(1,...use.map(x=>Math.max(x.c,x.p))),atm:atm};
+}
+let liveQ=null;
+async function livePoll(){
+  try{
+    const j=await api('live');liveQ=j;
+    KEYS.forEach(k=>{if(j.ix[k])liveApply(k,j.ix[k])});
+    LIVE.fail=0;LIVE.last=Date.now();liveBadge();
+  }catch(e){LIVE.fail++;liveBadge(e.message)}
+  setTimeout(livePoll,2000);
+}
+async function liveSlow(){
+  try{
+    const k=state.ix;
+    await liveChainLoad(k);
+    if(state.tab==='live'||state.tab==='chain')await liveLoadHist(k);
+  }catch(e){}
+  setTimeout(liveSlow,6000);
+}
+(async function liveInit(){
+  try{await api('health')}catch(e){return}
+  try{
+    const q=await api('live');
+    await Promise.all(KEYS.map(async k=>{try{await liveLoadHist(k)}catch(e){LIVE.hist[k]=[]}try{await liveChainLoad(k)}catch(e){}}));
+    KEYS.forEach(k=>liveSeed(k,q.ix[k]));
+    LIVE.on=true;LIVE.last=Date.now();liveBadge();
+    if(typeof chRefreshCtl==='function')chRefreshCtl();
+    livePoll();liveSlow();
+  }catch(e){LIVE.on=false}
+})();
+
 const SECS=['live','mood','scorecard','chain','btst','zero-hero','paper','guru','learn','risk'];
 function curSec(){return state.tab==='ideas'?state.idea:state.tab}
 function renderCur(){
@@ -1551,7 +1642,7 @@ window.addEventListener('hashchange',route);
 /* one tick per second for all three indices */
 function tickAll(){
   const now=Date.now();
-  KEYS.forEach(k=>{const s=S[k],tk=stepState(s);tk.t=now;const d=detect(s);if(d)fire(k,d.id,d.bias)});
+  if(!LIVE.on)KEYS.forEach(k=>{const s=S[k],tk=stepState(s);tk.t=now;const d=detect(s);if(d)fire(k,d.id,d.bias)});
   paperTick();
   updateChips();
   if(state.tab==='live')renderLive();
@@ -1798,6 +1889,7 @@ const NEWS=[
  {i:'nifty',h:'कच्चे तेल में तेज़ गिरावट',e:'Crude oil falls sharply',x:'आम तौर पर यह भारतीय बाज़ार के लिए राहत मानी जाती है',y:'This is generally seen as a relief for India'}
 ];
 function newsTick(){
+  if(LIVE.on)return;
   if(state.tab==='guru'&&document.hidden)return;
   const n=NEWS[Math.floor(Math.random()*NEWS.length)],k=n.i,s=S[k],T=s.ticks,a=T[Math.max(0,T.length-120)].p,c=(s.price-a)/a*100;
   say2({
