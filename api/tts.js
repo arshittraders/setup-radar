@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
   try {
     let body = req.body;
     if (typeof body === 'string') body = JSON.parse(body || '{}');
-    const text = String((body && body.text) || '').trim().slice(0, 600);
+    const text = String((body && body.text) || '').trim().slice(0, 1000);
     if (!text) return send(res, 400, { ok: false, error: 'text khali hai' });
     const r = await fetch(OAI + '/v1/audio/speech', {
       method: 'POST',
