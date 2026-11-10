@@ -18,6 +18,7 @@ input,button{font:600 16px Hind;border-radius:12px;border:1px solid var(--line);
 <div class="grid" id="kpi"></div>
 <div class="card"><h2>Funnel (unique log)</h2><div id="fun"></div></div>
 <div class="card"><h2>Lesson-wise: kitne log kahan tak pahunche</h2><div class="sub" style="margin-bottom:6px">Neela = lesson shuru kiya · Hara = poora kiya</div><div id="les"></div></div>
+<div class="card"><h2>Candle Lab: pattern-wise</h2><div class="sub" style="margin-bottom:6px">Neela = shuru kiya · Hara = quiz pass</div><div id="cll"></div></div>
 <div class="card"><h2>Pichhle 14 din</h2><div style="overflow:auto"><table id="tr"></table></div></div>
 <div class="card"><h2>Source (ad / WhatsApp / direct)</h2><table id="src"></table></div>
 <div class="card"><h2>Payments</h2><table id="sal"></table></div>
@@ -35,6 +36,7 @@ const L=j.les,d=i=>L[i-1].done;
 const F=[['Landing visit',u('land_view')],['Download click',u('dl_click')],['App opened',u('app_open')],['Lesson 1 done',d(1)],['Lesson 5 done',d(5)],['Lesson 9 done',d(9)],['Lesson 10 done',d(10)],['Paywall dekha',u('paywall_view')],['Pay click',u('pay_click')],['Paid',u('paid')]];
 const mx=Math.max(1,...F.map(x=>x[1]));$('fun').innerHTML=F.map(x=>'<div class="bar"><span>'+x[0]+'</span><i style="width:'+Math.max(1,x[1]/mx*100)+'%"></i><em>'+n(x[1])+'</em></div>').join('');
 const m2=Math.max(1,...L.map(x=>x.start));$('les').innerHTML=L.map(x=>'<div class="bar l"><span>L'+x.n+(x.n>10?' 🔒':'')+'</span><div><i style="width:'+Math.max(1,x.start/m2*100)+'%"></i><i class="d" style="margin-top:3px;width:'+Math.max(1,x.done/m2*100)+'%"></i></div><em style="font-size:12px">'+x.start+' / '+x.done+' / Q'+x.quiz+'</em></div>').join('');
+const m3=Math.max(1,...j.cl.map(x=>x.start));$('cll').innerHTML=j.cl.map(x=>'<div class="bar l"><span>P'+x.n+(x.n>10?' 🔒':'')+'</span><div><i style="width:'+Math.max(1,x.start/m3*100)+'%"></i><i class="d" style="margin-top:3px;width:'+Math.max(1,x.done/m3*100)+'%"></i></div><em style="font-size:12px">'+x.start+' / '+x.done+'</em></div>').join('');
 $('tr').innerHTML='<tr><th>Din</th><th>Visit</th><th>DL</th><th>App</th><th>Paid</th></tr>'+j.trend.slice().reverse().map(x=>'<tr><td>'+x.d.slice(5)+'</td><td>'+x.land_view+'</td><td>'+x.dl_click+'</td><td>'+x.app_open+'</td><td>'+x.paid+'</td></tr>').join('');
 const ks=[...new Set([...Object.keys(j.srcV),...Object.keys(j.srcD)])];$('src').innerHTML='<tr><th>Source</th><th>Visits</th><th>Downloads</th></tr>'+(ks.map(k=>'<tr><td>'+k+'</td><td>'+(j.srcV[k]||0)+'</td><td>'+(j.srcD[k]||0)+'</td></tr>').join('')||'<tr><td colspan=3 class=sub>Abhi koi data nahi</td></tr>');
 $('sal').innerHTML='<tr><th>Time</th><th>Plan</th><th>₹</th><th>Ref</th></tr>'+(j.sales.map(s=>'<tr><td>'+new Date(s.t).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+'</td><td>'+s.plan+'</td><td>'+s.amt+'</td><td>'+s.pid+'</td></tr>').join('')||'<tr><td colspan=4 class=sub>Abhi koi payment nahi</td></tr>');

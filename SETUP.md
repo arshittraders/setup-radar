@@ -52,3 +52,9 @@ Pages: `/download` (landing + AI chat + APK), `/admin` (stats), `/terms`. APK fi
 
 Prices: course ₹699 once, AI Guru ₹299 for 30 days (set in `api/_lic.js`). Guru questions/day: free 5, course 12, Guru plan 150 (`QUOTA` in `api/guru.js`). Owner (`LIVE_PASS`) is unlimited.
 Ad / WhatsApp links: `https://<site>/download?s=meta` or `?s=wa` (the `s` value shows in admin Source table).
+
+## Candle Lab (30 candle patterns + 1-month backtest)
+In the Tutorial tab. Patterns 1-10 free, 11-30 unlock with the ₹699 course. The app finds each pattern on 15-minute candles and measures what happened after (1/3/5 candles) versus a normal-candle baseline, with small-sample warnings.
+- Data: `/api/hist?ix=nifty` (Upstox v3 historical, last ~31 days). By default it is **owner-only** (same `LIVE_PASS` as live data); everyone else sees a clearly labelled **demo practice series**.
+- To show the real month of data to all users, set env `HIST_PUBLIC=1` and Redeploy. Do this only after checking Upstox's data-redistribution terms (or use a licensed data provider).
+- Admin has a pattern-wise started/passed table (events `cl_start`, `cl_done`).

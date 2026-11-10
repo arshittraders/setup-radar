@@ -3131,6 +3131,7 @@ function vHome(){
     return '<button class="lrow2'+(ok?' ok':'')+(cur?' cur':'')+'" type="button" '+(lock?'disabled':'data-ln="'+(ok?'reread':'start')+'" data-n="'+n+'"')+'><b>'+(ok?'✓':n)+'</b><span>'+esc2(l.t)+'</span><small>'+(ok?L_.passed[n]+'%':lock?'Lock':'Agla')+'</small></button>'}).join('');
   return '<div><h2 style="font-size:20px">Tutorial</h2><p class="lead" style="margin-top:4px">15 din ka course: roz 2 lesson, har lesson ke baad 10 sawal ka quiz. Pass hone ke liye kam se kam 50% chahiye. Sab tabs khule hain, tum seekhte hue unhe use kar sakte ho.</p></div>'
     +'<div class="card lab-card"><div class="eyebrow">Naya</div><h2 style="font-size:17px;margin:4px 0 6px">Payoff Lab</h2><p class="lead" style="margin:0 0 10px">Slider khiskao aur dekho: expiry par option kharidne, bechne aur hedge karne par kitna faida ya nuksaan hota hai.</p><button class="btn ln-w" type="button" data-ln="lab">Payoff Lab kholo</button></div>'
+    +clCard()
     +main
     +(p===9?vTeaser():'')+(p>=20?vLive():'')
     +'<div class="card"><div class="ln-stats"><div><small>Poore</small><b class="num">'+p+' / 30</b></div><div><small>Aaj</small><b class="num">'+L_.today+' / '+capToday()+'</b></div><div><small>Quiz average</small><b class="num">'+(p?avg+'%':'-')+'</b></div></div></div>'
@@ -3284,7 +3285,7 @@ function vLab(){
 function lnRender(){
   if(!$('lnBody'))return;
   const v=L_.view;
-  body().innerHTML=v==='lab'?vLab():v==='lesson'?vLesson():v==='quiz'?vQuiz():v==='result'?vResult():v==='cert'?vCert():vHome();
+  body().innerHTML=v==='cl'?clView():v==='lab'?vLab():v==='lesson'?vLesson():v==='quiz'?vQuiz():v==='result'?vResult():v==='cert'?vCert():vHome();
   if(v==='lesson'&&L_.speakOnRender){L_.speakOnRender=false}
   if(v==='quiz')quizSpeak();else if(v==='result'){try{stopSpeech()}catch(e){}}
   navRefresh();
@@ -3448,6 +3449,296 @@ document.addEventListener('click',e=>{
 });
 window.addEventListener('hashchange',()=>setTimeout(popLabels,50));
 setInterval(popLabels,2000);
+
+/* ===== Candle Lab: 30 patterns (content) ===== */
+const CTX={down:[[100,102,90,92],[92,94,82,84],[84,86,72,74]],up:[[8,22,6,20],[20,34,18,32],[32,46,30,44]]};
+const PATS=[
+{id:'doji',hi:'Doji',hd:'डोजी',bias:'neutral',ctx:'none',shape:[[50,80,20,50]],
+ d:'Doji mein open aur close lagbhag same hote hain, body bas ek patli line. Samjho tarazu: khareedar aur bechne wale dono ne zor lagaya, par koi jeeta nahi.',
+ v:'डोजी में खुलने और बंद होने का भाव लगभग बराबर होता है। मतलब खरीदार और बेचने वाले दोनों ने ज़ोर लगाया, पर कोई जीता नहीं। यह दिशा नहीं बताता, सिर्फ़ फैसले की घड़ी बताता है।',
+ rule:'Body candle ki range ke 10% se kam. Range normal se kam se kam aadhi.',trap:'Akeli doji par trade nahi banta. Agli candle ka intezaar karo.'},
+{id:'hammer',hi:'Hammer',hd:'हैमर',bias:'bull',ctx:'down',shape:[[58,66,12,64]],
+ d:'Hammer mein neeche lambi shadow aur upar chhoti body hoti hai. Jaise paani mein dabayi gend wapas uchhal aaye: bechne walon ne gira diya, khareedaron ne wapas utha liya.',
+ v:'हैमर में नीचे लंबी परछाईं और ऊपर छोटी बॉडी होती है। जैसे पानी में दबाई गेंद वापस उछल आती है। बेचने वालों ने गिराया, पर खरीदारों ने वापस उठा लिया।',
+ rule:'Neeche ki shadow body se kam se kam 2 guna, upar ki shadow lagbhag nahi. Girawat ke baad bani ho.',trap:'Girawat ke baad hi iska matlab hai. Beech trend mein ya sideways bazaar mein bekaar.'},
+{id:'hanging',hi:'Hanging Man',hd:'हैंगिंग मैन',bias:'bear',ctx:'up',shape:[[64,70,16,58]],
+ d:'Shakal hammer jaisi hai, par ye tezi ke baad aati hai. Bheed mein jaise ek aadmi pehli baar ghabrakar peechhe hate: bechne wale pehli baar dikhe.',
+ v:'हैंगिंग मैन की शक्ल हैमर जैसी होती है, पर यह तेज़ी के बाद आता है। मतलब ऊपर पहुँचकर बेचने वाले पहली बार दिखे। यह चेतावनी है, पक्का इशारा नहीं।',
+ rule:'Hammer jaisi shape, lekin pichhli tezi ke baad. Body ka rang aksar laal.',trap:'Akele ye kamzor hai. Agli candle neeche band ho tabhi dhyan do.'},
+{id:'invhammer',hi:'Inverted Hammer',hd:'इन्वर्टेड हैमर',bias:'bull',ctx:'down',shape:[[30,88,28,36]],
+ d:'Ulta hammer: upar lambi shadow, neeche chhoti body. Girawat ke baad khareedaron ne pehli baar upar dhakela, par tik nahi paye. Agli candle se pata chalta hai ki dum hai ya nahi.',
+ v:'इन्वर्टेड हैमर में ऊपर लंबी परछाईं और नीचे छोटी बॉडी होती है। गिरावट के बाद खरीदारों ने पहली बार ऊपर धक्का दिया। अगली कैंडल बताएगी कि दम है या नहीं।',
+ rule:'Upar ki shadow body se kam se kam 2 guna, neeche ki shadow chhoti. Girawat ke baad.',trap:'Ye akele bharosemand nahi. Agli candle upar band ho to hi mazboot.'},
+{id:'shooting',hi:'Shooting Star',hd:'शूटिंग स्टार',bias:'bear',ctx:'up',shape:[[38,90,30,32]],
+ d:'Tezi ke baad upar lambi shadow aur neeche chhoti body. Patang jaise bahut upar gayi aur dor kat ke wapas neeche aa gayi.',
+ v:'शूटिंग स्टार में तेज़ी के बाद ऊपर लंबी परछाईं बनती है। जैसे पतंग बहुत ऊपर गई और डोर कटकर नीचे आ गई। ऊपर के भाव टिक नहीं पाए।',
+ rule:'Upar ki shadow body se kam se kam 2 guna, neeche ki shadow chhoti. Tezi ke baad.',trap:'Support ke paas ye jhootha ishara de sakta hai. Agli candle dekho.'},
+{id:'bullmaru',hi:'Bullish Marubozu',hd:'बुलिश मारुबोज़ू',bias:'bull',ctx:'none',shape:[[14,86,13,85]],
+ d:'Poori hari, lambi body aur shadow lagbhag nahi. Pehle pal se aakhri pal tak khareedar hi haave rahe, jaise ek taraf se match.',
+ v:'बुलिश मारुबोज़ू में पूरी हरी लंबी बॉडी होती है और परछाईं लगभग नहीं होती। मतलब शुरू से आख़िर तक खरीदार हावी रहे।',
+ rule:'Hari candle, body range ki 90% se zyada, range normal se badi.',trap:'Badi candle ke baad aksar thakaan aati hai. Upar se entry mehngi padti hai.'},
+{id:'bearmaru',hi:'Bearish Marubozu',hd:'बेयरिश मारुबोज़ू',bias:'bear',ctx:'none',shape:[[86,87,14,15]],
+ d:'Poori laal, lambi body aur shadow lagbhag nahi. Shuru se aakhir tak bechne wale haave rahe, jaise bazaar ek hi side se dhakela gaya.',
+ v:'बेयरिश मारुबोज़ू में पूरी लाल लंबी बॉडी होती है और परछाईं लगभग नहीं होती। शुरू से आख़िर तक बेचने वाले हावी रहे।',
+ rule:'Laal candle, body range ki 90% se zyada, range normal se badi.',trap:'Girawat ke baad neeche se bechna risky ho sakta hai. Stop-loss pehle sochna.'},
+{id:'spinning',hi:'Spinning Top',hd:'स्पिनिंग टॉप',bias:'neutral',ctx:'none',shape:[[44,86,14,56]],
+ d:'Lattu jaisi: chhoti body, upar neeche dono taraf shadow. Rassakashi barabar rahi, koi side haavi nahi hui.',
+ v:'स्पिनिंग टॉप में छोटी बॉडी होती है और ऊपर-नीचे दोनों तरफ परछाईं। रस्साकशी बराबर रही, कोई पक्ष हावी नहीं हुआ।',
+ rule:'Body range ki 30% tak, dono shadow body se bade.',trap:'Ye sirf ruk jaane ka ishara hai, direction ka nahi.'},
+{id:'dragonfly',hi:'Dragonfly Doji',hd:'ड्रैगनफ्लाई डोजी',bias:'bull',ctx:'down',shape:[[80,81,14,80]],
+ d:'English ke T jaisi: open aur close upar, neeche bahut lambi shadow. Bazaar neeche tak gira, phir poora wapas aa gaya.',
+ v:'ड्रैगनफ्लाई डोजी अंग्रेज़ी के T जैसी दिखती है। भाव नीचे तक गिरा, फिर पूरा वापस आ गया। गिरावट के बाद यह तेज़ी का इशारा माना जाता है।',
+ rule:'Open aur close lagbhag same aur upar, neeche lambi shadow, upar shadow nahi. Girawat ke baad.',trap:'Agli candle upar band na ho to ishara kamzor.'},
+{id:'gravestone',hi:'Gravestone Doji',hd:'ग्रेवस्टोन डोजी',bias:'bear',ctx:'up',shape:[[20,88,19,20]],
+ d:'Ulta T: open aur close neeche, upar bahut lambi shadow. Bazaar upar gaya par sab kuch wapas gira diya, jaise kabristan ka patthar.',
+ v:'ग्रेवस्टोन डोजी उल्टे T जैसी दिखती है। भाव ऊपर गया, पर सब कुछ वापस नीचे आ गया। तेज़ी के बाद यह मंदी का इशारा माना जाता है।',
+ rule:'Open aur close lagbhag same aur neeche, upar lambi shadow, neeche shadow nahi. Tezi ke baad.',trap:'Agli candle neeche band na ho to ishara kamzor.'},
+{id:'bullengulf',hi:'Bullish Engulfing',hd:'बुलिश एंगल्फ़िंग',bias:'bull',ctx:'down',shape:[[60,62,42,44],[40,70,38,68]],
+ d:'Hari candle pichhli laal candle ko poora nigal le. Jaise bade bhai ne chhote ko dhak liya: khareedar ne pichhle din ke saare bechne walon ka zor mita diya.',
+ v:'बुलिश एंगल्फ़िंग में हरी कैंडल पिछली लाल कैंडल को पूरा निगल लेती है। जैसे बड़े भाई ने छोटे को ढक लिया। खरीदारों ने बेचने वालों का सारा ज़ोर मिटा दिया।',
+ rule:'Pehli laal, doosri hari aur uski body pehli ki body ko poora dhak le. Girawat ke baad.',trap:'Support ke bina ye aksar fail hota hai. Stop-loss candle ke low ke neeche.'},
+{id:'bearengulf',hi:'Bearish Engulfing',hd:'बेयरिश एंगल्फ़िंग',bias:'bear',ctx:'up',shape:[[44,62,42,60],[64,66,34,36]],
+ d:'Laal candle pichhli hari candle ko poora nigal le. Tezi ke baad bechne walon ne ek hi candle mein pichhla saara faayda palat diya.',
+ v:'बेयरिश एंगल्फ़िंग में लाल कैंडल पिछली हरी कैंडल को पूरा निगल लेती है। तेज़ी के बाद बेचने वालों ने एक ही कैंडल में पिछला फ़ायदा पलट दिया।',
+ rule:'Pehli hari, doosri laal aur uski body pehli ki body ko poora dhak le. Tezi ke baad.',trap:'Resistance ke paas zyada mayne rakhta hai. Beech mein jhootha bhi nikalta hai.'},
+{id:'piercing',hi:'Piercing Line',hd:'पियर्सिंग लाइन',bias:'bull',ctx:'down',shape:[[70,72,38,40],[34,60,32,58]],
+ d:'Laal candle ke baad hari candle neeche khulti hai par pichhli laal ke aadhe se upar band hoti hai. Aadhi jeet: khareedaron ne wapas takkar di.',
+ v:'पियर्सिंग लाइन में लाल कैंडल के बाद हरी कैंडल नीचे खुलती है, पर पिछली कैंडल के आधे से ऊपर बंद होती है। खरीदारों ने वापसी की कोशिश दिखाई।',
+ rule:'Laal ke baad hari, neeche khule, pehli body ke beech se upar band.',trap:'Engulfing se kamzor hai. Pehle chhota size aur stop-loss rakho.'},
+{id:'darkcloud',hi:'Dark Cloud Cover',hd:'डार्क क्लाउड कवर',bias:'bear',ctx:'up',shape:[[40,72,38,70],[76,78,50,52]],
+ d:'Hari candle ke baad laal candle upar khulti hai par pichhli hari ke aadhe se neeche band hoti hai. Dhoop ke baad kaale badal chha gaye.',
+ v:'डार्क क्लाउड कवर में हरी कैंडल के बाद लाल कैंडल ऊपर खुलती है, पर पिछली कैंडल के आधे से नीचे बंद होती है। जैसे धूप के बाद काले बादल छा गए।',
+ rule:'Hari ke baad laal, upar khule, pehli body ke beech se neeche band.',trap:'Tezi ke baad hi dekho. Agli candle bhi neeche jaye to hi bharosa badhta hai.'},
+{id:'bullinside',hi:'Bullish Inside Candle',hd:'बुलिश इनसाइड कैंडल',bias:'bull',ctx:'down',shape:[[75,77,33,35],[48,62,46,60]],
+ d:'Badi laal candle ke andar chhoti hari candle poori samayi hui. Girawat ki raftaar achanak dheemi padi: jaise tez gaadi ne brake dabaya.',
+ v:'बुलिश इनसाइड कैंडल में बड़ी लाल कैंडल के अंदर छोटी हरी कैंडल पूरी समाई होती है। गिरावट की रफ़्तार अचानक धीमी पड़ी। जैसे तेज़ गाड़ी ने ब्रेक दबाया।',
+ rule:'Badi laal, phir chhoti hari jiski body pehli ki body ke andar ho. Girawat ke baad.',trap:'Ye sirf dheema padne ka ishara hai, palatne ka pakka saboot nahi.'},
+{id:'bearinside',hi:'Bearish Inside Candle',hd:'बेयरिश इनसाइड कैंडल',bias:'bear',ctx:'up',shape:[[35,77,33,75],[62,64,48,50]],
+ d:'Badi hari candle ke andar chhoti laal candle. Tezi ki raftaar dheemi padi, khareedar thak gaye jaise lambi daud ke baad.',
+ v:'बेयरिश इनसाइड कैंडल में बड़ी हरी कैंडल के अंदर छोटी लाल कैंडल समाई होती है। तेज़ी की रफ़्तार धीमी पड़ी। खरीदार लंबी दौड़ के बाद थक गए।',
+ rule:'Badi hari, phir chhoti laal jiski body pehli ki body ke andar ho. Tezi ke baad.',trap:'Sirf thakaan ka ishara. Neeche tootne ka intezaar karo.'},
+{id:'tweezerbot',hi:'Tweezer Bottom',hd:'ट्वीज़र बॉटम',bias:'bull',ctx:'down',shape:[[65,67,30,45],[45,64,30,62]],
+ d:'Do candle ka low lagbhag barabar. Neeche ek deewar jaisa: bazaar do baar wahan gaya aur dono baar wapas aa gaya.',
+ v:'ट्वीज़र बॉटम में दो कैंडल का सबसे निचला भाव लगभग बराबर होता है। जैसे नीचे एक दीवार हो। बाज़ार दो बार वहाँ गया और दोनों बार लौट आया।',
+ rule:'Do candle ke low lagbhag same, pehli laal doosri hari. Girawat ke baad.',trap:'Deewar tootne par stop-loss lagana zaroori hai.'},
+{id:'tweezertop',hi:'Tweezer Top',hd:'ट्वीज़र टॉप',bias:'bear',ctx:'up',shape:[[35,70,33,55],[55,70,36,38]],
+ d:'Do candle ka high lagbhag barabar. Upar chhat jaisi: bazaar do baar wahan tak gaya aur dono baar wapas laut aaya.',
+ v:'ट्वीज़र टॉप में दो कैंडल का सबसे ऊँचा भाव लगभग बराबर होता है। जैसे ऊपर छत हो। बाज़ार दो बार वहाँ तक गया और दोनों बार लौट आया।',
+ rule:'Do candle ke high lagbhag same, pehli hari doosri laal. Tezi ke baad.',trap:'Chhat tooti to ye ishara galat sabit hota hai.'},
+{id:'insidebar',hi:'Inside Bar',hd:'इनसाइड बार',bias:'neutral',ctx:'none',shape:[[30,75,25,70],[45,64,36,58]],
+ d:'Badi candle ke andar poori chhoti candle. Bazaar ne saans rok li, jaise tir chhodne se pehle kamaan kheenchi jaati hai. Breakout kisi bhi taraf ho sakta hai.',
+ v:'इनसाइड बार में एक बड़ी कैंडल के अंदर पूरी छोटी कैंडल बनती है। बाज़ार ने साँस रोक ली है। जैसे तीर छोड़ने से पहले कमान खिंचती है। ब्रेकआउट किसी भी तरफ़ हो सकता है।',
+ rule:'Doosri candle ka high aur low dono pehli ke andar.',trap:'Direction pehle se mat tay karo. Dono taraf ke breakout ka plan chahiye.'},
+{id:'outsidebar',hi:'Outside Bar',hd:'आउटसाइड बार',bias:'neutral',ctx:'none',shape:[[48,60,42,55],[40,78,32,70]],
+ d:'Ek candle pichhli candle ko upar aur neeche dono taraf se dhak le. Badi hilchal: jis taraf close hua, usi taraf ka zor dikha.',
+ v:'आउटसाइड बार में एक कैंडल पिछली कैंडल को ऊपर और नीचे दोनों तरफ़ से ढक लेती है। बड़ी हलचल हुई। जिस तरफ़ बंद हुई, उसी तरफ़ का ज़ोर दिखा।',
+ rule:'High pichhle se upar, low pichhle se neeche, range badi.',trap:'Hilchal badi hai to stop-loss bhi door lagta hai, lot chhota rakho.'},
+{id:'morningstar',hi:'Morning Star',hd:'मॉर्निंग स्टार',bias:'bull',ctx:'down',shape:[[80,82,48,50],[44,48,36,40],[46,78,44,76]],
+ d:'Teen candle: badi laal, beech mein chhoti, phir badi hari. Raat ke baad subah ka tara: andhera khatam hone ka ishara.',
+ v:'मॉर्निंग स्टार तीन कैंडल से बनता है: बड़ी लाल, बीच में छोटी, और फिर बड़ी हरी। जैसे रात के बाद सुबह का तारा, अंधेरा ख़त्म होने का इशारा।',
+ rule:'Badi laal, chhoti body wali beech ki candle, phir badi hari jo pehli ke beech se upar band ho.',trap:'Teen candle ka intezaar hai, entry late hoti hai. Stop-loss door lagta hai.'},
+{id:'eveningstar',hi:'Evening Star',hd:'ईवनिंग स्टार',bias:'bear',ctx:'up',shape:[[30,62,28,60],[66,74,62,70],[64,66,32,34]],
+ d:'Teen candle: badi hari, beech mein chhoti, phir badi laal. Shaam ka tara: din dhalne ka ishara.',
+ v:'ईवनिंग स्टार तीन कैंडल से बनता है: बड़ी हरी, बीच में छोटी, और फिर बड़ी लाल। जैसे शाम का तारा, दिन ढलने का इशारा।',
+ rule:'Badi hari, chhoti body wali beech ki candle, phir badi laal jo pehli ke beech se neeche band ho.',trap:'Entry late hoti hai, isliye risk:reward pehle dekho.'},
+{id:'soldiers',hi:'Three White Soldiers',hd:'थ्री व्हाइट सोल्जर्स',bias:'bull',ctx:'none',shape:[[20,42,18,40],[34,60,32,58],[52,80,50,78]],
+ d:'Lagataar teen hari candle, har close pichhle se upar. Teen sipahi ek ke baad ek aage badhte hue.',
+ v:'थ्री व्हाइट सोल्जर्स में लगातार तीन हरी कैंडल बनती हैं, और हर बंद भाव पिछले से ऊपर होता है। जैसे तीन सिपाही एक के बाद एक आगे बढ़ रहे हों।',
+ rule:'Teen hari candle, har close pichhle se upar, har open pichhli body ke andar.',trap:'Teen candle ke baad bhaav pehle hi upar hota hai. Peechha karna mehnga pad sakta hai.'},
+{id:'crows',hi:'Three Black Crows',hd:'थ्री ब्लैक क्रोज़',bias:'bear',ctx:'none',shape:[[80,82,58,60],[66,68,40,42],[48,50,20,22]],
+ d:'Lagataar teen laal candle, har close pichhle se neeche. Teen kauwe ek ke baad ek utarte hue: girawat ka zor.',
+ v:'थ्री ब्लैक क्रोज़ में लगातार तीन लाल कैंडल बनती हैं, और हर बंद भाव पिछले से नीचे होता है। जैसे तीन कौवे एक के बाद एक नीचे उतर रहे हों।',
+ rule:'Teen laal candle, har close pichhle se neeche, har open pichhli body ke andar.',trap:'Teen candle ke baad girawat aksar kaafi ho chuki hoti hai.'},
+{id:'insideup',hi:'Three Inside Up',hd:'थ्री इनसाइड अप',bias:'bull',ctx:'down',shape:[[75,77,38,40],[48,64,46,62],[62,84,60,82]],
+ d:'Bullish Inside Candle ke baad teesri hari candle pehli laal ke open ke upar band hoti hai. Inside Candle ko mili pakki muhar.',
+ v:'थ्री इनसाइड अप में बुलिश इनसाइड कैंडल के बाद तीसरी हरी कैंडल पहली लाल कैंडल के खुलने के भाव से ऊपर बंद होती है। यानी इनसाइड कैंडल को पक्की मुहर मिल गई।',
+ rule:'Badi laal, uske andar chhoti hari, phir teesri hari jo pehli ke open ke upar band ho.',trap:'Teen candle ka intezaar hai, isliye entry late hoti hai.'},
+{id:'insidedown',hi:'Three Inside Down',hd:'थ्री इनसाइड डाउन',bias:'bear',ctx:'up',shape:[[40,77,38,75],[66,68,52,54],[52,54,28,30]],
+ d:'Bearish Inside Candle ke baad teesri laal candle pehli hari ke open ke neeche band hoti hai. Inside Candle ko mili pakki muhar.',
+ v:'थ्री इनसाइड डाउन में बेयरिश इनसाइड कैंडल के बाद तीसरी लाल कैंडल पहली हरी कैंडल के खुलने के भाव से नीचे बंद होती है। यानी इनसाइड कैंडल को पक्की मुहर मिल गई।',
+ rule:'Badi hari, uske andar chhoti laal, phir teesri laal jo pehli ke open ke neeche band ho.',trap:'Entry late hoti hai. Risk:reward pehle dekho.'},
+{id:'mdoji',hi:'Morning Doji Star',hd:'मॉर्निंग डोजी स्टार',bias:'bull',ctx:'down',shape:[[80,82,50,52],[42,48,36,42],[46,78,44,76]],
+ d:'Morning Star ka sakht roop: beech wali candle doji hoti hai. Bechne walon ki puri himmat beech mein toot gayi, phir hari candle ne pakda.',
+ v:'मॉर्निंग डोजी स्टार, मॉर्निंग स्टार का सख़्त रूप है, जिसमें बीच की कैंडल डोजी होती है। बेचने वालों की हिम्मत बीच में टूट गई, फिर हरी कैंडल ने कमान संभाली।',
+ rule:'Badi laal, beech mein doji, phir badi hari jo pehli ke beech se upar band ho.',trap:'Bahut kam banta hai, isliye sample chhota aata hai.'},
+{id:'edoji',hi:'Evening Doji Star',hd:'ईवनिंग डोजी स्टार',bias:'bear',ctx:'up',shape:[[30,62,28,60],[68,74,62,68],[64,66,32,34]],
+ d:'Evening Star ka sakht roop: beech wali candle doji. Khareedaron ki himmat beech mein toot gayi, phir laal candle ne dhakel diya.',
+ v:'ईवनिंग डोजी स्टार, ईवनिंग स्टार का सख़्त रूप है, जिसमें बीच की कैंडल डोजी होती है। खरीदारों की हिम्मत बीच में टूट गई, फिर लाल कैंडल ने नीचे धकेल दिया।',
+ rule:'Badi hari, beech mein doji, phir badi laal jo pehli ke beech se neeche band ho.',trap:'Bahut kam banta hai, isliye sample chhota aata hai.'},
+{id:'rising3',hi:'Rising Three Methods',hd:'राइज़िंग थ्री मेथड्स',bias:'bull',ctx:'none',shape:[[20,64,18,62],[58,60,46,48],[52,54,40,42],[46,48,36,38],[40,80,38,78]],
+ d:'Badi hari candle, phir teen chhoti laal candle jo badi hari ke range ke andar rahein, phir badi hari. Tezi mein thodi saans lena, phir daud jaari.',
+ v:'राइज़िंग थ्री मेथड्स में एक बड़ी हरी कैंडल, फिर तीन छोटी लाल कैंडल जो उसके दायरे के अंदर रहें, और फिर एक और बड़ी हरी कैंडल बनती है। तेज़ी में थोड़ी साँस लेकर दौड़ जारी रहती है।',
+ rule:'Badi hari, teen chhoti candle uske range mein, phir hari jo pehli ke close ke upar band ho.',trap:'Bahut kam banta hai. Chhote sample par bharosa mat karo.'},
+{id:'falling3',hi:'Falling Three Methods',hd:'फॉलिंग थ्री मेथड्स',bias:'bear',ctx:'none',shape:[[80,82,36,38],[42,54,40,52],[48,60,46,58],[54,64,52,62],[60,62,20,22]],
+ d:'Badi laal candle, phir teen chhoti hari candle jo badi laal ke range ke andar rahein, phir badi laal. Girawat mein thodi rahat, phir girawat jaari.',
+ v:'फॉलिंग थ्री मेथड्स में एक बड़ी लाल कैंडल, फिर तीन छोटी हरी कैंडल जो उसके दायरे के अंदर रहें, और फिर एक और बड़ी लाल कैंडल बनती है। गिरावट में थोड़ी राहत के बाद गिरावट जारी रहती है।',
+ rule:'Badi laal, teen chhoti candle uske range mein, phir laal jo pehli ke close ke neeche band ho.',trap:'Bahut kam banta hai. Chhote sample par bharosa mat karo.'}
+];
+
+/* ===== Candle Lab: data, detection, backtest ===== */
+const CLK='sr_cl_v1';
+const CL={view:'home',n:1,s:0,sel:0,done:{},data:{},q:null,say:0};
+try{const r=JSON.parse(localStorage.getItem(CLK)||'{}');if(r.done&&typeof r.done==='object')CL.done=r.done}catch(e){}
+const clSave=()=>{try{localStorage.setItem(CLK,JSON.stringify({done:CL.done}))}catch(e){}};
+const clDoneN=()=>Object.keys(CL.done).length;
+const clOpenOK=n=>n<=clDoneN()+1&&(n<=10||PAID);
+function clRng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function clDemo(ix){ /* practice series: 22 trading days of 15-min candles. NOT real market data */
+  const R=clRng(1234+ix*77),base=[25800,58500,84500][ix]||25800,out=[],days=[];
+  let d=new Date(Date.UTC(2026,9,12)),price=base,vol=base*0.0011;
+  while(days.length<22){const w=d.getUTCDay();if(w>0&&w<6)days.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+864e5)}
+  days.forEach(day=>{
+    price*=1+(R()-0.5)*0.004;const drift=(R()-0.5)*vol*0.25;
+    for(let k=0;k<25;k++){
+      const mins=555+k*15,t=day+'T'+String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
+      vol=Math.max(base*0.0005,Math.min(base*0.0024,vol*(0.9+R()*0.2)+(k===0?base*0.0004:0)));
+      const o=price;let mv=(R()+R()+R()-1.5)*vol*1.6+drift;const r=R();if(r<0.05)mv*=2.2;else if(r<0.14)mv*=0.12;
+      const c=o+mv,wu=R()<0.22?0:Math.pow(R(),1.6)*vol*1.2,wl=R()<0.22?0:Math.pow(R(),1.6)*vol*1.2;
+      out.push({t:t,o:+o.toFixed(2),h:+(Math.max(o,c)+wu).toFixed(2),l:+(Math.min(o,c)-wl).toFixed(2),c:+c.toFixed(2)});price=c}
+  });return out}
+function clPrep(cs){for(let i=0;i<cs.length;i++){const c=cs[i];c.b=Math.abs(c.c-c.o);c.r=Math.max(c.h-c.l,1e-9);c.u=c.h-Math.max(c.o,c.c);c.lo=Math.min(c.o,c.c)-c.l;c.up=c.c>c.o;c.dn=c.c<c.o;c.day=c.t.slice(0,10);
+  let s=0,k=0;for(let j=Math.max(0,i-14);j<i;j++){s+=cs[j].r;k++}c.atr=k?s/k:c.r}}
+const clT=(c,s)=>{if(s<4)return 0;const d=(c[s-1].c-c[s-4].c)/(c[s-1].atr||1);return d>0.5?1:d<-0.5?-1:0};
+const DET={
+ doji:(c,i)=>{const x=c[i];return x.b<=0.1*x.r&&x.r>=0.5*x.atr},
+ hammer:(c,i)=>{const x=c[i];return x.b>0.08*x.r&&x.lo>=2*x.b&&x.u<=0.15*x.r&&x.r>=0.6*x.atr&&clT(c,i)<0},
+ hanging:(c,i)=>{const x=c[i];return x.b>0.08*x.r&&x.lo>=2*x.b&&x.u<=0.15*x.r&&x.r>=0.6*x.atr&&clT(c,i)>0},
+ invhammer:(c,i)=>{const x=c[i];return x.b>0.08*x.r&&x.u>=2*x.b&&x.lo<=0.15*x.r&&x.r>=0.6*x.atr&&clT(c,i)<0},
+ shooting:(c,i)=>{const x=c[i];return x.b>0.08*x.r&&x.u>=2*x.b&&x.lo<=0.15*x.r&&x.r>=0.6*x.atr&&clT(c,i)>0},
+ bullmaru:(c,i)=>{const x=c[i];return x.up&&x.b>=0.9*x.r&&x.r>=0.8*x.atr},
+ bearmaru:(c,i)=>{const x=c[i];return x.dn&&x.b>=0.9*x.r&&x.r>=0.8*x.atr},
+ spinning:(c,i)=>{const x=c[i];return x.b<=0.3*x.r&&x.b>0.1*x.r&&x.u>=x.b&&x.lo>=x.b&&x.r>=0.5*x.atr},
+ dragonfly:(c,i)=>{const x=c[i];return x.b<=0.08*x.r&&x.lo>=0.65*x.r&&x.u<=0.1*x.r&&x.r>=0.5*x.atr&&clT(c,i)<=0},
+ gravestone:(c,i)=>{const x=c[i];return x.b<=0.08*x.r&&x.u>=0.65*x.r&&x.lo<=0.1*x.r&&x.r>=0.5*x.atr&&clT(c,i)>=0},
+ bullengulf:(c,i)=>{const p=c[i-1],x=c[i];return p.dn&&x.up&&x.o<=p.c&&x.c>=p.o&&x.b>p.b&&p.b>=0.3*p.atr&&clT(c,i-1)<0},
+ bearengulf:(c,i)=>{const p=c[i-1],x=c[i];return p.up&&x.dn&&x.o>=p.c&&x.c<=p.o&&x.b>p.b&&p.b>=0.3*p.atr&&clT(c,i-1)>0},
+ piercing:(c,i)=>{const p=c[i-1],x=c[i];return p.dn&&p.b>=0.5*p.atr&&x.up&&x.o<=p.c+0.15*p.atr&&x.c>(p.o+p.c)/2&&x.c<p.o&&clT(c,i-1)<0},
+ darkcloud:(c,i)=>{const p=c[i-1],x=c[i];return p.up&&p.b>=0.5*p.atr&&x.dn&&x.o>=p.c-0.15*p.atr&&x.c<(p.o+p.c)/2&&x.c>p.o&&clT(c,i-1)>0},
+ bullinside:(c,i)=>{const p=c[i-1],x=c[i];return p.dn&&p.b>=0.6*p.atr&&x.up&&x.o>=p.c-0.05*p.atr&&x.c<p.o&&clT(c,i-1)<0},
+ bearinside:(c,i)=>{const p=c[i-1],x=c[i];return p.up&&p.b>=0.6*p.atr&&x.dn&&x.o<=p.c+0.05*p.atr&&x.c>p.o&&clT(c,i-1)>0},
+ tweezerbot:(c,i)=>{const p=c[i-1],x=c[i];return p.dn&&x.up&&Math.abs(p.l-x.l)<=0.1*x.atr&&clT(c,i-1)<0},
+ tweezertop:(c,i)=>{const p=c[i-1],x=c[i];return p.up&&x.dn&&Math.abs(p.h-x.h)<=0.1*x.atr&&clT(c,i-1)>0},
+ insidebar:(c,i)=>{const p=c[i-1],x=c[i];return x.h<p.h&&x.l>p.l&&p.r>=0.8*p.atr},
+ outsidebar:(c,i)=>{const p=c[i-1],x=c[i];return x.h>p.h&&x.l<p.l&&x.r>=1.2*x.atr&&x.b>=0.5*x.r},
+ morningstar:(c,i)=>{const a=c[i-2],b=c[i-1],x=c[i];return a.dn&&a.b>=0.6*a.atr&&b.b<=0.4*a.b&&Math.max(b.o,b.c)<=a.c+0.1*a.atr&&x.up&&x.c>(a.o+a.c)/2&&clT(c,i-2)<0},
+ eveningstar:(c,i)=>{const a=c[i-2],b=c[i-1],x=c[i];return a.up&&a.b>=0.6*a.atr&&b.b<=0.4*a.b&&Math.min(b.o,b.c)>=a.c-0.1*a.atr&&x.dn&&x.c<(a.o+a.c)/2&&clT(c,i-2)>0},
+ soldiers:(c,i)=>{const a=c[i-2],b=c[i-1],x=c[i];return a.up&&b.up&&x.up&&b.c>a.c&&x.c>b.c&&b.o>=a.o&&b.o<=a.c&&x.o>=b.o&&x.o<=b.c&&a.b>=0.4*a.atr&&b.b>=0.4*b.atr&&x.b>=0.4*x.atr&&x.u<=0.3*x.b},
+ crows:(c,i)=>{const a=c[i-2],b=c[i-1],x=c[i];return a.dn&&b.dn&&x.dn&&b.c<a.c&&x.c<b.c&&b.o<=a.o&&b.o>=a.c&&x.o<=b.o&&x.o>=b.c&&a.b>=0.4*a.atr&&b.b>=0.4*b.atr&&x.b>=0.4*x.atr&&x.lo<=0.3*x.b},
+ insideup:(c,i)=>{const a=c[i-2],b=c[i-1],x=c[i];return a.dn&&a.b>=0.6*a.atr&&b.up&&b.o>=a.c-0.05*a.atr&&b.c<a.o&&x.up&&x.c>a.o&&clT(c,i-2)<0},
+ insidedown:(c,i)=>{const a=c[i-2],b=c[i-1],x=c[i];return a.up&&a.b>=0.6*a.atr&&b.dn&&b.o<=a.c+0.05*a.atr&&b.c>a.o&&x.dn&&x.c<a.o&&clT(c,i-2)>0},
+ mdoji:(c,i)=>{const a=c[i-2],b=c[i-1],x=c[i];return a.dn&&a.b>=0.6*a.atr&&b.b<=0.12*b.r&&Math.max(b.o,b.c)<=a.c+0.1*a.atr&&x.up&&x.c>(a.o+a.c)/2&&clT(c,i-2)<0},
+ edoji:(c,i)=>{const a=c[i-2],b=c[i-1],x=c[i];return a.up&&a.b>=0.6*a.atr&&b.b<=0.12*b.r&&Math.min(b.o,b.c)>=a.c-0.1*a.atr&&x.dn&&x.c<(a.o+a.c)/2&&clT(c,i-2)>0},
+ rising3:(c,i)=>{if(i<4)return false;const a=c[i-4],m=[c[i-3],c[i-2],c[i-1]],x=c[i];return a.up&&a.b>=0.7*a.atr&&m.every(k=>k.b<=0.6*a.b&&k.h<=a.h+0.1*a.atr&&k.l>=a.l-0.1*a.atr&&k.c<=a.c+0.05*a.atr)&&x.up&&x.c>a.c&&x.b>=0.6*a.atr},
+ falling3:(c,i)=>{if(i<4)return false;const a=c[i-4],m=[c[i-3],c[i-2],c[i-1]],x=c[i];return a.dn&&a.b>=0.7*a.atr&&m.every(k=>k.b<=0.6*a.b&&k.h<=a.h+0.1*a.atr&&k.l>=a.l-0.1*a.atr&&k.c>=a.c-0.05*a.atr)&&x.dn&&x.c<a.c&&x.b>=0.6*a.atr}
+};
+const CLH=[1,3,5];
+function clStats(cs){clPrep(cs);const n=cs.length,out={},base={};
+  CLH.forEach(h=>{let up=0,k=0;for(let i=0;i<n-h;i++){if(cs[i].day!==cs[i+h].day)continue;k++;if(cs[i+h].c>cs[i].c)up++}base[h]=k?up/k*100:50});
+  PATS.forEach(p=>{const f=DET[p.id],occ=[];for(let i=6;i<n;i++){let ok=false;try{ok=f(cs,i)}catch(e){}if(ok)occ.push(i)}
+    const st={n:occ.length,occ:occ,h:{}},sg=p.bias==='bear'?-1:1;
+    CLH.forEach(h=>{let w=0,k=0,mv=0,up=0,big=0;occ.forEach(i=>{if(i+h>=n||cs[i+h].day!==cs[i].day)return;k++;const m=(cs[i+h].c-cs[i].c)/cs[i].c*100;if(m>0)up++;if(sg*m>0)w++;mv+=sg*m;if(Math.abs(cs[i+h].c-cs[i].c)>cs[i].atr)big++});
+      st.h[h]={k:k,win:k?w/k*100:0,up:k?up/k*100:0,down:k?100-up/k*100:0,mv:k?mv/k:0,big:k?big/k*100:0,base:p.bias==='bear'?100-base[h]:base[h],baseUp:base[h]}});
+    out[p.id]=st});
+  return out}
+async function clLoadIx(ix){
+  if(CL.data[ix])return CL.data[ix];
+  let cs=null,real=false;const key=['nifty','banknifty','sensex'][ix]||'nifty';
+  try{const j=await api('hist?ix='+key);if(j&&j.candles&&j.candles.length>150){cs=j.candles.map(c=>({t:String(c.t).slice(0,16),o:+c.o,h:+c.h,l:+c.l,c:+c.c}));real=true}}catch(e){}
+  if(!cs)cs=clDemo(ix);
+  const D={ix:ix,real:real,cs:cs,name:INDICES[ix].name,from:cs[0].t.slice(0,10),to:cs[cs.length-1].t.slice(0,10)};D.st=clStats(cs);CL.data[ix]=D;return D}
+function clVerdict(p,st){const h=st.h[3],n=h.k,f0=x=>Math.round(x);
+  if(n<8)return{code:'small',t:'Sample chhota: sirf '+n+' baar naapa ja saka. Is mahine ke naam par is pattern ko pakka nahi maan sakte.',v:'इस महीने में यह पैटर्न सिर्फ़ '+n+' बार नापा जा सका, इसलिए नतीजा पक्का नहीं माना जा सकता। इसे सिर्फ़ एक संकेत की तरह देखो। यह पुराना रिकॉर्ड है, भविष्य की गारंटी नहीं।'};
+  if(p.bias==='neutral')return{code:'neutral',t:'Ye direction nahi batata. Agli 3 candle mein upar '+f0(h.up)+'% aur neeche '+f0(h.down)+'% baar gaya. Badi hilchal '+f0(h.big)+'% baar hui. Purana record hai, guarantee nahi.',v:'यह पैटर्न दिशा नहीं बताता। अगली तीन कैंडल में '+f0(h.up)+' प्रतिशत बार ऊपर और '+f0(h.down)+' प्रतिशत बार नीचे गया। यह पुराना रिकॉर्ड है, भविष्य की गारंटी नहीं।'};
+  const e=h.win-h.base,A=f0(h.win),B=f0(h.base);
+  if(e>=8)return{code:'good',t:'Is mahine thoda behtar raha: '+A+'% baar asar dikha, jabki normal candle par '+B+'% hota hai. Phir bhi ye purana record hai, guarantee nahi.',v:'इस महीने यह थोड़ा बेहतर रहा। '+n+' में से '+A+' प्रतिशत बार असर दिखा, जबकि सामान्य कैंडल पर '+B+' प्रतिशत होता है। फिर भी यह पुराना रिकॉर्ड है, भविष्य की गारंटी नहीं।'};
+  if(e<=-8)return{code:'bad',t:'Is mahine ulta chala: sirf '+A+'% baar asar dikha, normal candle par '+B+'% hota hai. Isliye akele pattern par bharosa mat karo.',v:'इस महीने यह उल्टा चला। सिर्फ़ '+A+' प्रतिशत बार असर दिखा, जबकि सामान्य कैंडल पर '+B+' प्रतिशत होता है। इसलिए अकेले पैटर्न पर भरोसा मत करो।'};
+  return{code:'flat',t:'Lagbhag coin-flip: '+A+'% baar asar dikha, normal candle par '+B+'%. Matlab pattern akela kaafi nahi, stop-loss aur risk management zaroori hai.',v:'यह लगभग सिक्का उछालने जैसा रहा। '+A+' प्रतिशत बार असर दिखा, जबकि सामान्य कैंडल पर '+B+' प्रतिशत होता है। मतलब पैटर्न अकेला काफ़ी नहीं है। स्टॉप-लॉस और रिस्क मैनेजमेंट ज़रूरी है।'}}
+/* ===== drawing ===== */
+function clSvg(cs,o){o=o||{};const W=o.w||300,Hh=o.h||150,pad=10,n=cs.length;let lo=Infinity,hi=-Infinity;cs.forEach(c=>{lo=Math.min(lo,c.l);hi=Math.max(hi,c.h)});if(o.lo!=null){lo=o.lo;hi=o.hi}
+  const sy=v=>Hh-pad-(v-lo)/((hi-lo)||1)*(Hh-2*pad),slot=(W-2*pad)/n,bw=Math.min(22,slot*0.6);let g='';
+  (o.rects||[]).forEach(r=>{g+='<rect x="'+(pad+r.a*slot)+'" y="2" width="'+((r.b-r.a+1)*slot)+'" height="'+(Hh-4)+'" fill="'+r.f+'" rx="6"/>'});
+  cs.forEach((c,k)=>{const x=pad+k*slot+slot/2,col=c.c>=c.o?'#16A34A':'#DC2626';
+    g+='<line x1="'+x+'" x2="'+x+'" y1="'+sy(c.h)+'" y2="'+sy(c.l)+'" stroke="'+col+'" stroke-width="2"/>';
+    const y1=sy(Math.max(c.o,c.c)),y2=sy(Math.min(c.o,c.c));g+='<rect x="'+(x-bw/2)+'" y="'+y1+'" width="'+bw+'" height="'+Math.max(2,y2-y1)+'" fill="'+col+'" rx="2"/>'});
+  if(o.line!=null)g+='<line x1="0" x2="'+W+'" y1="'+sy(o.line)+'" y2="'+sy(o.line)+'" stroke="#2563EB" stroke-dasharray="4 3" stroke-width="1.5"/>';
+  return '<svg viewBox="0 0 '+W+' '+Hh+'" style="width:100%;height:auto;display:block" role="img" aria-label="candlestick chart">'+g+'</svg>'}
+function clShape(p){const ctx=(CTX[p.ctx]||[]).map(r=>({o:r[0],h:r[1],l:r[2],c:r[3]})),sh=p.shape.map(r=>({o:r[0],h:r[1],l:r[2],c:r[3]}));
+  return clSvg(ctx.concat(sh),{lo:0,hi:105,w:300,h:150,rects:[{a:ctx.length,b:ctx.length+sh.length-1,f:'rgba(250,204,21,.28)'}]})}
+function clOccSvg(D,p,i){const cs=D.cs,k=p.shape.length,s=i-(k-1);let d0=i,d1=i;while(d0>0&&cs[d0-1].day===cs[i].day)d0--;while(d1<cs.length-1&&cs[d1+1].day===cs[i].day)d1++;
+  const a=Math.max(d0,s-9),b=Math.min(d1,i+6),w=cs.slice(a,b+1),rects=[{a:s-a,b:i-a,f:'rgba(250,204,21,.30)'}];const e3=Math.min(i+3,d1);if(e3>i)rects.push({a:i+1-a,b:e3-a,f:'rgba(37,99,235,.10)'});
+  return clSvg(w,{w:320,h:170,rects:rects,line:cs[i].c})}
+function clOccRes(D,p,i){const cs=D.cs;if(i+3>=cs.length||cs[i+3].day!==cs[i].day)return null;const m=(cs[i+3].c-cs[i].c)/cs[i].c*100,sg=p.bias==='bear'?-1:1;return{m:m,ok:p.bias==='neutral'?null:sg*m>0}}
+const clDate=t=>{const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return +t.slice(8,10)+' '+M[+t.slice(5,7)-1]+' '+t.slice(11,16)};
+
+/* ===== Candle Lab: screens ===== */
+(function(){const s=document.createElement('style');s.textContent='.cl-chip{display:inline-block;font:700 11px var(--f-display);padding:3px 9px;border-radius:999px;margin-right:6px;vertical-align:2px}.cl-bull{background:#DCFCE7;color:#166534}.cl-bear{background:#FEE2E2;color:#991B1B}.cl-neu{background:#E2E8F0;color:#334155}.cl-occ{display:flex;gap:6px;overflow:auto;padding:4px 0 8px}.cl-occ button{white-space:nowrap;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 10px;font:600 12px var(--f-display);color:var(--ink-2)}.cl-occ button.on{background:var(--ink);color:#fff}.cl-bar{display:grid;grid-template-columns:86px 1fr 44px;gap:8px;align-items:center;font-size:12.5px;margin:6px 0}.cl-bar i{display:block;height:10px;border-radius:6px;background:var(--grad)}.cl-bar i.b{background:#CBD5E1}.cl-opt{display:block;width:100%;text-align:left;margin:6px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:600 14px var(--f-display);color:var(--ink)}.cl-opt.ok{background:#DCFCE7;border-color:#16A34A}.cl-opt.no{background:#FEE2E2;border-color:#DC2626}.cl-dots{display:flex;gap:6px;margin:6px 0 10px}.cl-dots b{flex:1;height:5px;border-radius:3px;background:var(--surface-2)}.cl-dots b.on{background:var(--a)}.cl-note{font-size:12px;color:var(--ink-3);line-height:1.5;margin-top:8px}.cl-tz{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}.cl-tz small{grid-column:1/-1;color:var(--ink-3)}.g-hero .cl-tz{border-color:rgba(255,255,255,.3)}.g-hero .cl-tz small{color:rgba(255,255,255,.8)}';document.head.appendChild(s)})();
+const clBias=p=>'<span class="cl-chip '+(p.bias==='bull'?'cl-bull':p.bias==='bear'?'cl-bear':'cl-neu')+'">'+(p.bias==='bull'?'Tezi ka ishara':p.bias==='bear'?'Mandi ka ishara':'Direction nahi')+'</span>';
+const clD=()=>CL.data[state.ix];
+function clSrcNote(D){if(!D)return '';return '<p class="cl-note">'+(D.real?'Data: '+esc2(D.name)+' · 15 min candles · '+D.from+' se '+D.to+' (pichhle ~1 mahine ka record).':'<b>Demo data:</b> ye practice series hai (22 trading din, 15 min), asli bazaar ka record nahi. Stats sirf samajhne ke liye hain.')+'</p>'}
+function clLocked(){return PATS.map((p,i)=>({p:p,n:i+1})).filter(x=>x.n>10)}
+function clTeaser(D,upto){const L=clLocked().slice(0,upto||3);return '<div class="card g-hero"><div class="eyebrow">Aage aur 20 patterns baaki hain</div><h2>Sabse bade patterns abhi aane hain</h2><p style="font-size:13.5px;line-height:1.6;margin:0 0 8px">Engulfing, Morning Star, Three Soldiers jaise patterns ka poora backtest tayyar hai. Dekho is mahine kaun kitni baar bana:</p>'+L.map(x=>'<div class="cl-tz"><b>'+x.n+'. '+esc2(x.p.hi)+'</b><span>'+(D?D.st[x.p.id].n+' baar bana':'')+'</span><small>Result: 🔒 poora course mein khulega</small></div>').join('')+'</div>'}
+function clWall(D){if(!WALLSEEN){WALLSEEN=true;ev('paywall_view')}
+  return '<div class="card g-hero"><div class="eyebrow">Basic 10 patterns poore</div><h2>Aage ke 20 pro patterns unlock karo</h2><p style="font-size:13.5px;line-height:1.6;margin:0 0 6px">Poore 30 patterns padhne ke baad tum har candle ko pehchanoge aur ye bhi jaanoge ki wo pichhle mahine kitni baar kaam ki aur kitni baar nahi. Ye sab poore course ke ₹699 mein shamil hai.</p>'+(D?clLocked().map(x=>'<div class="cl-tz"><b>'+x.n+'. '+esc2(x.p.hi)+'</b><span>'+D.st[x.p.id].n+' baar bana</span><small>🔒 Backtest result paid mein</small></div>').join(''):'')+'<button class="btn ln-w" type="button" data-ln="pay" data-plan="course" style="background:#fff;color:var(--a);margin-top:12px;display:block;width:100%">₹699 mein poora course lo (ek baar)</button><p id="payMsg" style="font-size:12.5px;margin:6px 0 0"></p><p style="font-size:12px;opacity:.9;margin:8px 0 0">Secure payment: Kiwtech (Arshit Traders) · Razorpay</p><details style="margin-top:10px"><summary style="font-size:13px;cursor:pointer">Pehle se kharida hai ya code hai?</summary><input id="payCode" placeholder="License key / Payment ID / Unlock code" autocomplete="off" style="width:100%;padding:12px;border-radius:12px;border:0;font-size:15px;box-sizing:border-box;margin-top:8px"><button class="btn ln-w" type="button" data-ln="unlock" style="margin-top:8px;background:rgba(255,255,255,.2);color:#fff">Unlock / Restore</button></details></div>'}
+function clCard(){const dn=clDoneN();return '<div class="card lab-card"><div class="eyebrow">Naya · '+dn+' / 30</div><h2 style="font-size:17px;margin:4px 0 6px">Candle Lab</h2><p class="lead" style="margin:0 0 10px">30 candle patterns: pehchano, dekho pichhle 1 mahine mein kahan bani aur uske baad kya hua (backtest). Basic 10 free.</p><button class="btn ln-w" type="button" data-cl="enter">Candle Lab kholo</button></div>'}
+function clHome(){const D=clD(),dn=clDoneN(),nx=Math.min(30,dn+1);
+  let h='<div><button class="btn ghost ln-w" type="button" data-cl="exit" style="width:auto;padding:0 14px;min-height:36px">← Tutorial</button><h2 style="font-size:20px;margin-top:10px">Candle Lab</h2><p class="lead" style="margin-top:4px">30 candle patterns: pehle samjho, phir dekho pichhle 1 mahine mein kahan bani aur uske baad kya hua. Basic 10 free hain.</p></div>';
+  if(!D)return h+'<div class="card"><p class="empty">Candle data load ho raha hai...</p></div>';
+  h+=clSrcNote(D);
+  if(dn>=30)h+='<div class="card g-hero"><div class="eyebrow">Candle Lab poora · 30 / 30</div><h2>Badhai ho!</h2><p style="font-size:13.5px;line-height:1.6">Tumne saare 30 candle patterns padh liye. Ab har candle ko backtest ke saath dekhna aata hai.</p></div>';
+  else if(!clOpenOK(nx))h+=clWall(D);
+  else h+='<div class="card g-hero"><div class="eyebrow">Progress · '+dn+' / 30</div><h2>'+nx+'. '+esc2(PATS[nx-1].hi)+'</h2><div class="g-bar"><i style="width:'+(dn/30*100)+'%"></i></div><button class="btn ln-w" type="button" data-cl="open" data-n="'+nx+'" style="background:#fff;color:var(--a);margin-top:14px">Pattern '+nx+' shuru karo</button></div>';
+  if(!PAID&&dn>=8&&dn<10)h+=clTeaser(D,3);
+  const G=[['Single candle (1 se 10) · FREE',1,10],['Do candle (11 se 20)',11,20],['Teen ya zyada candle (21 se 30)',21,30]];
+  G.forEach(g=>{h+='<div class="card"><div class="eyebrow">'+g[0]+'</div>';for(let n=g[1];n<=g[2];n++){const ok=n<=dn,pw=n>10&&!PAID,cur=n===dn+1,lk=n>dn+1||(pw&&!ok);
+    h+='<button class="lrow2'+(ok?' ok':'')+(cur&&!pw?' cur':'')+'" type="button" '+(lk?'disabled':'data-cl="open" data-n="'+n+'"')+'><b>'+(ok?'✓':n)+'</b><span>'+esc2(PATS[n-1].hi)+'</span><small>'+(ok?'Dekho':pw?'Paid 🔒':lk?'Lock':'Agla')+'</small></button>'}
+    h+='</div>'});
+  return h+'<p class="cl-note">Candle patterns sirf shiksha ke liye hain. Backtest purana record hai, future ki guarantee ya trade ki salah nahi.</p>'}
+function clDots(){let d='<div class="cl-dots">';for(let i=0;i<5;i++)d+='<b class="'+(i<=CL.s?'on':'')+'"></b>';return d+'</div>'}
+function clNav(back,next,nl){return '<div style="display:flex;gap:8px;margin-top:12px">'+(back?'<button class="btn ghost ln-w" type="button" data-cl="prev" style="flex:1">Peeche</button>':'')+(next?'<button class="btn ln-w" type="button" data-cl="next" style="flex:2">'+(nl||'Aage')+'</button>':'')+'</div>'}
+function clPat(){const n=CL.n,p=PATS[n-1],D=clD();if(!D)return '<div class="card"><p class="empty">Candle data load ho raha hai...</p></div>';const st=D.st[p.id];let h='';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center"><button class="btn ghost ln-w" type="button" data-cl="home" style="width:auto;padding:0 14px;min-height:36px">← Saari patterns</button><span class="cl-note" style="margin:0">'+n+' / 30</span></div>'+clDots();
+  if(CL.s===0){h+='<div class="card"><div class="eyebrow">Pattern '+n+' / 30</div><h2 style="font-size:21px;margin:4px 0">'+esc2(p.hi)+' <small style="font-weight:500;color:var(--ink-3)">'+p.hd+'</small></h2><div>'+clBias(p)+'<span class="cl-chip cl-neu">'+p.shape.length+' candle</span></div><div style="margin:10px 0;background:var(--surface-2);border-radius:14px;padding:6px">'+clShape(p)+'</div><p class="lead" style="margin:0">'+esc2(p.d)+'</p><button class="btn ghost ln-w" type="button" data-cl="say" style="margin-top:10px">🔊 Guru se suno</button>'+(n===9&&!PAID?'<div class="note" style="margin-top:10px">Aage 21 aur patterns baaki hain: Engulfing, Stars, Soldiers... aur har ka backtest.</div>':'')+'</div>'+clNav(false,true)}
+  else if(CL.s===1){h+='<div class="card"><div class="eyebrow">Pehchaan ka rule</div><h2 style="font-size:18px;margin:4px 0 8px">'+esc2(p.hi)+' kaise pehchanein</h2><div style="background:var(--surface-2);border-radius:14px;padding:6px;margin-bottom:10px">'+clShape(p)+'</div><p class="lead" style="margin:0 0 8px"><b>Rule:</b> '+esc2(p.rule)+'</p><div class="note"><b>Dhyan rakho:</b> '+esc2(p.trap)+'</div><p class="cl-note">App is rule se 15-min candles par pattern khud dhoondhta hai. Peeli patti = pattern ki candles.</p></div>'+clNav(true,true)}
+  else if(CL.s===2){const occ=st.occ.slice().reverse(),sel=Math.min(CL.sel,Math.max(0,occ.length-1));
+    h+='<div class="card"><div class="eyebrow">Pichhle 1 mahine mein kahan bani</div><h2 style="font-size:18px;margin:4px 0 6px">'+esc2(p.hi)+': '+st.n+' baar</h2>'+clSrcNote(D);
+    if(!occ.length)h+='<p class="lead">Is data mein ye pattern bani hi nahi. Ye rare pattern hai, isliye kabhi kabhi poore mahine mein nahi dikhta.</p>';
+    else{const i=occ[sel],r=clOccRes(D,p,i);h+='<div class="cl-occ">'+occ.slice(0,16).map((x,k)=>'<button type="button" data-cl="sel" data-k="'+k+'" class="'+(k===sel?'on':'')+'">'+clDate(D.cs[x].t)+'</button>').join('')+'</div><div style="background:var(--surface-2);border-radius:14px;padding:6px">'+clOccSvg(D,p,i)+'</div><p class="lead" style="margin:8px 0 0">'+(r?'Pattern ke baad agli 3 candle (45 min): <b style="color:'+(r.ok===false?'#DC2626':r.ok?'#16A34A':'inherit')+'">'+(r.m>=0?'+':'')+r.m.toFixed(2)+'%</b> '+(r.ok===null?(r.m>=0?'↑':'↓'):r.ok?'✓ ishara sahi nikla':'✗ ishara galat nikla'):'Is din ke baaki candles kam the, isliye result nahi naapa gaya.')+'</p><p class="cl-note">Peela hissa = pattern, neela hissa = uske baad ki 3 candle, neeli line = pattern ka close.</p>'}
+    h+='</div>'+clNav(true,true)}
+  else if(CL.s===3){const v=clVerdict(p,st),hh=st.h;
+    h+='<div class="card"><div class="eyebrow">Backtest: kitni baar kaam kiya</div><h2 style="font-size:18px;margin:4px 0 4px">'+esc2(p.hi)+' · '+st.n+' baar bana</h2>'+clSrcNote(D);
+    h+='<div style="margin-top:6px">';CLH.forEach(k=>{const x=hh[k],val=p.bias==='neutral'?x.up:x.win,bs=p.bias==='neutral'?x.baseUp:x.base;h+='<div class="cl-bar"><span>Agli '+k+' candle</span><div><i style="width:'+Math.max(2,val)+'%"></i><i class="b" style="margin-top:3px;width:'+Math.max(2,bs)+'%"></i></div><b>'+Math.round(val)+'%</b></div>'});
+    h+='</div><p class="cl-note" style="margin-top:2px">Neeli patti = is pattern ke baad '+(p.bias==='neutral'?'upar gaya':'ishara sahi nikla')+'. Dhusar patti = normal candle ke baad ka aam % (compare ke liye). Naapa gaya: ('+hh[3].k+' baar, 3 candle ke liye)</p>';
+    h+='<div class="note" style="margin-top:10px"><b>'+(v.code==='good'?'Thoda behtar':v.code==='bad'?'Ulta chala':v.code==='flat'?'Coin-flip jaisa':v.code==='small'?'Sample chhota':'Wait ka ishara')+':</b> '+esc2(v.t)+'</div>'+(p.bias!=='neutral'&&hh[3].k>=8?'<p class="cl-note">Average move (agli 3 candle, ishara ki disha mein): '+(hh[3].mv>=0?'+':'')+hh[3].mv.toFixed(2)+'%</p>':'')+'<p class="cl-note">Ye sirf purana record hai. Isse kisi trade ki salah ya future ki guarantee nahi milti.</p></div>'+clNav(true,true,'Chhota quiz')}
+  else{h+=clQuiz(p,D)}
+  return h}
+function clQs(p){const rot=(a,k)=>{const r=a.map((t,i)=>({t:t,i:i})),m=k%a.length,o=r.slice(m).concat(r.slice(0,m));return o},n=CL.n,ans=p.bias==='bull'?0:p.bias==='bear'?1:2;
+  const base=[{q:p.hi+' ka basic matlab kya hai?',o:['Tezi (upar jaane) ki sambhavna badhti hai','Mandi (neeche jaane) ki sambhavna badhti hai','Direction ka signal nahi, sirf ruk jaane ya hilchal ka ishara'],a:ans},
+  {q:'Is pattern par trade se pehle sabse zaroori kya hai?',o:['Stop-loss aur chhota lot pehle se tay karna','Bina stop-loss ke bada lot lena','Sirf pattern ka naam yaad rakhna'],a:0},
+  [{q:'Backtest mein sample (kitni baar bana) chhota ho to kya karein?',o:['Result pakka maan lo','Result ko sirf ek sanket maano, saboot nahi','Isi par poori capital lagao'],a:1},{q:'Pattern ka win% normal candle ke lagbhag barabar ho to matlab?',o:['Pattern akela kaafi nahi, risk management zaroori','Pattern guaranteed kaam karta hai','Lot double kar do'],a:0},{q:'Backtest ka purana record kya batata hai?',o:['Bhavishya ki guarantee','Is data mein kya hua, bas itna','Kal kya hoga pakka'],a:1}][n%3]];
+  return base.map((b,qi)=>{const r=rot(b.o,n+qi);return{q:b.q,o:r.map(x=>x.t),a:r.findIndex(x=>x.i===b.a)}})}
+function clQuiz(p,D){if(!CL.q||CL.q.n!==CL.n)CL.q={n:CL.n,i:0,score:0,pick:null,qs:clQs(p),fin:false};const z=CL.q;let h='';
+  if(z.fin){const pass=z.score>=2,dn=clDoneN();
+    h+='<div class="card g-hero"><div class="eyebrow">Quiz result</div><h2>'+z.score+' / 3 '+(pass?'· Pass':'· Dobara koshish karo')+'</h2><p style="font-size:13.5px;line-height:1.6">'+(pass?'Pattern '+CL.n+' poora. '+(CL.n<30?'Agle pattern ka naam: '+esc2(PATS[CL.n].hi)+'.':'Saare 30 patterns poore!'):'Kam se kam 2 sahi chahiye. Pichhle step dekho aur dobara koshish karo.')+'</p>'+(pass?(CL.n<30&&clOpenOK(CL.n+1)?'<button class="btn ln-w" type="button" data-cl="open" data-n="'+(CL.n+1)+'" style="background:#fff;color:var(--a);margin-top:10px">Agla pattern</button>':''):'<button class="btn ln-w" type="button" data-cl="retry" style="background:#fff;color:var(--a);margin-top:10px">Quiz dobara</button>')+'<button class="btn ln-w" type="button" data-cl="home" style="background:rgba(255,255,255,.2);color:#fff;margin-top:8px">Saari patterns</button></div>';
+    if(pass&&!PAID&&CL.n===9)h+=clTeaser(D,3);
+    if(pass&&!PAID&&CL.n===10)h+=clWall(D);
+    return h}
+  const q=z.qs[z.i];h+='<div class="card"><div class="eyebrow">Sawal '+(z.i+1)+' / 3</div><h2 style="font-size:17px;margin:6px 0 10px">'+esc2(q.q)+'</h2>'+q.o.map((t,k)=>'<button type="button" class="cl-opt'+(z.pick!==null?(k===q.a?' ok':k===z.pick?' no':''):'')+'" data-cl="pick" data-k="'+k+'" '+(z.pick!==null?'disabled':'')+'>'+esc2(t)+'</button>').join('')+(z.pick!==null?'<button class="btn ln-w" type="button" data-cl="qnext" style="margin-top:10px">'+(z.i<2?'Agla sawal':'Result dekho')+'</button>':'')+'</div>';return h}
+function clView(){return CL.view==='p'?clPat():clHome()}
+function clSpeak(){if(!LAUTO||CL.view!=='p')return;const p=PATS[CL.n-1];if(CL.s===0)speak(p.v,true,null,true);else if(CL.s===3){const D=clD();if(D)speak(clVerdict(p,D.st[p.id]).v,true,null,true)}else{try{stopSpeech()}catch(e){}}}
+$('v-learn').addEventListener('click',e=>{const b=e.target.closest('[data-cl]');if(!b)return;const a=b.dataset.cl,n=+b.dataset.n;
+  const R=()=>{lnRender();window.scrollTo(0,0)};
+  if(a==='enter'){L_.view='cl';CL.view='home';R();clLoadIx(state.ix).then(()=>{if(L_.view==='cl')lnRender()});return}
+  if(a==='exit'){try{stopSpeech()}catch(x){}L_.view='home';R();return}
+  if(a==='home'){try{stopSpeech()}catch(x){}CL.view='home';R();return}
+  if(a==='open'){if(!clOpenOK(n))return;CL.n=n;CL.s=0;CL.sel=0;CL.q=null;CL.view='p';ev('cl_start',n);R();clSpeak();return}
+  if(a==='next'){CL.s=Math.min(4,CL.s+1);R();clSpeak();return}
+  if(a==='prev'){CL.s=Math.max(0,CL.s-1);R();clSpeak();return}
+  if(a==='say'){const p=PATS[CL.n-1];speak(p.v,true,null,true);return}
+  if(a==='sel'){CL.sel=+b.dataset.k;lnRender();return}
+  if(a==='retry'){CL.q=null;lnRender();return}
+  if(a==='pick'&&CL.q&&CL.q.pick===null){const q=CL.q;q.pick=+b.dataset.k;if(q.pick===q.qs[q.i].a)q.score++;lnRender();return}
+  if(a==='qnext'&&CL.q){const q=CL.q;if(q.i<2){q.i++;q.pick=null}else{q.fin=true;if(q.score>=2&&CL.n===clDoneN()+1){CL.done[CL.n]=true;clSave();ev('cl_done',CL.n)}else if(q.score>=2&&!CL.done[CL.n]){}}R();return}
+});
 
 syncGuru();navRefresh();
 route();

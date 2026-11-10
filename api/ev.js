@@ -2,7 +2,7 @@
 const { send } = require('./_u');
 const kv = require('./_kv');
 const limited = require('./_rl');
-const OK = new Set(['land_view', 'chat_msg', 'dl_click', 'app_open', 'lesson_start', 'lesson_done', 'quiz_pass', 'paywall_view', 'pay_click', 'paid', 'guru_q', 'guru_limit']);
+const OK = new Set(['land_view', 'chat_msg', 'dl_click', 'app_open', 'lesson_start', 'lesson_done', 'quiz_pass', 'paywall_view', 'pay_click', 'paid', 'guru_q', 'guru_limit', 'cl_start', 'cl_done']);
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204, {});
   if (!kv.on()) return send(res, 200, { ok: false, off: true });
@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
       ['INCR', 'ev:' + e], ['INCR', 'evd:' + d + ':' + e], ['SADD', 's:' + e, id], ['SADD', 'sd:' + d + ':' + e, id],
       ['HSETNX', 'u:' + id, 'first', now], ['HSET', 'u:' + id, 'last', now], ['HSETNX', 'u:' + id, 'src', src], ['SADD', 'users', id]
     ];
-    if (n && (e === 'lesson_start' || e === 'lesson_done' || e === 'quiz_pass')) {
+    if (n && (e === 'lesson_start' || e === 'lesson_done' || e === 'quiz_pass' || e === 'cl_start' || e === 'cl_done')) {
       c.push(['SADD', 's:' + e + ':' + n, id]);
       if (e === 'lesson_done') c.push(['HSET', 'u:' + id, 'lesson', n]);
     }
