@@ -1490,6 +1490,7 @@ function liveBadge(err){
   const el=document.querySelector('.demo-chip');if(!el)return;
   if(!LIVE.on)return;
   if(err&&LIVE.fail>=3){el.textContent='LIVE · ERROR';el.style.background='#FCE8EB';el.style.color='#D92D43';el.title=err;return}
+  if(LIVE.mkt&&!LIVE.mkt.open){el.textContent=LIVE.mkt.holiday?'BAZAAR BAND · CHHUTTI':'BAZAAR BAND';el.style.background='#FFF4DB';el.style.color='#8A5A00';el.title=(LIVE.mkt.holiday||'Market band hai')+'. Ye aakhri bhaav hai.';return}
   const age=(Date.now()-LIVE.last)/1000,t=new Date(LIVE.last).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   el.textContent='LIVE '+t;el.style.background='#E2F5EC';el.style.color='#087A52';el.title='Upstox data, '+Math.round(age)+'s pehle';
 }
@@ -1557,9 +1558,38 @@ async function liveSlow(){
     KEYS.forEach(k=>liveSeed(k,q.ix[k]));
     LIVE.on=true;LIVE.last=Date.now();liveBadge();
     if(typeof chRefreshCtl==='function')chRefreshCtl();
-    livePoll();liveSlow();
+    livePoll();liveSlow();liveMarketLoop();
   }catch(e){LIVE.on=false}
 })();
+
+/* ---- live market status + real news ---- */
+async function liveMarketLoop(){
+  try{LIVE.mkt=await api('market');liveBadge()}catch(e){}
+  setTimeout(liveMarketLoop,60000);
+}
+const NSK='sr_newsseen_v1';
+function newsSeen(){try{return new Set(JSON.parse(localStorage.getItem(NSK)||'[]'))}catch(e){return new Set()}}
+function newsMark(h){try{const a=[...newsSeen(),h].slice(-200);localStorage.setItem(NSK,JSON.stringify(a))}catch(e){}}
+async function liveNews(manual){
+  try{
+    if(!LIVE.news||Date.now()-LIVE.newsAt>300000){const j=await api('news');LIVE.news=j.items||[];LIVE.newsAt=Date.now()}
+    const seen=newsSeen();
+    let it=LIVE.news.find(n=>!seen.has(n.heading));
+    if(!it){if(manual)say2({hi:'अभी कोई नई ख़बर नहीं है। जब आएगी, मैं बता दूँगा।',en:'No new news right now. I will tell you when something comes.'});return}
+    newsMark(it.heading);
+    const o={auto:!manual},head='ख़बर ('+(it.sym||'बाज़ार')+'): '+it.heading+'। ';
+    if(AI.on){
+      const s0=S[state.ix];
+      try{
+        const r=await fetch('/api/guru',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:'Ye khabar beginner ko samjhao: kya hui aur options trader ko kin baaton par dhyan dena chahiye. Prediction ya salah mat do. Khabar: '+it.heading+'. '+it.summary,ctx:{index:INDICES[state.ix].name,price:Math.round(s0.price),data:'live'},lang:G_.lang,hist:[]})});
+        const d=await r.json();
+        if(d&&d.ok&&d.a){say2({hi:head+d.a,en:d.a},o);return}
+      }catch(e){}
+    }
+    const sm=it.summary?it.summary.slice(0,220):'';
+    say2({hi:head+sm+(sm?'। ':'')+'यह सिर्फ़ जानकारी है, सलाह नहीं।',en:'News ('+(it.sym||'market')+'): '+it.heading+'. '+sm+' This is information, not advice.'},o);
+  }catch(e){if(manual)say2({hi:'ख़बर अभी नहीं आ पाई। थोड़ी देर बाद कोशिश करो।',en:'Could not fetch news right now. Try again shortly.'})}
+}
 
 const SECS=['live','mood','scorecard','chain','btst','zero-hero','paper','guru','learn','risk'];
 function curSec(){return state.tab==='ideas'?state.idea:state.tab}
@@ -1575,6 +1605,7 @@ function renderCur(){
   if(c==='learn'&&typeof lnRender==='function')lnRender();
 }
 function route(){
+  try{if(typeof stopSpeech==='function')stopSpeech()}catch(e){}
   let h=(location.hash||'#live').slice(1);
   if(h==='btst'||h==='zero-hero'){state.idea=h;h='ideas'}
   if(!TABS.includes(h))h='live';
@@ -1807,19 +1838,26 @@ function maleScore(v){const s=(v.name||'')+' '+(v.voiceURI||'');return V_FEM.tes
 function hiVoices(){return VOICES.filter(v=>vlang(v).indexOf('hi')===0).sort((a,b)=>maleScore(b)-maleScore(a))}
 function enVoice(){const e=VOICES.filter(v=>vlang(v).indexOf('en')===0).sort((a,b)=>maleScore(b)-maleScore(a));return e.find(v=>vlang(v)==='en-in')||e[0]||null}
 function pickVoice(){const h=hiVoices();return h.length?h[VP.vi%h.length]:null}
+function stopSpeech(){
+  AI.seq=(AI.seq||0)+1;
+  try{if(AI.ctl){AI.ctl.abort();AI.ctl=null}}catch(e){}
+  try{if(AI.au){AI.au.pause();AI.au=null}}catch(e){}
+  try{window.speechSynthesis&&window.speechSynthesis.cancel()}catch(e){}
+}
 function speak(text,force){
   if(!text)return;
   if(AI.on&&!AI.fail){
     if(!force&&!G_.voice)return;
     if(!(navigator.userActivation&&navigator.userActivation.hasBeenActive))return;
-    try{window.speechSynthesis&&window.speechSynthesis.cancel()}catch(e){}
-    try{if(AI.au){AI.au.pause();AI.au=null}}catch(e){}
-    const t=String(text).slice(0,600),play=u=>{try{AI.au=new Audio(u);AI.au.playbackRate=VP.sp;AI.au.play().catch(()=>speakLocal(text,force))}catch(e){speakLocal(text,force)}};
+    stopSpeech();
+    const my=AI.seq,t=String(text).slice(0,600);
+    const play=u=>{if(my!==AI.seq)return;try{const a=new Audio(u);a.playbackRate=VP.sp;AI.au=a;a.play().catch(()=>{if(my===AI.seq)speakLocal(text,force)})}catch(e){speakLocal(text,force)}};
     if(AI.cache.has(t))return play(AI.cache.get(t));
-    fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})})
+    AI.ctl=(typeof AbortController!=='undefined')?new AbortController():null;
+    fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t}),signal:AI.ctl?AI.ctl.signal:undefined})
       .then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()})
       .then(b=>{const u=URL.createObjectURL(b);AI.cache.set(t,u);play(u)})
-      .catch(()=>{AI.fail=(AI.fail||0)+1;if(AI.fail>=3)AI.on=false;speakLocal(text,force)});
+      .catch(e=>{if(my!==AI.seq)return;AI.fail=(AI.fail||0)+1;if(AI.fail>=3)AI.on=false;speakLocal(text,force)});
     return;
   }
   speakLocal(text,force);
@@ -1849,7 +1887,7 @@ function say2(m,o){
   G_.feed.push({w:'c',m:m,t:Date.now(),id:++G_.news+1000*0});
   if(G_.feed.length>40)G_.feed.shift();
   gUpdate();
-  if(o.speak!==false&&!(G_.autoNews&&aiBusy()))speak(rtx(m));
+  if(o.speak!==false&&!((o.auto||G_.autoNews)&&aiBusy()))speak(rtx(m));
 }
 function aiBusy(){return !!((AI.au&&!AI.au.paused&&!AI.au.ended)||Date.now()-(G_.lastAsk||0)<45000)}
 function userSays(txt){G_.feed.push({w:'u',m:txt,t:Date.now()});if(G_.feed.length>40)G_.feed.shift();gUpdate()}
@@ -2484,7 +2522,7 @@ gRender=function(feedOnly){
   $('gNote').textContent=tx({hi:'Guru sirf shiksha deta hai, khareedne-bechne ki salah nahi. Awaaz abhi phone ki apni voice hai. Lesson ka text abhi sirf Hinglish mein hai.',en:'The guru only teaches and gives no buy or sell advice. The voice is currently your phone\'s own voice. Lesson text is Hinglish only for now.'});
   const rp=$('gReport');rp.hidden=!G_.rep;if(G_.rep)rp.innerHTML=reportHtml();
 };
-const _newsTick=newsTick;newsTick=function(m){if(!tabOpen('live'))return;if(!VP.news&&m!==true)return;G_.autoNews=m!==true;try{_newsTick()}finally{G_.autoNews=false}};
+const _newsTick=newsTick;newsTick=function(m){if(!tabOpen('live'))return;if(!VP.news&&m!==true)return;if(LIVE.on){liveNews(m===true);return}G_.autoNews=m!==true;try{_newsTick()}finally{G_.autoNews=false}};
 $('v-guru').addEventListener('click',e=>{
   const smp='नमस्ते, मैं तुम्हारा गुरु हूँ। चलो सीखना शुरू करते हैं।';
   if(e.target.closest('#gVoicePick')){loadVoices();const hv=hiVoices();if(!hv.length){miniToast('Hindi voice nahi mili','Phone Settings mein Text-to-speech kholo aur Hindi voice download karo.');return}VP.vi=(VP.vi+1)%hv.length;vSave();gRender(false);speak(smp,true);return}

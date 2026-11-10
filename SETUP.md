@@ -33,3 +33,7 @@ Optional env vars: `FUT_NIFTY`, `FUT_BANKNIFTY`, `FUT_SENSEX` (futures instrumen
 4. Optional: `OPENAI_MODEL` (default gpt-4o-mini), `OPENAI_VOICE` (default onyx, male), `OPENAI_TTS_MODEL` (default gpt-4o-mini-tts).
 
 Key sirf server par rehti hai. `/api/guru` (sawaal-jawab) aur `/api/tts` (awaaz) per-IP rate limit ke saath chalte hain. Key na ho to app purane offline coach aur phone ki awaaz par chalta rahega.
+
+## Live news + market status (same Upstox token, nothing extra to set up)
+- `/api/news`: real news (last 7 days) for indices and big stocks. In live mode the Guru reads it and the AI explains it in simple Hindi. News toggle in the Guru tab turns auto-news off.
+- `/api/market`: market open/closed + holiday check. When the market is closed the badge shows "BAZAAR BAND".
