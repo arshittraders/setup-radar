@@ -1701,7 +1701,7 @@ function dmHl(h,tries){
 }
 function dmCoachHtml(){
   const st=DEMO[DM.n][DM.i],tot=DEMO[DM.n].length,last=DM.i===tot-1;
-  return '<div class="dm-top"><b>Lesson '+DM.n+' demo · '+(DM.i+1)+' / '+tot+'</b><button type="button" data-dm="stop" aria-label="Band karo">✕</button></div><p class="dm-t">'+esc2(st[3])+'</p><div class="g-row">'+(DM.i>0?'<button class="btn ghost" type="button" data-dm="prev">Peeche</button>':'')+'<button class="btn ghost" type="button" data-dm="say">Phir suno</button><button class="btn" type="button" data-dm="'+(last?'stop':'next')+'">'+(last?'Lesson par wapas':'Agla')+'</button></div>';
+  return '<div class="dm-top"><b>Lesson '+DM.n+' demo · '+(DM.i+1)+' / '+tot+'</b><button type="button" data-dm="stop" aria-label="Band karo">✕</button></div><p class="dm-t">'+esc2(st[3])+'</p><div class="g-row">'+(DM.i>0?'<button class="btn ghost" type="button" data-dm="prev">Peeche</button>':'')+'<button class="btn ghost" type="button" data-dm="say">Phir suno</button><button class="btn ghost" type="button" data-dm="auto">Auto: '+(LAUTO?'Chalu':'Band')+'</button><button class="btn" type="button" data-dm="'+(last?'stop':'next')+'">'+(last?'Lesson par wapas':'Agla')+'</button></div>';
 }
 function dmStep(){
   const st=DEMO[DM.n][DM.i];
@@ -1712,7 +1712,7 @@ function dmStep(){
     el.innerHTML=dmCoachHtml();
     document.documentElement.style.setProperty('--dmh',el.offsetHeight+'px');
     DM.h=st[2];setTimeout(()=>dmHl(st[2]),350);
-    if(LAUTO)speak(st[3],true);
+    const ii=DM.i;if(LAUTO)speak(st[3],true,()=>{if(DM.on&&DM.i===ii&&LAUTO&&ii<DEMO[DM.n].length-1){DM.i++;dmStep()}},true);
   };
   const want='#'+st[0];
   if(location.hash!==want){location.hash=want;setTimeout(go,450)}else go();
@@ -1736,7 +1736,8 @@ document.addEventListener('click',e=>{
   const a=b.dataset.dm;
   if(a==='next'&&DM.i<DEMO[DM.n].length-1){DM.i++;dmStep()}
   else if(a==='prev'&&DM.i>0){DM.i--;dmStep()}
-  else if(a==='say'){const st=DEMO[DM.n][DM.i];speak(st[3],true)}
+  else if(a==='say'){const st=DEMO[DM.n][DM.i],ii=DM.i;speak(st[3],true,()=>{if(DM.on&&DM.i===ii&&LAUTO&&ii<DEMO[DM.n].length-1){DM.i++;dmStep()}},true)}
+  else if(a==='auto'){LAUTO=!LAUTO;try{localStorage.setItem(LAK,LAUTO?'1':'0')}catch(e){}if(!LAUTO)try{stopSpeech()}catch(e){}const el=document.getElementById('dmCoach');if(el)el.innerHTML=dmCoachHtml();if(LAUTO)dmStep()}
   else if(a==='stop'){dmStop(true)}
 });
 
@@ -2128,20 +2129,29 @@ function stopSpeech(){
   try{if(AI.au){AI.au.pause();AI.au=null}}catch(e){}
   try{window.speechSynthesis&&window.speechSynthesis.cancel()}catch(e){}
 }
-function speak(text,force,cb){
+function speak(text,force,cb,strict){
   if(!text){if(cb)setTimeout(cb,300);return}
   if(AI.on&&!AI.fail){
     if(!force&&!G_.voice){if(cb)setTimeout(cb,3000);return}
     if(!(navigator.userActivation&&navigator.userActivation.hasBeenActive)){if(cb)setTimeout(cb,3000);return}
     stopSpeech();
     const my=AI.seq,t=String(text).slice(0,950);
-    const play=u=>{if(my!==AI.seq)return;try{const a=new Audio(u);a.playbackRate=VP.sp;AI.au=a;a.onended=()=>{if(my===AI.seq&&cb)setTimeout(()=>{if(my===AI.seq)cb()},900)};a.play().catch(()=>{if(my===AI.seq)speakLocal(text,force,cb)})}catch(e){speakLocal(text,force,cb)}};
+    const play=u=>{if(my!==AI.seq)return;try{const a=new Audio(u);a.playbackRate=VP.sp;AI.au=a;a.onended=()=>{if(my===AI.seq&&cb)setTimeout(()=>{if(my===AI.seq)cb()},900)};a.play().catch(()=>{if(my!==AI.seq)return;if(strict){if(cb)setTimeout(cb,3000)}else speakLocal(text,force,cb)})}catch(e){if(strict){if(cb)setTimeout(cb,3000)}else speakLocal(text,force,cb)}};
     if(AI.cache.has(t))return play(AI.cache.get(t));
     AI.ctl=(typeof AbortController!=='undefined')?new AbortController():null;
-    fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t}),signal:AI.ctl?AI.ctl.signal:undefined})
-      .then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()})
-      .then(b=>{const u=URL.createObjectURL(b);AI.cache.set(t,u);play(u)})
-      .catch(e=>{if(my!==AI.seq)return;AI.fail=(AI.fail||0)+1;if(AI.fail>=3)AI.on=false;speakLocal(text,force,cb)});
+    const go=n=>fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t}),signal:AI.ctl?AI.ctl.signal:undefined})
+      .then(r=>{if(!r.ok){const er=new Error(String(r.status));er.st=r.status;throw er}return r.blob()})
+      .then(b=>{AI.fail=0;const u=URL.createObjectURL(b);AI.cache.set(t,u);play(u)})
+      .catch(e=>{
+        if(my!==AI.seq)return;
+        if(n<2&&(e.st===429||e.st>=500||e.name==='TypeError')){setTimeout(()=>{if(my===AI.seq)go(n+1)},1800);return}
+        if(strict){
+          if(!AI.warned||Date.now()-AI.warned>60000){AI.warned=Date.now();miniToast('Awaaz abhi nahi aa pa rahi','Thodi der baad "Phir suno" dabao.')}
+          if(cb)setTimeout(cb,3000);return
+        }
+        if(e.st!==429){AI.fail=(AI.fail||0)+1;if(AI.fail>=5)AI.on=false}
+        speakLocal(text,force,cb)});
+    go(0);
     return;
   }
   speakLocal(text,force,cb);
@@ -3112,7 +3122,7 @@ function qSpeakText(z,i){const q=z.qs[i];return 'Sawal '+(i+1)+'. '+q.q+' '+q.o.
 function quizSpeak(){
   const z=L_.qz;if(!z||z.picked!==null||z.spk===z.i)return;
   z.spk=z.i;if(!LAUTO)return;
-  speak(qSpeakText(z,z.i),true);
+  speak(qSpeakText(z,z.i),true,null,true);
   if(z.i+1<z.qs.length)setTimeout(()=>ttsPrefetch(qSpeakText(z,z.i+1)),1500);
 }
 function quizVerdict(z){
@@ -3123,7 +3133,7 @@ function quizVerdict(z){
   speak(t,true,()=>{
     if(L_.qz!==z||L_.view!=='quiz'||z.i!==i||z.picked===null||!LAUTO)return;
     if(z.i<z.qs.length-1){z.i++;z.picked=null;lnRender();window.scrollTo(0,0)}else finishQuiz();
-  });
+  },true);
 }
 
 function vQuiz(){
@@ -3254,7 +3264,7 @@ let LAUTO=true;try{LAUTO=localStorage.getItem(LAK)!=='0'}catch(e){}
 function slideText(n,i){const m=window.MIS&&window.MIS[n-1]&&window.MIS[n-1][i];const a=window.LAPP&&LAPP[n];const l=LDEV[n-1];return l[i]+(m?' आसान मिसाल। '+m:'')+(a&&i===l.length-1?' '+a[2]:'')}
 function slideSpeak(force){
   if(!force&&!LAUTO)return;
-  speak(slideText(L_.n,L_.si),true);
+  speak(slideText(L_.n,L_.si),true,null,true);
   const nx=L_.si+1;if(nx<LDEV[L_.n-1].length)setTimeout(()=>ttsPrefetch(slideText(L_.n,nx)),1200);
 }
 const LAPP={1:['live','Live tab kholo','अब अपनी ऐप का लाइव टैब खोलकर देखो, डेमो बाज़ार चल रहा है।'],2:['chain','Option chain kholo','अब अपनी ऐप में चेन टैब खोलो। हर स्ट्राइक पर कॉल और पुट का दाम एक साथ दिखेगा।'],3:['chain','Chain mein lot size dekho','अब चेन टैब में निफ्टी का लॉट साइज़ देखो।'],4:['chain','Chain mein premium aur strike dekho','अब चेन टैब में ATM और दूर की स्ट्राइक का प्रीमियम देखो।'],5:['lab','Payoff Lab kholo','अब पेऑफ लैब खोलो। कॉल खरीदने और बेचने का फर्क स्लाइडर से देखो।'],6:['live','Live chart par VWAP lagao','अब लाइव टैब पर VWAP चालू करके देखो।'],7:['chain','Option chain mein OI dekho','अब चेन टैब में OI और OI का बदलाव देखो।'],8:['mood','Mood tab: PCR, support, resistance','अब मूड टैब में PCR, सपोर्ट और रेज़िस्टेंस देखो।'],9:['mood','Mood tab: VIX aur range','अब मूड टैब में VIX और एक्सपेक्टेड रेंज देखो।'],10:['mood','Mood tab: max pain','अब मूड टैब में मैक्स पेन देखो।'],11:['live','Live tab: setup alerts','अब लाइव टैब पर सेटअप अलर्ट देखो।'],12:['live','Live tab: VWAP aur OI','अब लाइव टैब पर VWAP और OI वाले सेटअप देखो।'],13:['scorecard','Scorecard kholo','अब स्कोरकार्ड टैब खोलकर पुराने सेटअप के आंकड़े देखो।'],14:['risk','Risk tab kholo','अब रिस्क टैब में अपनी पूंजी भरकर स्टॉप लॉस और लॉट निकालो।'],15:['paper','Paper trading kholo','अब पेपर टैब खोलकर पहला डेमो ट्रेड लो।'],16:['lab','Payoff Lab: theta','अब पेऑफ लैब में देखो कि समय के साथ प्रीमियम कैसे घटता है।'],17:['lab','Payoff Lab kholo','अब पेऑफ लैब खोलकर भाव और समय का असर देखो।'],18:['paper','Paper tab: Discipline Score','अब पेपर टैब में अपना डिसिप्लिन स्कोर देखो।'],19:['live','Live tab kholo','अब लाइव टैब में खबरें और गैप देखो।'],20:['ideas','Ideas tab kholo','अब आइडियाज़ टैब में BTST देखो। और टैब मेन्यू पर लाइव शुरू करने का प्लान पढ़ो।'],21:['lab','Payoff Lab: option selling','अब पेऑफ लैब में कॉल बेचने का नक्शा देखो।'],22:['chain','Chain: Hedge Lab aur margin','अब चेन टैब में हेज लैब और मार्जिन देखो।'],23:['lab','Payoff Lab: bull put spread','अब पेऑफ लैब में बुल पुट स्प्रेड चुनो।'],24:['lab','Payoff Lab: iron condor','अब पेऑफ लैब में आयरन कॉन्डोर चुनो।'],25:['paper','Paper tab kholo','अब पेपर टैब में स्टॉप लॉस के साथ ट्रेड का अभ्यास करो।'],26:['chain','Chain tab kholo','अब चेन टैब में एक्सपायरी के दिन प्रीमियम की चाल देखो।'],27:['risk','Risk tab kholo','अब रिस्क टैब में अपनी जोखिम सीमा जांचो।'],28:['mood','Mood tab kholo','अब मूड टैब देखकर कल की योजना बनाओ।'],29:['paper','Paper tab: report card','अब पेपर टैब में अपना रिपोर्ट कार्ड देखो।'],30:['guru','Guru se poochho','अब गुरु टैब में कोई भी सवाल पूछ सकते हो।']};

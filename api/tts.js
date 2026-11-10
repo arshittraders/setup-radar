@@ -5,7 +5,7 @@ const OAI = process.env.OPENAI_BASE || 'https://api.openai.com';
 module.exports = async (req, res) => {
   const key = process.env.OPENAI_API_KEY;
   if (!key) return send(res, 503, { ok: false, error: 'OPENAI_API_KEY set nahi hai' });
-  if (limited(req, 'tts', 60, 10 * 60e3)) return send(res, 429, { ok: false, error: 'rate limit' });
+  if (limited(req, 'tts', 240, 10 * 60e3)) return send(res, 429, { ok: false, error: 'rate limit' });
   try {
     let body = req.body;
     if (typeof body === 'string') body = JSON.parse(body || '{}');
