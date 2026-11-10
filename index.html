@@ -1,0 +1,1779 @@
+<title>Setup Radar</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1D4ED8">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: single-column phone app. Sticky header with the three index chips, bottom tab bar, cool-white surfaces.
+   The blue-to-teal gradient is kept for the brand mark, active states and primary actions only.
+   Green and red mean buy and sell, nothing else. Light look by choice. */
+:root{
+  --bg:#F3F6FB; --surface:#FFFFFF; --surface-2:#EAF0F8;
+  --ink:#0B1B2E; --ink-2:#44566C; --ink-3:#6B7C92; --line:#DAE3EE;
+  --a:#1D4ED8; --b:#0891B2; --grad:linear-gradient(135deg,#1D4ED8,#0891B2);
+  --up:#087A52; --up-bar:#12A874; --up-bg:#E2F5EC;
+  --down:#D92D43; --down-bar:#E5566A; --down-bg:#FCE8EB;
+  --warn:#8A5B00; --warn-bg:#FFF3D6; --warn-line:#E9B949;
+  --f-display:'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+  --f-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+h2{font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:-.01em}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:10px;padding-bottom:8px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:30px;height:30px;border-radius:9px;background:var(--grad);display:grid;place-items:center;flex:none}
+.name{font-family:var(--f-display);font-weight:800;font-size:17px;letter-spacing:-.02em}
+.head-actions{display:flex;align-items:center;gap:8px}
+.demo-chip{font:600 10px/1 var(--f-mono);letter-spacing:.08em;color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:999px;padding:6px 8px;white-space:nowrap}
+.icon-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--ink-2)}
+.icon-btn[aria-pressed="true"]{background:var(--grad);border-color:transparent;color:#fff}
+.idx-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding-bottom:10px}
+.chip{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);text-align:left;min-width:0}
+.chip .cn{font:600 12px/1.2 var(--f-display);white-space:nowrap}
+.chip .cc{font:500 11px/1.2 var(--f-mono)}
+.chip[aria-selected="true"]{background:var(--grad);border-color:transparent;color:#fff}
+.chip[aria-selected="true"] .cc{color:#fff}
+.cc.up{color:var(--up)} .cc.down{color:var(--down)}
+.chip .dot{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--down-bar);box-shadow:0 0 0 2px var(--surface)}
+
+/* layout */
+main{padding-top:14px;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+section{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.eyebrow{font:600 11px/1.2 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.lead{color:var(--ink-2);font-size:13px}
+.hero{box-shadow:0 10px 30px -18px rgba(29,78,216,.35)}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.price{font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.chg{font:600 13px/1 var(--f-mono);padding:7px 9px;border-radius:9px}
+.chg.up{color:var(--up);background:var(--up-bg)} .chg.down{color:var(--down);background:var(--down-bg)}
+svg{display:block;width:100%;height:auto;max-width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--ink-3);font-size:11px;margin-top:8px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:5px}
+.lg-line{width:14px;height:0;border-top:2px solid var(--a)}
+.lg-vwap{width:14px;height:0;border-top:2px dashed #B7791F}
+.lg-dot{width:8px;height:8px;border-radius:50%;background:var(--down-bar);border:2px solid var(--surface);box-shadow:0 0 0 1px var(--down-bar)}
+.live-tag{display:inline-flex;align-items:center;gap:6px;font:600 10px/1 var(--f-mono);letter-spacing:.08em;color:var(--up)}
+.live-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--up-bar);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+/* svg classes */
+.s-grid{stroke:var(--line);stroke-width:1;fill:none}
+.s-line{stroke:var(--a);stroke-width:1.8;fill:none;stroke-linejoin:round;stroke-linecap:round}
+.s-vwap{stroke:#B7791F;stroke-width:1.4;stroke-dasharray:4 3;fill:none}
+.s-text{fill:var(--ink-3);font:500 9px var(--f-mono)}
+.s-dot{fill:var(--a);stroke:var(--surface);stroke-width:2}
+.s-mark{fill:var(--down-bar);stroke:var(--surface);stroke-width:2}
+.bar-up{fill:var(--up-bar)} .bar-down{fill:var(--down-bar)}
+.s-zero{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:3 3;fill:none}
+
+/* buy / sell */
+.meter{display:flex;height:12px;border-radius:999px;overflow:hidden;background:var(--surface-2)}
+.m-buy{background:var(--up-bar)} .m-sell{background:var(--down-bar)}
+.meter-labels{display:flex;justify-content:space-between;margin:6px 0 12px;font:600 12px var(--f-mono)}
+.meter-labels .b{color:var(--up)} .meter-labels .s{color:var(--down)}
+.hint{color:var(--ink-3);font-size:11px;margin:6px 0 0}
+.tape{margin-top:12px;border-top:1px solid var(--line)}
+.tape-row{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:6px;padding:7px 0;border-bottom:1px solid var(--line);font:500 12px var(--f-mono);font-variant-numeric:tabular-nums}
+.tape-row.h{color:var(--ink-3);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.tape-row span:nth-child(n+2){text-align:right}
+.up{color:var(--up)} .down{color:var(--down)}
+
+/* log */
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.log li{border-top:1px solid var(--line)}
+.log li:first-child{border-top:0}
+.lrow{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;width:100%;text-align:left;background:none;border:0;padding:12px 0;min-width:0}
+.log time{font:500 12px var(--f-mono);color:var(--ink-3);padding-top:2px}
+.log .t{font-weight:600}
+.log .m{grid-column:2;color:var(--ink-2);font-size:12px}
+.pill{display:inline-block;font:600 10px/1 var(--f-mono);letter-spacing:.04em;padding:4px 7px;border-radius:999px;margin-left:6px;vertical-align:1px}
+.pill.bull{background:var(--up-bg);color:var(--up)} .pill.bear{background:var(--down-bg);color:var(--down)}
+.empty{color:var(--ink-3);font-size:13px;padding:4px 0}
+.lock{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-3)}
+
+/* buttons / forms */
+.btn{border:0;border-radius:12px;padding:12px 16px;font:700 14px var(--f-display);background:var(--grad);color:#fff;min-height:44px}
+.btn.ghost{background:var(--surface);color:var(--a);border:1px solid var(--line)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--surface-2);border-radius:12px}
+.seg button{border:0;background:transparent;border-radius:9px;padding:10px 8px;font:700 13px var(--f-display);color:var(--ink-2);min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--grad);color:#fff}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld label{font:600 11px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.fld input,.fld select{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px;font:500 15px var(--f-mono);min-height:44px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+
+/* scorecard */
+.rank{display:flex;flex-direction:column;gap:8px}
+.row{display:grid;grid-template-columns:1fr auto;gap:6px 12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0}
+.row[aria-pressed="true"]{border-color:var(--a);box-shadow:0 0 0 1px var(--a)}
+.row .rn{font:700 14px var(--f-display)}
+.row .rw{font:600 20px/1 var(--f-mono);text-align:right}
+.row .rs{grid-column:1/-1;display:flex;justify-content:space-between;gap:10px;color:var(--ink-3);font-size:11px;flex-wrap:wrap}
+.track{grid-column:1/-1;position:relative;height:6px;border-radius:999px;background:var(--surface-2)}
+.track b{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--grad)}
+.track i{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink-3);left:50%}
+.tag{display:inline-block;font:600 10px/1 var(--f-mono);letter-spacing:.04em;padding:4px 7px;border-radius:999px;margin-left:6px;vertical-align:2px}
+.tag.good{background:var(--up-bg);color:var(--up)} .tag.ok{background:var(--warn-bg);color:var(--warn)} .tag.weak{background:var(--down-bg);color:var(--down)}
+.dots{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px;margin:12px 0}
+.dot{aspect-ratio:1;border-radius:50%;max-width:100%}
+.dot.w{background:var(--up-bar)}
+.dot.l{border:2px solid var(--down-bar);background:transparent}
+.dot.n{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--a)}
+.dlegend{display:flex;gap:14px;color:var(--ink-3);font-size:11px;margin-bottom:14px}
+.dlegend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.dlegend .w::before{background:var(--up-bar)} .dlegend .l::before{border:2px solid var(--down-bar)}
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.metrics div{background:var(--surface);padding:10px 12px;min-width:0}
+.metrics dt{font:600 10px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.metrics dd{margin:3px 0 0;font:600 16px var(--f-mono)}
+.metrics small{display:block;font:400 11px var(--f-body);color:var(--ink-3);margin-top:1px}
+
+/* notices */
+.note{background:var(--warn-bg);border:1px solid var(--warn-line);color:#5C3D00;border-radius:12px;padding:12px 14px;font-size:12px}
+.disc{color:var(--ink-3);font-size:11px;padding:2px 4px 0}
+.list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;color:var(--ink-2);font-size:13px}
+.list li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:2px;background:var(--grad);margin-right:9px;vertical-align:1px}
+.btst{display:grid;grid-template-columns:1fr auto;gap:4px 12px}
+.btst .sym{font:800 15px var(--f-display)}
+.btst .big{font:600 20px/1 var(--f-mono);text-align:right}
+.btst .sub{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--ink-2);font-size:12px}
+.btst .sub b{font-family:var(--f-mono);font-weight:600;color:var(--ink)}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.res .big{grid-column:1/-1;background:var(--grad);color:#fff;border-radius:14px;padding:14px 16px}
+.res .big .eyebrow{color:rgba(255,255,255,.85)}
+.res .big .v{font:600 34px/1.1 var(--f-mono);margin-top:4px}
+.res .it{background:var(--surface-2);border-radius:12px;padding:12px;min-width:0}
+.res .it .v{font:600 17px var(--f-mono);margin-top:3px;overflow-wrap:anywhere}
+
+/* toast */
+.toasts{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:40;display:flex;flex-direction:column;gap:8px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));pointer-events:none}
+.toast{pointer-events:auto;max-width:520px;width:100%;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 18px 40px -16px rgba(11,27,46,.45);animation:drop .35s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden}
+.toast::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--grad)}
+.toast .th{display:flex;justify-content:space-between;gap:8px;font:600 11px var(--f-mono);color:var(--ink-3);letter-spacing:.04em}
+.toast .tt{font:800 16px/1.3 var(--f-display);margin:4px 0 2px}
+.toast p{color:var(--ink-2);font-size:12px}
+.toast .ta{display:flex;gap:8px;margin-top:10px}
+.toast .ta .btn{padding:9px 14px;font-size:13px;min-height:40px}
+@keyframes drop{from{transform:translateY(-14px);opacity:0}}
+
+/* bottom bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.navin{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;padding-top:6px;padding-bottom:6px}
+.navin a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:12px;color:var(--ink-3);text-decoration:none;font:600 9.5px var(--f-display);min-height:48px}
+.navin a[aria-current="page"]{color:var(--a)}
+.navin a[aria-current="page"] svg{stroke:url(#navgrad)}
+.navin a[aria-current="page"]::after{content:"";width:18px;height:3px;border-radius:3px;background:var(--grad);margin-top:1px}
+.navin svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+.icon-btn svg,.mark svg{width:18px;height:18px}
+.lock svg{width:13px;height:13px}
+a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.pill.sc{background:var(--surface-2);color:var(--a)}
+.sc-card{border-color:var(--a);box-shadow:0 0 0 1px var(--a),0 14px 34px -20px rgba(29,78,216,.5)}
+.sc-top{display:flex;align-items:center;gap:14px;margin:12px 0}
+.ringbox{flex:none;width:76px;height:76px}
+.ringbox svg{width:76px;height:76px}
+.chk-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.chk{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start}
+.chk .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center}
+.chk .ic svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.chk.ok .ic{background:var(--up-bg);color:var(--up)}
+.chk.no .ic{background:var(--down-bg);color:var(--down)}
+.chk b{display:block;font-size:13px}
+.chk small{display:block;color:var(--ink-3);font-size:11px}
+.plan-h{font:600 20px/1.2 var(--f-mono);margin:4px 0 10px}
+.act{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.strip{display:block;color:inherit;text-decoration:none}
+.strip-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.strip-h .go{font:700 12px var(--f-display);color:var(--a)}
+.strip-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+.strip-g .w{grid-column:1/-1}
+.strip-g small{display:block;color:var(--ink-3);font-size:11px}
+.strip-g b{font:600 14px var(--f-mono)}
+.rng{font-size:24px;font-weight:600;margin:6px 0 4px;letter-spacing:-.01em}
+.rng span{font:500 13px var(--f-body);color:var(--ink-3)}
+.rbar{position:relative;height:26px;margin:16px 0 4px}
+.rbar i{position:absolute;top:8px;height:10px;border-radius:999px}
+.rbar .r2{background:var(--surface-2)}
+.rbar .r1{background:var(--a);opacity:.28}
+.rbar .op{top:3px;height:20px;width:2px;background:var(--ink-3);border-radius:0}
+.rbar .pm{position:absolute;top:2px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:var(--grad);border:3px solid var(--surface);box-shadow:0 2px 8px rgba(11,27,46,.35)}
+.rlab{position:relative;height:16px;font:500 10px var(--f-mono);color:var(--ink-3)}
+.rlab span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.lad-h,.lr{display:grid;grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr);gap:6px;align-items:center}
+.lad-h{font:600 10px var(--f-mono);letter-spacing:.04em;color:var(--ink-3);text-transform:uppercase;margin:12px 0 6px}
+.lad-h span:nth-child(2){text-align:center}
+.lad-h span:nth-child(3){text-align:right}
+.lr{padding:2px 0;border-radius:8px}
+.lr.near{background:var(--surface-2)}
+.pb,.cb{position:relative;height:24px}
+.pb i,.cb i{position:absolute;top:3px;bottom:3px}
+.pb i{right:0;background:var(--up-bg);border-right:2px solid var(--up-bar);border-radius:5px 0 0 5px}
+.cb i{left:0;background:var(--down-bg);border-left:2px solid var(--down-bar);border-radius:0 5px 5px 0}
+.pb em,.cb em{position:absolute;top:50%;transform:translateY(-50%);font-style:normal;font-size:10px;color:var(--ink)}
+.pb em{left:4px}
+.cb em{right:4px}
+.ks{text-align:center;font:600 12px var(--f-mono)}
+.ks small{display:block;font:700 9px var(--f-mono);letter-spacing:.06em}
+.ks.s small{color:var(--up)}
+.ks.r small{color:var(--down)}
+.lr.near .ks{color:var(--a)}
+.bandrow{display:grid;grid-template-columns:52px minmax(0,1fr) 78px;align-items:center;gap:10px;padding:6px 0;font-size:12px}
+.bandrow small{color:var(--ink-3)}
+
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.act .full{grid-column:1/-1}
+.wal{background:var(--grad);color:#fff;border-color:transparent}
+.wal .eyebrow{color:rgba(255,255,255,.88)}
+.eq{font-size:34px;font-weight:600;letter-spacing:-.02em;margin:4px 0 12px}
+.wal-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.wal-g div{background:rgba(255,255,255,.16);border-radius:12px;padding:9px 11px;min-width:0}
+.wal-g small{display:block;font-size:11px;color:rgba(255,255,255,.9)}
+.wal-g b{font:600 15px var(--f-mono)}
+.lockb{background:var(--warn-bg);color:#5C3D00;border-radius:10px;padding:9px 11px;font-size:12px;margin-bottom:12px}
+.wal .btn.ghost{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.5);width:100%}
+.pos-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.pnl{font-size:20px;font-weight:600;white-space:nowrap}
+.pbar{position:relative;height:10px;border-radius:999px;margin:18px 0 4px}
+.pbar b{position:absolute;top:-4px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--grad);border:3px solid var(--surface);box-shadow:0 2px 6px rgba(11,27,46,.35)}
+.plab{display:flex;justify-content:space-between;font:500 10px var(--f-mono);color:var(--ink-3)}
+.pos-m{display:flex;justify-content:space-between;margin-top:8px;font:500 12px var(--f-mono);color:var(--ink-2)}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.tl li:first-child{border-top:0}
+.tl b{display:block;font-size:13px}
+.tl small{color:var(--ink-3);font-size:11px}
+.tl .num{font-weight:600;white-space:nowrap}
+.gstrip{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 12px;min-width:0}
+.gav{flex:none;width:36px;height:36px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font:800 15px var(--f-display)}
+.gstrip .gt{flex:1;min-width:0;font:400 12.5px/1.4 var(--f-body);color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:left;background:none;border:0;padding:0;cursor:pointer}
+.gstrip .gb{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--a);border-radius:10px;min-height:40px;min-width:44px;padding:0 10px;font:700 12px var(--f-display)}
+.g-hero{background:var(--grad);color:#fff;border-color:transparent}
+.g-hero .eyebrow{color:rgba(255,255,255,.88)}
+.g-hero h2{font-size:20px;margin:4px 0 10px}
+.g-bar{height:8px;border-radius:999px;background:rgba(255,255,255,.25);overflow:hidden}
+.g-bar i{display:block;height:100%;background:#fff;border-radius:999px}
+.g-tools{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.g-tools button{border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16);color:#fff;border-radius:10px;min-height:40px;padding:0 12px;font:700 12.5px var(--f-display)}
+.g-tools button[aria-pressed="true"]{background:#fff;color:var(--a)}
+.g-less{font-size:14.5px;line-height:1.7;color:var(--ink);margin:8px 0 12px}
+.g-task{display:flex;gap:10px;align-items:flex-start;background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.g-task b{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 12px var(--f-mono);background:var(--line);color:var(--ink-2)}
+.g-task.ok b{background:var(--up);color:#fff}
+.g-row{display:flex;gap:8px}
+.g-row .btn{flex:1}
+.sgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:10px}
+.sgrid button{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:var(--surface);font:600 12px var(--f-mono);color:var(--ink-2);min-height:40px}
+.sgrid button.done{background:var(--up-bg);color:var(--up);border-color:transparent}
+.sgrid button.cur{background:var(--grad);color:#fff;border-color:transparent}
+.sgrid button[disabled]{opacity:.4}
+.sgrid button[aria-pressed="true"]{outline:2px solid var(--a);outline-offset:1px}
+.feed{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;padding:2px}
+.bub{max-width:92%;padding:10px 12px;border-radius:14px;font-size:13.5px;line-height:1.6;overflow-wrap:anywhere}
+.bub.c{background:var(--surface-2);align-self:flex-start;border-top-left-radius:4px}
+.bub.u{background:var(--grad);color:#fff;align-self:flex-end;border-top-right-radius:4px}
+.bub small{display:flex;gap:8px;align-items:center;font:500 10px var(--f-mono);opacity:.75;margin-top:4px}
+.bub small button{border:0;background:none;color:var(--a);font:700 11px var(--f-display);padding:4px 0;min-height:28px}
+.ask{display:flex;gap:8px;margin-top:10px}
+.ask input{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:500 14px var(--f-body);min-height:46px;background:var(--surface)}
+.ask button{flex:none;min-width:46px;min-height:46px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--a);font:800 13px var(--f-display);padding:0 12px}
+.ask button.go{background:var(--grad);color:#fff;border:0}
+.quick{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.quick button{border:1px solid var(--line);background:var(--surface);color:var(--a);border-radius:999px;min-height:38px;padding:0 12px;font:700 12px var(--f-display)}
+.rep-score{font:600 44px/1 var(--f-mono);letter-spacing:-.02em}
+.rep-row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:13px}
+.rep-row i{grid-column:1/-1;display:block;height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.rep-row i s{display:block;height:100%;background:var(--grad);border-radius:999px}
+.rep-row small{grid-column:1/-1;color:var(--ink-3);font-size:11.5px}
+.navin{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+.ln-w{width:100%}
+.ln-slide{font:600 19px/1.65 var(--f-display);margin:16px 0 18px;color:var(--ink)}
+.ln-q{font:700 17px/1.5 var(--f-display);margin:14px 0 4px}
+.dots{display:flex;gap:5px}
+.dots i{flex:1;height:5px;border-radius:9px;background:var(--line)}
+.dots i.on{background:var(--grad)}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:13px 14px;margin-top:10px;font:600 14.5px/1.4 var(--f-body);min-height:48px}
+.opt.ok{background:var(--up-bg);border-color:var(--up);color:var(--up)}
+.opt.bad{background:var(--down-bg);border-color:var(--down);color:var(--down)}
+.ln-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center}
+.ln-stats small{display:block;font:600 10px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.ln-stats b{font:600 17px var(--f-mono)}
+.lrows{display:flex;flex-direction:column}
+.lrow2{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;text-align:left;border:0;border-top:1px solid var(--line);background:none;padding:11px 2px;min-height:46px;font:600 14px var(--f-body);color:var(--ink)}
+.lrow2:first-child{border-top:0}
+.lrow2 b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font:700 12px var(--f-mono);color:var(--ink-2)}
+.lrow2.ok b{background:var(--up);color:#fff}
+.lrow2.cur b{background:var(--grad);color:#fff}
+.lrow2 small{font:600 11px var(--f-mono);color:var(--ink-3)}
+.lrow2[disabled]{opacity:.45}
+.ln-list{margin:0;padding-left:18px;font-size:13.5px;line-height:1.6}
+.ln-list.neg li::marker{color:var(--down)}
+#v-learn>#lnBody{display:flex;flex-direction:column;gap:14px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="navgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1D4ED8"/><stop offset="1" stop-color="#0891B2"/></linearGradient>
+</defs></svg>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand-row">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8" opacity=".55"/><circle cx="12" cy="12" r="3.2"/><path d="M12 12 L18.5 5.5"/></svg></span>
+        <span class="name">Setup Radar</span>
+      </div>
+      <div class="head-actions">
+        <span class="demo-chip">DEMO DATA</span>
+        <button class="icon-btn" id="vc" aria-pressed="false" aria-label="Hindi voice alert on ya off">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>
+        </button>
+        <button class="icon-btn" id="snd" aria-pressed="false" aria-label="Alert sound on ya off">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="idx-row" id="idxRow" role="tablist" aria-label="Index chuno"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="gstrip" id="gStrip"><span class="gav" aria-hidden="true">G</span><button class="gt" type="button" id="gsText" aria-label="Guru ki baat, poori dekhne ke liye dabao"></button><button class="gb" type="button" id="gsListen">Suno</button><button class="gb" type="button" id="gsMute" aria-label="Guru ki awaaz on ya off"></button></div>
+
+  <!-- LIVE -->
+  <section id="v-live">
+    <div class="card sc-card" id="setupCard" hidden></div>
+    <div class="card hero">
+      <div class="hero-top">
+        <div>
+          <div class="eyebrow" id="hName">Nifty 50</div>
+          <div class="price num" id="hPrice">0.00</div>
+        </div>
+        <div class="chg up num" id="hChg">0.00%</div>
+      </div>
+      <svg id="spark" viewBox="0 0 320 128" role="img" aria-label="Pichle 2 minute ka price chart"></svg>
+      <div class="legend"><span><i class="lg-line"></i>Price (2 min)</span><span><i class="lg-vwap"></i>VWAP</span><span><i class="lg-dot"></i>Setup bana</span></div>
+    </div>
+
+    <a class="card strip" id="moodStrip" href="#mood"></a>
+
+    <div class="card">
+      <div class="card-head"><h2>Buy vs Sell, har 1 second</h2><span class="live-tag">LIVE</span></div>
+      <div class="meter" aria-hidden="true"><div class="m-buy" id="mBuy"></div><div class="m-sell" id="mSell"></div></div>
+      <div class="meter-labels"><span class="b" id="mBuyT">Buy 50%</span><span class="s" id="mSellT">Sell 50%</span></div>
+      <svg id="bars" viewBox="0 0 320 96" role="img" aria-label="Pichle 40 second ka net buy ya sell"></svg>
+      <p class="hint">Upar wali bar = us second buyers zyada. Neeche wali bar = sellers zyada. Meter pichle 10 second ka hai.</p>
+      <div class="tape" id="tape"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Aaj ke setups</h2><span class="lock"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Bante hi lock, edit nahi</span></div>
+      <ul class="log" id="log"></ul>
+    </div>
+
+    <button class="btn ghost" id="demoFire" type="button">Demo setup bana ke dekho</button>
+    <p class="disc" data-disc></p>
+  </section>
+
+  <!-- MOOD -->
+  <section id="v-mood" hidden>
+    <div>
+      <h2 style="font-size:20px">Aaj ka Market Mood</h2>
+      <p class="lead" style="margin-top:4px">VIX aur option chain se: aaj kitna move normal hai aur price kahan ruk sakta hai.</p>
+    </div>
+    <div class="card" id="moodRange"></div>
+    <div class="card" id="moodChain"></div>
+    <div class="note">Option chain aur VIX abhi demo hain. Live hone par Upstox ke option chain, OI aur PCR data se banenge.</div>
+    <p class="disc" data-disc></p>
+  </section>
+
+  <!-- SCORECARD -->
+  <section id="v-scorecard" hidden>
+    <div>
+      <h2 style="font-size:20px">Setup Scorecard</h2>
+      <p class="lead" style="margin-top:4px">Har setup ke pichle 100 trade ka asli hisaab. Pehle side chuno, phir setup dabao.</p>
+    </div>
+    <div class="seg" role="group" aria-label="Option side">
+      <button type="button" data-side="buy" aria-pressed="true">Option Buying</button>
+      <button type="button" data-side="sell" aria-pressed="false">Option Selling</button>
+    </div>
+    <div class="rank" id="rank"></div>
+    <div class="card" id="detail"></div>
+    <p class="disc" data-disc></p>
+  </section>
+
+  <!-- BTST -->
+  <section id="v-btst" hidden>
+    <div class="seg idea-seg" role="group" aria-label="Idea chuno">
+      <button type="button" data-idea="btst" aria-pressed="true">BTST</button>
+      <button type="button" data-idea="zero-hero" aria-pressed="false">Zero-Hero</button>
+    </div>
+    <div>
+      <h2 style="font-size:20px">BTST Scanner</h2>
+      <p class="lead" style="margin-top:4px">Aaj kharid kar kal bechne layak setups. Scan window 3:00 se 3:25 PM, close ke paas.</p>
+    </div>
+    <div id="btstList" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="note">Ye list demo numbers pe bani hai. Live hone par Upstox ke asli close, volume aur OI se banegi.</div>
+    <p class="disc" data-disc></p>
+  </section>
+
+  <!-- ZERO TO HERO -->
+  <section id="v-zero-hero" hidden>
+    <div class="seg idea-seg" role="group" aria-label="Idea chuno">
+      <button type="button" data-idea="btst" aria-pressed="true">BTST</button>
+      <button type="button" data-idea="zero-hero" aria-pressed="false">Zero-Hero</button>
+    </div>
+    <div>
+      <h2 style="font-size:20px">Zero to Hero</h2>
+      <p class="lead" style="margin-top:4px">Expiry ke din sasta OTM option jab momentum aaye. Jeetna kam baar hota hai, par jeet badi hoti hai.</p>
+    </div>
+    <div id="zhBody" style="display:flex;flex-direction:column;gap:12px"></div>
+    <div class="card">
+      <h2>Setup tab banta hai jab</h2>
+      <ul class="list">
+        <li>10 second mein tez move, ek taraf ke buyers ya sellers hawi</li>
+        <li>Volume normal se 2.5 guna se zyada</li>
+        <li>Option ke OI mein achanak jodna</li>
+      </ul>
+    </div>
+    <div class="note"><b>Seedhi baat:</b> ye lottery jaisa setup hai. Zyadatar baar premium doob jaata hai. Sirf utna lagao jitna poora doobne par bhi chal jaye. Risk tab mein limit nikaal lo.</div>
+    <p class="disc" data-disc></p>
+  </section>
+
+  <!-- PAPER -->
+  <section id="v-paper" hidden>
+    <div>
+      <h2 style="font-size:20px">Paper Trading</h2>
+      <p class="lead" style="margin-top:4px">₹5,00,000 virtual paisa. Live tab ke setup card se trade lo. Stop-loss aur target app khud track karega.</p>
+    </div>
+    <div class="card wal" id="pWallet"></div>
+    <div id="pPos" style="display:flex;flex-direction:column;gap:12px"></div>
+    <div class="card" id="pStats" hidden></div>
+    <div class="card" id="pTrades"></div>
+    <div class="note">Paper trade demo market pe chalte hain, isliye asli paisa ya asli order kuch nahi lagta. Har trade pe ~₹60 charges aur 0.5% slippage joda jaata hai taaki result asli ke kareeb rahe. Data sirf is phone ke browser mein save hota hai.</div>
+    <p class="disc" data-disc></p>
+  </section>
+
+  <!-- LEARN -->
+  <section id="v-learn"><div id="lnBody"></div></section>
+
+  <!-- GURU -->
+  <section id="v-guru" hidden>
+    <div class="card g-hero">
+      <div class="eyebrow" id="gPhase"></div>
+      <h2 id="gTitle"></h2>
+      <div class="g-bar"><i id="gProg"></i></div>
+      <div class="g-tools">
+        <button type="button" data-gl="hi" aria-pressed="true">Hinglish</button>
+        <button type="button" data-gl="en" aria-pressed="false">English</button>
+        <button type="button" id="gVoice" aria-pressed="true"></button>
+      </div>
+    </div>
+    <div class="card" id="gStage"></div>
+    <div class="card">
+      <h2 id="gMapT"></h2>
+      <div class="sgrid" id="gGrid"></div>
+    </div>
+    <div class="card">
+      <h2 id="gChatT" style="margin-bottom:10px"></h2>
+      <div class="feed" id="gFeed" aria-live="polite"></div>
+      <form class="ask" id="gForm"><input id="gIn" type="text" autocomplete="off" aria-label="Guru se pucho"><button type="button" id="gMic" aria-label="Bolkar pucho">Mic</button><button class="go" type="submit" id="gSend"></button></form>
+      <div class="quick" id="gQuick"></div>
+    </div>
+    <div class="card" id="gReport" hidden></div>
+    <div class="note" id="gNote"></div>
+    <p class="disc" data-disc></p>
+  </section>
+
+  <!-- RISK -->
+  <section id="v-risk" hidden>
+    <div>
+      <h2 style="font-size:20px">Risk Calculator</h2>
+      <p class="lead" style="margin-top:4px">Capital daalo, kitne lot aur kitna stop-loss rakhna hai ye mil jaayega.</p>
+    </div>
+    <form class="card" id="riskForm" autocomplete="off" style="display:flex;flex-direction:column;gap:12px">
+      <div class="grid2">
+        <div class="fld"><label for="rCap">Capital (₹)</label><input id="rCap" type="number" inputmode="decimal" value="500000" min="0"></div>
+        <div class="fld"><label for="rIx">Index</label>
+          <select id="rIx"><option value="nifty">Nifty 50</option><option value="banknifty">Bank Nifty</option><option value="sensex">Sensex</option></select></div>
+        <div class="fld"><label for="rRisk">Risk per trade (%)</label><input id="rRisk" type="number" inputmode="decimal" value="2" min="0" step="0.1"></div>
+        <div class="fld"><label for="rDay">Din ki max loss (%)</label><input id="rDay" type="number" inputmode="decimal" value="4" min="0" step="0.5"></div>
+        <div class="fld"><label for="rPrem">Option premium (₹)</label><input id="rPrem" type="number" inputmode="decimal" value="120" min="0" step="0.5"></div>
+        <div class="fld"><label for="rSl">Stop-loss (% premium)</label><input id="rSl" type="number" inputmode="decimal" value="30" min="0" step="1"></div>
+      </div>
+      <div class="fld"><label for="rLot">Lot size</label><input id="rLot" type="number" inputmode="numeric" value="75" min="1"></div>
+      <p class="hint" style="margin:0">Lot size NSE aur BSE badalte rehte hain. Trade se pehle apne broker mein dobara check kar lo.</p>
+    </form>
+    <div class="res" id="riskOut" aria-live="polite"></div>
+    <div id="riskWarn"></div>
+    <p class="disc" data-disc></p>
+  </section>
+</main>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<nav class="bar" aria-label="Sections">
+  <div class="wrap navin" id="nav">
+    <a href="#learn" data-t="learn"><svg viewBox="0 0 24 24"><path d="M4 5.5C6 4.5 9 4.5 12 6c3-1.5 6-1.5 8-.5V19c-2-1-5-1-8 .5-3-1.5-6-1.5-8-.5V5.5z"/><path d="M12 6v13.5"/></svg>Seekho</a>
+    <a href="#live" data-t="live"><svg viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>Live</a>
+    <a href="#mood" data-t="mood"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.8l3 2"/></svg>Mood</a>
+    <a href="#scorecard" data-t="scorecard"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Score</a>
+    <a href="#ideas" data-t="ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Ideas</a>
+    <a href="#paper" data-t="paper"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M16 14.5h2"/></svg>Paper</a>
+    <a href="#guru" data-t="guru"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></svg>Guru</a>
+    <a href="#risk" data-t="risk"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/></svg>Risk</a>
+  </div>
+</nav>
+
+<script id="core">
+/* ===== core: demo market, setup detector, seeded history (no DOM) ===== */
+const INDICES={
+  nifty:{key:'nifty',name:'Nifty 50',short:'Nifty',base:25860,vol:1.7,volBase:21000,oiBase:9.4e6,oiStep:9000,lot:75},
+  banknifty:{key:'banknifty',name:'Bank Nifty',short:'Bank Nifty',base:58420,vol:4.6,volBase:9000,oiBase:3.1e6,oiStep:4000,lot:30},
+  sensex:{key:'sensex',name:'Sensex',short:'Sensex',base:84760,vol:5.8,volBase:6500,oiBase:2.2e6,oiStep:2500,lot:20}
+};
+const KEYS=['nifty','banknifty','sensex'];
+const SETUPS=[
+  {id:'orb',name:'Range Breakout',note:'Pichle 90 second ki range tooti, volume ka support mila.',buy:[.40,.55],sell:[.60,.76]},
+  {id:'mom',name:'Momentum Burst',note:'10 second mein tez move, ek taraf ke log hawi.',buy:[.36,.50],sell:[.56,.70]},
+  {id:'vwap',name:'VWAP Reclaim',note:'Price VWAP ke paar gaya aur wahin tika.',buy:[.38,.52],sell:[.62,.78]},
+  {id:'oil',name:'OI Long Buildup',note:'Price badha aur OI bhi badha, naye long bane.',buy:[.42,.57],sell:[.58,.74]},
+  {id:'ois',name:'OI Short Buildup',note:'Price ghata par OI badha, naye short bane.',buy:[.40,.54],sell:[.60,.76]}
+];
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const nfi=v=>Math.round(v).toLocaleString('en-IN');
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+
+function makeState(ix){return{ix,price:ix.base,open:ix.base,oi:ix.oiBase,ticks:[],vNum:0,vDen:0,drift:0,oiDrift:0,regLeft:0,cool:0,n:0}}
+function stepState(s){
+  const ix=s.ix;s.n++;
+  if(--s.regLeft<=0){s.drift=(Math.random()-.5)*ix.vol*.7;s.oiDrift=(Math.random()-.45)*ix.oiStep*1.2;s.regLeft=20+Math.floor(Math.random()*40)}
+  const move=s.drift+gauss()*ix.vol;
+  s.price=Math.max(1,s.price+move);
+  const total=ix.volBase*(.6+Math.random()*.8);
+  const share=clamp(.5+move/(ix.vol*7)+(Math.random()-.5)*.12,.18,.82);
+  const buy=Math.round(total*share),sell=Math.round(total*(1-share));
+  s.oi+=s.oiDrift+(Math.random()-.5)*ix.oiStep*.6;
+  s.vNum+=s.price*total;s.vDen+=total;
+  const tk={n:s.n,p:s.price,buy,sell,oi:s.oi,vwap:s.vNum/s.vDen,t:0};
+  s.ticks.push(tk);if(s.ticks.length>400)s.ticks.shift();
+  return tk;
+}
+function detect(s){
+  const T=s.ticks,n=T.length;
+  if(n<110||s.n<s.cool)return null;
+  const last=T[n-1],prev=T[n-2],p=last.p;
+  let hi=-Infinity,lo=Infinity;
+  for(let i=n-96;i<n-4;i++){hi=Math.max(hi,T[i].p);lo=Math.min(lo,T[i].p)}
+  let b=0,sl=0;for(let i=n-8;i<n;i++){b+=T[i].buy;sl+=T[i].sell}
+  const share=b/(b+sl),ref=T[n-11];
+  const chg=(p-ref.p)/ref.p*100,oiChg=(last.oi-ref.oi)/ref.oi*100;
+  if(p>hi&&share>.62)return{id:'orb',bias:'bull'};
+  if(p<lo&&share<.38)return{id:'orb',bias:'bear'};
+  if(chg>.06&&share>.62)return{id:'mom',bias:'bull'};
+  if(chg<-.06&&share<.38)return{id:'mom',bias:'bear'};
+  if(prev.p<prev.vwap&&p>last.vwap&&share>.58)return{id:'vwap',bias:'bull'};
+  if(prev.p>prev.vwap&&p<last.vwap&&share<.42)return{id:'vwap',bias:'bear'};
+  if(chg>.05&&oiChg>.25)return{id:'oil',bias:'bull'};
+  if(chg<-.05&&oiChg>.25)return{id:'ois',bias:'bear'};
+  return null;
+}
+
+/* seeded last-100 history: stable numbers per index, setup and side */
+function wilson(w,n){const z=1.96,p=w/n,d=1+z*z/n,c=p+z*z/(2*n),m=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n));return[(c-m)/d,(c+m)/d]}
+const _st={};
+function stats(k,sid,side){
+  const key=k+'|'+sid+'|'+side;if(_st[key])return _st[key];
+  const su=SETUPS.find(x=>x.id===sid),r=mulberry32(hash(key));
+  const[lo,hi]=su[side],p=lo+(hi-lo)*r();
+  const res=[];
+  for(let i=0;i<100;i++){
+    const win=r()<p;let v;
+    if(side==='buy')v=win?1.0+r():-(.85+r()*.2);
+    else v=win?.3+r()*.4:(r()<.05?-3.2:-(.8+r()*1.0));
+    res.push({win,r:v});
+  }
+  let wins=0,sw=0,sl=0,nl=0,streak=0,mx=0,cum=0;const curve=[0];
+  for(const x of res){
+    if(x.win){wins++;sw+=x.r;streak=0}else{nl++;sl+=x.r;streak++;mx=Math.max(mx,streak)}
+    cum+=x.r;curve.push(cum);
+  }
+  const o={res,wins,avgWin:wins?sw/wins:0,avgLoss:nl?sl/nl:0,streak:mx,total:cum,exp:cum/100,ci:wilson(wins,100),curve};
+  return(_st[key]=o);
+}
+function zh(k,side){
+  const r=mulberry32(hash('zh|'+k+'|'+side)),h0=.09+r()*.13,M=3+r()*2.4,L=.85;
+  let hits=0;for(let i=0;i<100;i++)if(r()<h0)hits++;
+  const h=hits/100;
+  return{hits,M,L,ev:h*M-(1-h)*L,prem:+(4+r()*24).toFixed(1)};
+}
+/* ---- option chain, mood, strength score, trade plan (all demo data) ---- */
+const STEP={nifty:50,banknifty:100,sensex:100};
+const VIXD=13.8;
+const IVX={nifty:1,banknifty:1.22,sensex:.98};
+const DTE=3;
+function oneSigma(k,p){return p*VIXD*IVX[k]/100/Math.sqrt(252)}
+const _ch={};
+function chainFor(k){
+  if(_ch[k])return _ch[k];
+  const ix=INDICES[k],st=STEP[k],atm=Math.round(ix.base/st)*st,r=mulberry32(hash('chain|'+k));
+  const wc=atm+st*(2+Math.floor(r()*3)),wp=atm-st*(2+Math.floor(r()*3)),base=ix.oiBase*.012,rows=[];
+  for(let i=-8;i<=8;i++){
+    const K=atm+i*st;
+    const c=Math.round(base*((K>=atm?.9:.25)*(.5+r())+(K===wc?2.6:0)+(Math.abs(K-wc)===st?.7:0)));
+    const p=Math.round(base*((K<=atm?.9:.25)*(.5+r())+(K===wp?2.6:0)+(Math.abs(K-wp)===st?.7:0)));
+    rows.push({K,c,p});
+  }
+  let cT=0,pT=0,R=rows[0],Sx=rows[0];
+  rows.forEach(x=>{cT+=x.c;pT+=x.p;if(x.c>R.c)R=x;if(x.p>Sx.p)Sx=x});
+  let best=Infinity,pain=rows[0].K;
+  rows.forEach(t=>{let s=0;rows.forEach(x=>{s+=Math.max(0,t.K-x.K)*x.c+Math.max(0,x.K-t.K)*x.p});if(s<best){best=s;pain=t.K}});
+  return(_ch[k]={rows,pcr:pT/cT,res:R.K,sup:Sx.K,pain,maxOi:Math.max(...rows.map(x=>Math.max(x.c,x.p))),atm});
+}
+function moodText(k,p){
+  const ch=chainFor(k),s=ch.sup,r=ch.res;let t;
+  if(p>r)t='Price resistance '+nfi(r)+' ke upar hai. Breakout ka mood, par wapas andar girne par dhyan do.';
+  else if(p<s)t='Price support '+nfi(s)+' ke neeche hai. Dabaav ka mood.';
+  else{const f=(p-s)/(r-s);t=f>.75?'Resistance '+nfi(r)+' ke paas hai, upar jaana mushkil ho sakta hai.':f<.25?'Support '+nfi(s)+' ke paas hai, wahan tikne ki koshish ho sakti hai.':'Support '+nfi(s)+' aur resistance '+nfi(r)+' ke beech range mein hai.'}
+  t+=ch.pcr>1.2?' Put OI zyada hai, neeche support mazboot dikh raha hai.':ch.pcr<.8?' Call OI zyada hai, upar resistance bhaari dikh raha hai.':' PCR neutral hai.';
+  return t;
+}
+function scoreSetup(k,s,bias,hour){
+  const T=s.ticks,n=T.length,last=T[n-1],p=last.p,ch=chainFor(k),bull=bias==='bull';
+  let b=0,sl=0;for(let i=n-10;i<n;i++){b+=T[i].buy;sl+=T[i].sell}
+  const share=b/(b+sl),oc=(last.oi-T[n-31].oi)/T[n-31].oi*100;
+  const wall=bull?ch.res:ch.sup,rm=bull?(wall-p)/p*100:(p-wall)/p*100;
+  const goodTime=(hour>=9.5&&hour<11.5)||(hour>=13.5&&hour<14.75);
+  const checks=[
+    {w:20,ok:bull?p>last.vwap:p<last.vwap,t:'Trend VWAP ke saath',d:'Price VWAP ke '+(p>last.vwap?'upar':'neeche')+' hai'},
+    {w:20,ok:bull?share>.55:share<.45,t:'Buyers aur sellers ek taraf',d:'Pichle 10 sec mein buy '+Math.round(share*100)+'%'},
+    {w:15,ok:oc>.03,t:'OI mein jodna',d:'OI '+(oc>=0?'+':'')+oc.toFixed(2)+'% pichle 30 sec'},
+    {w:20,ok:rm>=.12||rm<0,t:bull?'Resistance se jagah':'Support se jagah',d:rm<0?(bull?'Resistance ':'Support ')+nfi(wall)+' paar ho chuka':(bull?'Resistance ':'Support ')+nfi(wall)+' sirf '+Math.round(Math.abs(wall-p))+' pts door'},
+    {w:15,ok:bull?ch.pcr>=.9:ch.pcr<=1.1,t:'PCR saath de raha hai',d:'PCR '+ch.pcr.toFixed(2)},
+    {w:10,ok:goodTime&&VIXD<20,t:'Achha time-window',d:goodTime?'Subah ya dopahar ka active time':'Beech ka sust time ya market ke baad (demo)'}
+  ];
+  let score=0;checks.forEach(c=>{if(c.ok)score+=c.w});
+  return{score,checks};
+}
+function tradePlan(k,bias,p,cap,rp){
+  const st=STEP[k],ix=INDICES[k],iv=VIXD*IVX[k]/100,strike=Math.round(p/st)*st;
+  const prem=.4*p*iv*Math.sqrt(DTE/365),delta=.5,theta=prem/(2*DTE),daily=p*iv/Math.sqrt(252);
+  const slD=.2*daily,t1D=1.5*slD,t2D=3*slD,sl=prem-delta*slD,t1=prem+delta*t1D,t2=prem+delta*t2D;
+  const lossLot=(prem-sl)*ix.lot,oneLot=prem*ix.lot,dir=bias==='bull'?1:-1;
+  const lotsRisk=lossLot>0?Math.floor(cap*rp/100/lossLot):0,lotsCap=oneLot>0?Math.floor(cap/oneLot):0,lots=Math.max(0,Math.min(lotsRisk,lotsCap));
+  return{strike,type:bias==='bull'?'CE':'PE',prem,sl,t1,t2,theta,thetaPct:theta/prem*100,slLvl:p-dir*slD,t1Lvl:p+dir*t1D,t2Lvl:p+dir*t2D,lots,maxLoss:lots*lossLot,capNeed:lots*oneLot,maxAllowed:cap*rp/100,oneLotLoss:lossLot};
+}
+function bandStats(k,sid,side){
+  const a=stats(k,sid,side),r=mulberry32(hash('band|'+k+sid+side)),w=a.wins;
+  return[{name:'0-49',n:22,win:clamp(Math.round(w-6-r()*6),15,92)},{name:'50-74',n:46,win:clamp(Math.round(w+(r()-.5)*5),15,92)},{name:'75+',n:32,win:clamp(Math.round(w+6+r()*8),15,95)}];
+}
+const STOCKS=['RELIANCE','HDFCBANK','ICICIBANK','SBIN','TATASTEEL','INFY','BHARTIARTL','LT'];
+function btstRows(){
+  return STOCKS.map(sym=>{
+    const r=mulberry32(hash('btst|'+sym)),strength=Math.round(78+r()*19),volx=+(1.4+r()*1.9).toFixed(1),oi=+(1.5+r()*8).toFixed(1),p=.42+r()*.24;
+    let w=0,sum=0;
+    for(let i=0;i<100;i++){const win=r()<p;if(win)w++;sum+=win?(.3+r()*1.4):-(.2+r()*1.1)}
+    return{sym,strength,volx,oi,win:w,avg:sum/100,score:strength*.4+volx*10+oi*2+w*.5};
+  }).sort((a,b)=>b.score-a.score);
+}
+</script>
+
+<script id="ui">
+/* ===== ui ===== */
+const $=id=>document.getElementById(id);
+const nf=(v,d=2)=>v.toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d});
+const sg=(v,d=2)=>(v>=0?'+':'')+v.toFixed(d);
+const Kf=v=>v>=1000?(v/1000).toFixed(1)+'K':String(v);
+const tm=t=>new Date(t).toLocaleTimeString('en-GB',{timeZone:'Asia/Kolkata',hour12:false});
+const TABS=['learn','live','mood','scorecard','ideas','paper','guru','risk'];
+function G(ev,d){if(typeof guruOn==='function'){try{guruOn(ev,d)}catch(e){}}}
+const state={ix:'nifty',side:'buy',sel:null,tab:'learn',idea:'btst',ev:null,cap:500000,rp:2,dp:4};
+const S={},EV=[],unseen={};
+let soundOn=false,voiceOn=false,audioCtx=null,evSeq=0;
+const DISC='Ye pichle 100 setups ka average hai. Aage ka koi prediction ya guarantee nahi hai. Ye investment advice nahi hai, sirf data hai. Options mein poori premium doob sakti hai.';
+
+/* seed 140 seconds of history so every chart is full on first paint */
+(function seed(){
+  const now=Date.now(),N=140;
+  KEYS.forEach(k=>{
+    const s=S[k]=makeState(INDICES[k]);
+    for(let i=0;i<N;i++){const tk=stepState(s);tk.t=now-(N-i)*1000}
+    s.cool=s.n+8;
+  });
+})();
+
+/* ---------- header chips ---------- */
+function buildChips(){
+  $('idxRow').innerHTML=KEYS.map(k=>`<button class="chip" role="tab" type="button" data-ix="${k}" aria-selected="${k===state.ix}"><span class="cn">${INDICES[k].short}</span><span class="cc num">0.00%</span><span class="dot" hidden></span></button>`).join('');
+}
+function updateChips(){
+  KEYS.forEach(k=>{
+    const el=document.querySelector(`.chip[data-ix="${k}"]`),s=S[k],c=(s.price-s.open)/s.open*100;
+    el.setAttribute('aria-selected',String(k===state.ix));
+    const cc=el.querySelector('.cc');cc.textContent=sg(c)+'%';cc.className='cc num '+(c>=0?'up':'down');
+    el.querySelector('.dot').hidden=!unseen[k];
+  });
+}
+
+/* ---------- live view ---------- */
+function sparkSvg(s){
+  const W=320,H=128,pL=6,pR=46,pT=10,pB=16,T=s.ticks.slice(-120);
+  let lo=Infinity,hi=-Infinity;for(const k of T){lo=Math.min(lo,k.p,k.vwap);hi=Math.max(hi,k.p,k.vwap)}
+  const pad=(hi-lo)*.12||1;lo-=pad;hi+=pad;
+  const x=i=>pL+(W-pL-pR)*i/(T.length-1),y=v=>pT+(H-pT-pB)*(1-(v-lo)/(hi-lo));
+  const pts=T.map((k,i)=>x(i).toFixed(1)+','+y(k.p).toFixed(1));
+  const vw=T.map((k,i)=>x(i).toFixed(1)+','+y(k.vwap).toFixed(1)).join(' ');
+  const area='M'+x(0).toFixed(1)+','+(H-pB)+' L'+pts.join(' L')+' L'+x(T.length-1).toFixed(1)+','+(H-pB)+' Z';
+  let g='';
+  [0,.5,1].forEach(f=>{const v=lo+(hi-lo)*f,yy=y(v);g+=`<line class="s-grid" x1="${pL}" x2="${W-pR+6}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}"/><text class="s-text" x="${W-2}" y="${(yy-3).toFixed(1)}" text-anchor="end">${nf(v,0)}</text>`});
+  let m='';
+  EV.filter(e=>e.k===s.ix.key&&e.n>=T[0].n&&e.n<=T[T.length-1].n).forEach(e=>{const i=e.n-T[0].n;m+=`<circle class="s-mark" cx="${x(i).toFixed(1)}" cy="${y(T[i].p).toFixed(1)}" r="5"/>`});
+  const lx=x(T.length-1),ly=y(T[T.length-1].p);
+  return `<defs><linearGradient id="gSpark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--a);stop-opacity:.2"/><stop offset="1" style="stop-color:var(--a);stop-opacity:0"/></linearGradient></defs>${g}<path d="${area}" fill="url(#gSpark)"/><polyline class="s-vwap" points="${vw}"/><polyline class="s-line" points="${pts.join(' ')}"/>${m}<circle class="s-dot" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="4"/><text class="s-text" x="${pL}" y="${H-3}">2 min pehle</text><text class="s-text" x="${W-pR}" y="${H-3}" text-anchor="end">abhi</text>`;
+}
+function barsSvg(s){
+  const T=s.ticks.slice(-40),W=320,H=96,mid=48,bw=W/T.length;
+  const mx=Math.max(1,...T.map(k=>Math.abs(k.buy-k.sell)));
+  let r='';
+  T.forEach((k,i)=>{const net=k.buy-k.sell,h=Math.max(1.5,Math.abs(net)/mx*(mid-6));r+=`<rect class="${net>=0?'bar-up':'bar-down'}" x="${(i*bw+1).toFixed(1)}" y="${(net>=0?mid-h:mid).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${h.toFixed(1)}" rx="1.5"/>`});
+  return `<line class="s-grid" x1="0" x2="${W}" y1="${mid}" y2="${mid}"/>${r}`;
+}
+function renderLive(){
+  const k=state.ix,s=S[k],T=s.ticks,last=T[T.length-1],c=(s.price-s.open)/s.open*100;
+  $('hName').textContent=s.ix.name;
+  $('hPrice').textContent=nf(s.price);
+  const ch=$('hChg');ch.textContent=sg(c)+'%';ch.className='chg num '+(c>=0?'up':'down');
+  $('spark').innerHTML=sparkSvg(s);
+  let b=0,sl=0;T.slice(-10).forEach(t=>{b+=t.buy;sl+=t.sell});
+  const bp=Math.round(b/(b+sl)*100);
+  $('mBuy').style.flexBasis=bp+'%';$('mSell').style.flexBasis=(100-bp)+'%';
+  $('mBuyT').textContent='Buy '+bp+'%';$('mSellT').textContent='Sell '+(100-bp)+'%';
+  $('bars').innerHTML=barsSvg(s);
+  let rows='<div class="tape-row h"><span>Time</span><span>Buy</span><span>Sell</span><span>Net</span></div>';
+  T.slice(-6).reverse().forEach(t=>{const net=t.buy-t.sell;rows+=`<div class="tape-row"><span>${tm(t.t)}</span><span class="up">${Kf(t.buy)}</span><span class="down">${Kf(t.sell)}</span><span class="${net>=0?'up':'down'}">${net>=0?'+':'-'}${Kf(Math.abs(net))}</span></div>`});
+  $('tape').innerHTML=rows;
+  renderStrip();
+}
+const fOi=v=>v>=1e5?(v/1e5).toFixed(1)+'L':Math.round(v/1e3)+'K';
+function renderLog(){
+  renderSetupCard();
+  if(!EV.length){$('log').innerHTML='<li class="empty" style="display:block;border:0;padding:0">Abhi tak koi setup nahi bana. Demo mein pehla setup kuch second mein aayega.</li>';return}
+  $('log').innerHTML=EV.map(e=>{
+    const su=SETUPS.find(x=>x.id===e.sid),a=stats(e.k,e.sid,'buy'),b=stats(e.k,e.sid,'sell');
+    return `<li><button class="lrow" type="button" data-id="${e.id}"><time>${tm(e.t)}</time><div class="t">${INDICES[e.k].short}: ${su.name}<span class="pill ${e.bias}">${e.bias==='bull'?'BULLISH':'BEARISH'}</span><span class="pill sc">${e.score}</span></div><div class="m">Level ${nf(e.p)}. Pichle 100 mein buying side ${a.wins}, selling side ${b.wins} chale. Poora plan dekhne ke liye dabao.</div></button></li>`;
+  }).join('');
+}
+function renderStrip(){
+  const k=state.ix,s=S[k],ch=chainFor(k),m=oneSigma(k,s.open);
+  $('moodStrip').innerHTML=`<div class="strip-h"><span class="eyebrow">Aaj ka mood</span><span class="go">Poora dekho</span></div><div class="strip-g"><div class="w"><small>Expected range (68%)</small><b>${nfi(s.open-m)} se ${nfi(s.open+m)}</b></div><div><small>PCR</small><b>${ch.pcr.toFixed(2)}</b></div><div><small>Support / Resistance</small><b>${nfi(ch.sup)} / ${nfi(ch.res)}</b></div></div>`;
+}
+function pickEv(){
+  if(state.ev&&state.ev.k===state.ix)return state.ev;
+  return EV.find(e=>e.k===state.ix)||null;
+}
+const CHECK='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',CROSS='<svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+function ring(score){
+  const c=2*Math.PI*30,d=c*score/100;
+  return `<svg viewBox="0 0 76 76" role="img" aria-label="Strength ${score} / 100"><defs><linearGradient id="gRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1D4ED8"/><stop offset="1" stop-color="#0891B2"/></linearGradient></defs><circle cx="38" cy="38" r="30" fill="none" stroke="#EAF0F8" stroke-width="8"/><circle cx="38" cy="38" r="30" fill="none" stroke="url(#gRing)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${d.toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 38 38)"/><text x="38" y="45" text-anchor="middle" style="font:600 21px var(--f-mono);fill:var(--ink)">${score}</text></svg>`;
+}
+function renderSetupCard(){
+  const e=pickEv(),box=$('setupCard');
+  if(!e){box.hidden=true;return}
+  box.hidden=false;
+  const su=SETUPS.find(x=>x.id===e.sid),ix=INDICES[e.k],pl=tradePlan(e.k,e.bias,e.p,state.cap,state.rp);
+  const[g,gl]=e.score>=75?['good','Strong']:e.score>=50?['ok','Theek']:['weak','Kamzor'];
+  const band=bandStats(e.k,e.sid,'buy')[e.score>=75?2:e.score>=50?1:0];
+  const chk=e.checks.map(c=>`<li class="chk ${c.ok?'ok':'no'}"><span class="ic" aria-hidden="true">${c.ok?CHECK:CROSS}</span><span><b>${c.t}</b><small>${c.d}</small></span></li>`).join('');
+  const lotsNote=pl.lots>0?`Max loss ₹${nfi(pl.maxLoss)}`:`1 lot ka loss ₹${nfi(pl.oneLotLoss)}, limit ₹${nfi(pl.maxAllowed)}`;
+  box.innerHTML=`<div class="eyebrow">Setup · ${ix.name} · ${tm(e.t)}</div><h2 style="font-size:18px;margin-top:4px">${su.name}<span class="pill ${e.bias}">${e.bias==='bull'?'BULLISH':'BEARISH'}</span></h2><p class="lead" style="margin-top:4px">${su.note}</p>
+  <div class="sc-top"><div class="ringbox">${ring(e.score)}</div><div><div class="eyebrow">Setup Strength</div><div style="margin:2px 0 4px"><b class="num" style="font-size:18px">${e.score}/100</b><span class="tag ${g}">${gl}</span></div><p class="lead" style="font-size:12px">Is score band mein pichle 100 setups: <b class="num">${band.win}%</b> chale (${band.n} setups, demo).</p></div></div>
+  <ul class="chk-list">${chk}</ul>
+  <div class="eyebrow" style="margin:18px 0 8px">Trade plan · sirf option buying ke liye</div>
+  <div class="plan-h">${ix.short} ${nfi(pl.strike)} ${pl.type} <span class="tag ok">ATM</span></div>
+  <dl class="metrics" style="margin:0"><div><dt>Premium (approx)</dt><dd>₹${pl.prem.toFixed(0)}</dd><small>Demo, expiry ~${DTE} din door</small></div><div><dt>Theta roz</dt><dd class="down">-₹${pl.theta.toFixed(0)}</dd><small>Premium ka ${pl.thetaPct.toFixed(0)}% roz katta hai</small></div><div><dt>Stop-loss</dt><dd class="down">₹${pl.sl.toFixed(0)}</dd><small>${ix.short} ${nfi(pl.slLvl)} par</small></div><div><dt>Lots</dt><dd>${pl.lots}</dd><small>${lotsNote}</small></div><div><dt>Target 1</dt><dd class="up">₹${pl.t1.toFixed(0)}</dd><small>${nfi(pl.t1Lvl)} · risk ka 1.5 guna</small></div><div><dt>Target 2</dt><dd class="up">₹${pl.t2.toFixed(0)}</dd><small>${nfi(pl.t2Lvl)} · risk ka 3 guna</small></div></dl>
+  <div class="act">${paperBtn(e,pl)}<button class="btn ghost" type="button" data-act="speak">Hindi mein suno</button><a class="btn ghost" href="#risk">Risk badlo</a></div>
+  <p class="hint">Ye volatility ke formula se bana calculator hai, kisi trade ki salah nahi. Lots abhi Rs ${nfi(state.cap)} capital aur ${state.rp}% risk par hain.</p>`;
+}
+function renderMood(){
+  const k=state.ix,ix=INDICES[k],s=S[k],ch=chainFor(k),m=oneSigma(k,s.open),p=s.price;
+  const lo=s.open-2.5*m,span=5*m,pos=v=>+clamp((v-lo)/span*100,0,100).toFixed(1);
+  const used=Math.abs(p-s.open)/m*100;
+  const usedTxt=used<50?'Abhi range mein kaafi jagah hai.':used<100?'Aadhi se zyada move ho chuka. Option buyers theta aur thakan ka dhyan rakhein.':'Normal range paar ho chuki. Aise din mein ulta move bhi tez ho sakta hai.';
+  $('moodRange').innerHTML=`<div class="eyebrow">Aaj ki expected range · ${ix.name}</div><div class="rng num">${nfi(s.open-m)} <span>se</span> ${nfi(s.open+m)}</div><p class="lead">VIX ${(VIXD*IVX[k]).toFixed(1)} (demo) ke hisaab se din ka 1σ move ±${Math.round(m)} points. Price lagbhag 68% din is range mein rehta hai.</p><div class="rbar" role="img" aria-label="Expected range bar"><i class="r2" style="left:${pos(s.open-2*m)}%;width:${(pos(s.open+2*m)-pos(s.open-2*m)).toFixed(1)}%"></i><i class="r1" style="left:${pos(s.open-m)}%;width:${(pos(s.open+m)-pos(s.open-m)).toFixed(1)}%"></i><i class="op" style="left:${pos(s.open)}%"></i><b class="pm" style="left:${pos(p)}%"></b></div><div class="rlab"><span style="left:10%">-2σ</span><span style="left:30%">-1σ</span><span style="left:50%">Open</span><span style="left:70%">+1σ</span><span style="left:90%">+2σ</span></div><p style="margin-top:12px"><b class="num">${Math.round(used)}%</b> 1σ move ho chuka. ${usedTxt}</p><p class="hint">Ye VIX se nikla math hai, kal ka forecast nahi.</p>`;
+  const near=ch.rows.reduce((a,b)=>Math.abs(b.K-p)<Math.abs(a.K-p)?b:a).K;
+  const rows=ch.rows.slice().reverse().map(r=>`<div class="lr${r.K===near?' near':''}"><div class="pb"><i style="width:${(r.p/ch.maxOi*100).toFixed(1)}%"></i><em class="num">${fOi(r.p)}</em></div><div class="ks num${r.K===ch.sup?' s':''}${r.K===ch.res?' r':''}">${nfi(r.K)}${r.K===ch.sup?'<small>SUPPORT</small>':''}${r.K===ch.res?'<small>RESISTANCE</small>':''}</div><div class="cb"><i style="width:${(r.c/ch.maxOi*100).toFixed(1)}%"></i><em class="num">${fOi(r.c)}</em></div></div>`).join('');
+  const pr=ch.pcr>1.2?'Put-heavy':ch.pcr<.8?'Call-heavy':'Neutral';
+  $('moodChain').innerHTML=`<div class="eyebrow">Option chain map · ${ix.name}</div><p style="margin:6px 0 12px">${moodText(k,p)}</p><dl class="metrics" style="margin:0"><div><dt>PCR</dt><dd>${ch.pcr.toFixed(2)}</dd><small>${pr}</small></div><div><dt>Max pain</dt><dd>${nfi(ch.pain)}</dd><small>Yahan option sellers ko sabse kam payout</small></div><div><dt>Support (put wall)</dt><dd class="up">${nfi(ch.sup)}</dd></div><div><dt>Resistance (call wall)</dt><dd class="down">${nfi(ch.res)}</dd></div></dl><div class="lad-h"><span>Put OI</span><span>Strike</span><span>Call OI</span></div>${rows}<p class="hint">Highlight wali row price ke sabse paas ka strike hai. Bada put OI neeche support jaisa kaam karta hai, bada call OI upar rukawat jaisa.</p>`;
+}
+function bandHtml(k,sid,side){
+  return '<h2 style="margin:16px 0 8px;font-size:14px">Strength score ke hisaab se win rate</h2>'+bandStats(k,sid,side).map(x=>`<div class="bandrow"><span class="num">${x.name}</span><span class="track" style="grid-column:auto"><b style="width:${x.win}%"></b><i></i></span><span class="num">${x.win}% <small>(${x.n})</small></span></div>`).join('')+'<p class="hint">Demo numbers. Asli data aane par yahin dikhega ki high score sach mein fayda deta hai ya nahi. Chhote sample mein range badi hoti hai.</p>';
+}
+
+/* ---------- alerts ---------- */
+const HI_IX={nifty:'Nifty',banknifty:'Bank Nifty',sensex:'Sensex'};
+const HI_SU={orb:'range breakout',mom:'momentum burst',vwap:'VWAP reclaim',oil:'OI long build-up',ois:'OI short build-up'};
+function istHour(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));return d.getHours()+d.getMinutes()/60}
+function beep(){
+  if(!soundOn||!audioCtx)return;
+  try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=880;g.gain.value=.06;o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+.14)}catch(e){}
+}
+function say(text){
+  try{const ss=window.speechSynthesis;if(!ss)return;ss.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-IN';const vs=ss.getVoices(),v=vs.find(x=>x.lang&&x.lang.toLowerCase().replace('_','-')==='en-in')||vs.find(x=>x.lang&&x.lang.toLowerCase().indexOf('en')===0);if(v)u.voice=v;u.rate=.95;ss.speak(u)}catch(e){}
+}
+function evText(e){return HI_IX[e.k]+' mein '+HI_SU[e.sid]+', '+(e.bias==='bull'?'bullish':'bearish')+' setup bana. strength '+e.score+'.'}
+function toast(e){
+  const su=SETUPS.find(x=>x.id===e.sid),a=stats(e.k,e.sid,'buy'),b=stats(e.k,e.sid,'sell');
+  const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');
+  el.innerHTML=`<div class="th"><span>SETUP BANA · ${INDICES[e.k].name.toUpperCase()}</span><span>${tm(e.t)}</span></div><div class="tt">${su.name}: ${e.bias==='bull'?'Bullish':'Bearish'} · Strength ${e.score}</div><p>${su.note}</p><p style="margin-top:4px">Pichle 100 mein option buying ${a.wins}%, selling ${b.wins}% chale.</p><div class="ta"><button class="btn" type="button" data-go>Plan dekho</button><button class="btn ghost" type="button" data-x>Band karo</button></div>`;
+  el.querySelector('[data-go]').onclick=()=>{state.ix=e.k;state.ev=e;unseen[e.k]=false;el.remove();if(location.hash==='#live')route();else location.hash='#live'};
+  el.querySelector('[data-x]').onclick=()=>el.remove();
+  const box=$('toasts');box.prepend(el);while(box.children.length>2)box.lastChild.remove();
+  setTimeout(()=>el.remove(),9000);
+}
+function fire(k,sid,bias){
+  if(typeof tabOpen==='function'&&!tabOpen('live'))return;
+  const s=S[k],sc=scoreSetup(k,s,bias,istHour()),e={id:++evSeq,t:Date.now(),k,sid,bias,p:s.price,n:s.n,score:sc.score,checks:sc.checks};
+  s.cool=s.n+120;EV.unshift(e);if(EV.length>30)EV.pop();
+  if(k===state.ix)state.ev=e;
+  if(!(state.tab==='live'&&state.ix===k))unseen[k]=true;
+  renderLog();toast(e);beep();if(voiceOn)say(evText(e));
+  try{if(navigator.vibrate&&navigator.userActivation&&navigator.userActivation.hasBeenActive)navigator.vibrate([60,40,60])}catch(x){}
+  G('setup',e);
+}
+
+/* ---------- scorecard ---------- */
+function grade(x){return x>=.1?['good','Strong']:x>=0?['ok','Theek']:['weak','Kamzor']}
+function curveSvg(cv){
+  const W=320,H=116,pL=6,pR=40,pT=10,pB=10;
+  const lo=Math.min(0,...cv),hi=Math.max(0,...cv),sp=(hi-lo)||1;
+  const x=i=>pL+(W-pL-pR)*i/(cv.length-1),y=v=>pT+(H-pT-pB)*(1-(v-lo)/sp);
+  const pts=cv.map((v,i)=>x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ');
+  const end=cv[cv.length-1];
+  return `<line class="s-zero" x1="${pL}" x2="${W-pR+6}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}"/><polyline class="s-line" points="${pts}"/><circle class="s-dot" cx="${x(cv.length-1).toFixed(1)}" cy="${y(end).toFixed(1)}" r="4"/><text class="s-text" x="${W-2}" y="${(y(hi)+9).toFixed(1)}" text-anchor="end">${sg(hi,1)}R</text><text class="s-text" x="${W-2}" y="${(y(0)-3).toFixed(1)}" text-anchor="end">0</text><text class="s-text" x="${W-2}" y="${(y(lo)-3).toFixed(1)}" text-anchor="end">${sg(lo,1)}R</text>`;
+}
+function renderScore(){
+  const k=state.ix,side=state.side,other=side==='buy'?'sell':'buy';
+  const rows=SETUPS.map(su=>({su,a:stats(k,su.id,side),o:stats(k,su.id,other)})).sort((p,q)=>q.a.exp-p.a.exp);
+  if(!state.sel||!SETUPS.some(x=>x.id===state.sel))state.sel=rows[0].su.id;
+  $('rank').innerHTML=rows.map(({su,a,o})=>{
+    const[g,gl]=grade(a.exp);
+    return `<button class="row" type="button" data-sid="${su.id}" aria-pressed="${su.id===state.sel}"><span class="rn">${su.name}<span class="tag ${g}">${gl}</span></span><span class="rw">${a.wins}%</span><span class="track"><b style="width:${a.wins}%"></b><i></i></span><span class="rs"><span>Avg ${sg(a.exp)}R per trade</span><span>${other==='buy'?'Buying':'Selling'} side: ${o.wins}%</span></span></button>`;
+  }).join('');
+  const su=SETUPS.find(x=>x.id===state.sel),a=stats(k,su.id,side);
+  const dots=a.res.map((x,i)=>`<span class="dot ${x.win?'w':'l'}${i===99?' n':''}"></span>`).join('');
+  $('detail').innerHTML=`<div class="eyebrow">${INDICES[k].name} · ${side==='buy'?'Option Buying':'Option Selling'}</div><h2 style="font-size:18px;margin-top:4px">${su.name}</h2><p class="lead" style="margin-top:4px">Pichle 100 setups: <b class="num">${a.wins}</b> chale, <b class="num">${100-a.wins}</b> nahi chale. Sabse naya trade neeche dayen kone mein.</p><div class="dots" aria-hidden="true">${dots}</div><div class="dlegend"><span class="w">Chala</span><span class="l">Nahi chala</span></div><dl class="metrics" style="margin:0"><div><dt>Win rate</dt><dd>${a.wins}%</dd><small>Range ${Math.round(a.ci[0]*100)} se ${Math.round(a.ci[1]*100)}%</small></div><div><dt>Avg per trade</dt><dd class="${a.exp>=0?'up':'down'}">${sg(a.exp)}R</dd><small>100 trade ka total ${sg(a.total,1)}R</small></div><div><dt>Avg jeet</dt><dd class="up">${sg(a.avgWin)}R</dd></div><div><dt>Avg haar</dt><dd class="down">${sg(a.avgLoss)}R</dd></div><div style="grid-column:1/-1"><dt>Lagatar haar ka record</dt><dd>${a.streak} trade</dd><small>Is setup mein itni baar ek ke baad ek haar mili.</small></div></dl>${bandHtml(k,su.id,side)}<h2 style="margin:16px 0 8px;font-size:14px">Agar har setup follow kiya hota (R mein)</h2><svg id="eq" viewBox="0 0 320 116" role="img" aria-label="Pichle 100 trade ka cumulative profit">${curveSvg(a.curve)}</svg><p class="hint">1R = us trade mein jitna risk liya tha. +1R matlab risk ke barabar profit.</p>`;
+}
+
+/* ---------- zero to hero ---------- */
+function renderZH(){
+  const k=state.ix,ix=INDICES[k];
+  $('zhBody').innerHTML=['ce','pe'].map(sd=>{
+    const z=zh(k,sd),h=z.hits,ev100=z.ev*100;
+    return `<div class="card"><div class="card-head" style="margin-bottom:8px"><div><div class="eyebrow">${ix.name} · ${sd==='ce'?'Call (CE)':'Put (PE)'} · OTM</div><div class="lead" style="margin-top:3px">Demo premium <b class="num">₹${z.prem.toFixed(1)}</b></div></div><div class="num" style="font-size:26px;font-weight:600">${h}%</div></div><p class="lead">100 mein <b class="num">${h}</b> baar premium ${z.M.toFixed(1)} guna ke aas paas gaya. Baaki baar lagbhag ${Math.round(z.L*100)}% premium doob gaya.</p><dl class="metrics" style="margin:12px 0 0"><div><dt>Jeet par</dt><dd class="up">+${z.M.toFixed(1)}x</dd></div><div><dt>Haar par</dt><dd class="down">-${Math.round(z.L*100)}%</dd></div><div style="grid-column:1/-1"><dt>₹100 lagane par avg result</dt><dd class="${ev100>=0?'up':'down'}">${ev100>=0?'+':'-'}₹${Math.abs(ev100).toFixed(0)}</dd><small>${ev100>=0?'Pichle 100 mein ye side thoda positive raha.':'Pichle 100 mein ye side negative raha. Dhyan se.'}</small></div></dl></div>`;
+  }).join('');
+}
+
+/* ---------- btst ---------- */
+function renderBtst(){
+  $('btstList').innerHTML=btstRows().map((r,i)=>{
+    const[g,gl]=i<3?['good','Strong']:i<6?['ok','Theek']:['weak','Halka'];
+    return `<div class="card btst"><div class="sym">${r.sym}<span class="tag ${g}">${gl}</span></div><div class="big">${r.win}%</div><div class="sub"><span>Day range mein <b>${r.strength}%</b> upar</span><span>Volume <b>${r.volx}x</b></span><span>OI <b>+${r.oi}%</b></span></div><div class="sub" style="color:var(--ink-3)"><span>Pichle 100 BTST mein ${r.win} baar agle din gap-up. Avg agle din move <b class="${r.avg>=0?'up':'down'}">${sg(r.avg)}%</b></span></div></div>`;
+  }).join('');
+}
+
+/* ---------- risk ---------- */
+function money(v){return '₹'+Math.round(v).toLocaleString('en-IN')}
+function calcRisk(){
+  const g=id=>parseFloat($(id).value)||0;
+  const cap=g('rCap'),rp=g('rRisk'),dp=g('rDay'),prem=g('rPrem'),sl=g('rSl'),lot=g('rLot');
+  state.cap=cap;state.rp=rp;state.dp=dp;
+  const maxLoss=cap*rp/100,daily=cap*dp/100,lossLot=prem*lot*sl/100,oneLot=prem*lot;
+  const byRisk=lossLot>0?Math.floor(maxLoss/lossLot):0,byCap=oneLot>0?Math.floor(cap/oneLot):0;
+  const lots=Math.min(byRisk,byCap),tradeLoss=lots*lossLot,trades=tradeLoss>0?Math.floor(daily/tradeLoss):0;
+  $('riskOut').innerHTML=`<div class="big"><div class="eyebrow">Zyada se zyada lots</div><div class="v">${lots}</div></div><div class="it"><div class="eyebrow">Capital lagega</div><div class="v">${money(lots*oneLot)}</div></div><div class="it"><div class="eyebrow">Stop-loss premium</div><div class="v">₹${(prem*(1-sl/100)).toFixed(1)}</div></div><div class="it"><div class="eyebrow">Ek trade ki max loss</div><div class="v down">${money(tradeLoss)}</div></div><div class="it"><div class="eyebrow">Din ki loss limit</div><div class="v">${money(daily)}</div></div>`;
+  let w='';
+  if(lots===0)w='Is premium pe 1 lot ka stop-loss bhi aapki risk limit se bada hai. Risk % badhao, stop-loss kam karo ya sasta option dekho.';
+  else if(byCap<byRisk)w='Lots capital ki wajah se limit hue hain, risk limit ki wajah se nahi.';
+  else w=`Din mein lagatar ${trades} stop-loss lagne par aaj ki limit poori ho jaayegi. Uske baad trading rok do.`;
+  $('riskWarn').innerHTML=`<div class="note">${w}</div>`;
+}
+
+/* ---------- paper trading (virtual wallet) ---------- */
+const PKEY='sr_paper_v2',P0=500000,CHG=60;
+const P={cash:P0,positions:[],trades:[],seq:0};
+let pSig='',pConfirm=0,pSaveN=0;
+const dayKey=t=>new Date(t).toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+const rs=v=>'₹'+Math.abs(Math.round(v)).toLocaleString('en-IN');
+const rss=v=>(v<0?'-':'+')+'₹'+Math.abs(Math.round(v)).toLocaleString('en-IN');
+const tlabel=o=>INDICES[o.k].short+' '+nfi(o.strike)+' '+o.type;
+function premNow(o){const s=S[o.k],dir=o.bias==='bull'?1:-1;return Math.max(.5,o.base+.5*dir*(s.price-o.S0)-o.theta/22500*(Date.now()-o.t0)/1000)}
+const bidNow=o=>premNow(o)*.995;
+const posPnl=o=>(bidNow(o)-o.entry)*o.lot*o.lots;
+function pOpenPnl(){return P.positions.reduce((a,o)=>a+posPnl(o),0)}
+function pEquity(){return P.cash+P.positions.reduce((a,o)=>a+bidNow(o)*o.lot*o.lots,0)}
+function pDayPnl(){const d=dayKey(Date.now());return P.trades.filter(t=>dayKey(t.t)===d).reduce((a,t)=>a+t.pnl,0)+pOpenPnl()}
+function pLocked(){return -pDayPnl()>=P0*state.dp/100}
+function pSave(){try{localStorage.setItem(PKEY,JSON.stringify(P))}catch(e){}}
+function pLoad(){
+  try{
+    const r=JSON.parse(localStorage.getItem(PKEY)||'null');
+    if(!r||!Number.isFinite(r.cash))return;
+    P.cash=r.cash;P.seq=Number.isFinite(r.seq)?r.seq:0;
+    P.trades=(r.trades||[]).filter(t=>t&&KEYS.includes(t.k)&&SETUPS.some(s=>s.id===t.sid)&&(t.type==='CE'||t.type==='PE')&&['pnl','t','strike','lots'].every(f=>Number.isFinite(t[f]))).slice(0,200);
+    (r.positions||[]).forEach(o=>{
+      if(!o||!KEYS.includes(o.k)||!SETUPS.some(s=>s.id===o.sid)||(o.bias!=='bull'&&o.bias!=='bear')||(o.type!=='CE'&&o.type!=='PE'))return;
+      if(!['entry','last','lot','lots','strike','theta','sl','sl0','t1','t2','score','id'].every(f=>Number.isFinite(o[f])))return;
+      o.t1Hit=!!o.t1Hit;o.evId=-1;o.base=o.last;o.S0=S[o.k].price;o.t0=Date.now();P.positions.push(o);
+    });
+  }catch(e){}
+}
+function paperEnter(e){
+  if(pLocked())return'lock';
+  if(P.positions.some(o=>o.evId===e.id))return'dup';
+  const pl=tradePlan(e.k,e.bias,S[e.k].price,state.cap,state.rp),lot=INDICES[e.k].lot,entry=pl.prem*1.005;
+  const lots=Math.min(pl.lots,Math.floor(P.cash/(entry*lot)));
+  if(lots<1)return'size';
+  P.cash-=entry*lot*lots;
+  P.positions.push({id:++P.seq,evId:e.id,k:e.k,bias:e.bias,type:pl.type,strike:pl.strike,sid:e.sid,score:e.score,lots,lot,entry,base:pl.prem,S0:S[e.k].price,t0:Date.now(),theta:pl.theta,sl:pl.sl,sl0:pl.sl,t1:pl.t1,t2:pl.t2,t1Hit:false,last:pl.prem,t:Date.now()});
+  pSave();G('enter');return'ok';
+}
+function paperClose(o,reason){
+  const px=bidNow(o),val=px*o.lot*o.lots,pnl=val-o.entry*o.lot*o.lots-CHG;
+  P.cash+=val-CHG;P.positions=P.positions.filter(x=>x!==o);
+  P.trades.unshift({t:Date.now(),k:o.k,type:o.type,strike:o.strike,lots:o.lots,entry:o.entry,exit:px,pnl,reason,sid:o.sid,score:o.score,ot:o.t});
+  if(P.trades.length>200)P.trades.pop();
+  pSave();G('close',P.trades[0]);return pnl;
+}
+function miniToast(title,text,btn,fn){
+  const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');
+  el.innerHTML='<div class="tt" style="margin-top:0">'+title+'</div><p>'+text+'</p>'+(btn?'<div class="ta"><button class="btn" type="button" data-go>'+btn+'</button><button class="btn ghost" type="button" data-x>Band karo</button></div>':'');
+  const g=el.querySelector('[data-go]');if(g)g.onclick=()=>{el.remove();if(fn)fn()};
+  const x=el.querySelector('[data-x]');if(x)x.onclick=()=>el.remove();
+  const box=$('toasts');box.prepend(el);while(box.children.length>2)box.lastChild.remove();
+  setTimeout(()=>el.remove(),7000);
+}
+function paperTick(){
+  P.positions.slice().forEach(o=>{
+    const pr=premNow(o);o.last=pr;
+    let why=null;
+    if(pr<=o.sl)why=o.t1Hit?'T1 ke baad SL':'Stop-loss';
+    else if(pr>=o.t2)why='Target 2';
+    else if(pr>=o.t1&&!o.t1Hit){o.t1Hit=true;o.sl=o.entry;pSave();miniToast('Target 1 hit',tlabel(o)+': SL ab entry par.')}
+    if(why){const pnl=paperClose(o,why);miniToast('Paper trade band',tlabel(o)+': '+rss(pnl)+' ('+why+')','Paper dekho',()=>{location.hash='#paper'});renderSetupCard()}
+  });
+  if(P.positions.length&&++pSaveN%5===0)pSave();
+}
+function paperBtn(e,pl){
+  let t,dis=true;
+  if(P.positions.some(o=>o.evId===e.id))t='Paper mein khula hai';
+  else if(pLocked())t='Aaj ki loss limit poori';
+  else if(pl.lots<1)t='Risk limit se bada, lot nahi';
+  else{t='Paper trade lo ('+pl.lots+' lot, virtual paisa)';dis=false}
+  return '<button class="btn full" type="button" data-act="paper"'+(dis?' disabled':'')+'>'+t+'</button>';
+}
+function posHtml(o){
+  const ix=INDICES[o.k],pr=premNow(o),pnl=posPnl(o),span=o.t2-o.sl0;
+  const pct=v=>clamp((v-o.sl0)/span*100,0,100),ep=pct(o.base),tp=pct(o.t1),cur=pct(pr);
+  const su=SETUPS.find(x=>x.id===o.sid);
+  return `<div class="card" data-pid="${o.id}"><div class="pos-h"><div><div class="plan-h" style="font-size:16px;margin:0">${tlabel(o)}</div><div class="lead" style="font-size:12px">${o.lots} lot · ${su.name} · Strength ${o.score}</div></div><div class="num pnl ${pnl>=0?'up':'down'}" data-f="pl${o.id}">${rss(pnl)}</div></div><div class="pbar" style="background:linear-gradient(90deg,var(--down-bg) ${ep.toFixed(1)}%,var(--surface-2) ${ep.toFixed(1)}% ${tp.toFixed(1)}%,var(--up-bg) ${tp.toFixed(1)}%)"><b data-f="bar${o.id}" style="left:${cur.toFixed(1)}%"></b></div><div class="plab"><span>SL ₹${o.sl0.toFixed(0)}</span><span>T1 ₹${o.t1.toFixed(0)}</span><span>T2 ₹${o.t2.toFixed(0)}</span></div><div class="pos-m"><span>Entry ₹${o.entry.toFixed(1)}</span><span>Abhi ₹<span data-f="p${o.id}">${pr.toFixed(1)}</span></span></div>${o.t1Hit?'<p class="hint" style="margin:6px 0 0">Target 1 hit ho chuka. SL ab entry ke paas hai.</p>':''}<button class="btn ghost" type="button" data-exit="${o.id}" style="width:100%;margin-top:10px">Exit karo</button></div>`;
+}
+function pSigNow(){return P.positions.map(o=>o.id+(o.t1Hit?'t':'')).join(',')+'|'+P.trades.length+'|'+pLocked()}
+function pLimLeft(){const lim=P0*state.dp/100;return Math.max(0,lim-Math.max(0,-pDayPnl()))}
+function renderPaper(){
+  const eq=pEquity(),open=pOpenPnl(),locked=pLocked();
+  $('pWallet').innerHTML=`<div class="eyebrow">Paper wallet · virtual paisa</div><div class="eq num" data-f="eq">${rs(eq)}</div><div class="wal-g"><div><small>Cash</small><b class="num">${rs(P.cash)}</b></div><div><small>Open P&amp;L</small><b class="num" data-f="open">${rss(open)}</b></div><div><small>Total P&amp;L</small><b class="num" data-f="tot">${rss(eq-P0)}</b></div><div><small>Aaj ki loss limit mein bacha</small><b class="num" data-f="lim">${rs(pLimLeft())}</b></div></div>${locked?'<div class="lockb">Aaj ki loss limit poori ho gayi. Naye paper trade lock hain. Ye discipline ka hissa hai.</div>':''}<button class="btn ghost" type="button" data-reset>${pConfirm&&Date.now()-pConfirm<4000?'Pakka? Dobara dabao':'Reset: ₹5,00,000 se dobara shuru'}</button>`;
+  $('pPos').innerHTML=P.positions.length?P.positions.map(posHtml).join(''):'<div class="card"><p class="empty">Koi khula paper trade nahi. Live tab mein setup card se "Paper trade lo" dabao.</p></div>';
+  const T=P.trades,n=T.length;
+  $('pStats').hidden=!n;
+  if(n){
+    const w=T.filter(t=>t.pnl>0).length,net=T.reduce((a,t)=>a+t.pnl,0);
+    $('pStats').innerHTML=`<h2 style="margin-bottom:10px">Tumhara record</h2><dl class="metrics" style="margin:0"><div><dt>Trades</dt><dd>${n}</dd></div><div><dt>Win rate</dt><dd>${Math.round(w/n*100)}%</dd><small>${w} jeete, ${n-w} haare</small></div><div><dt>Net P&amp;L</dt><dd class="${net>=0?'up':'down'}">${rss(net)}</dd></div><div><dt>Sabse badi haar</dt><dd class="down">${rss(Math.min(...T.map(t=>t.pnl)))}</dd></div></dl>`;
+  }
+  $('pTrades').innerHTML='<h2 style="margin-bottom:6px">Trade journal</h2>'+(n?'<ul class="tl">'+T.slice(0,15).map(t=>`<li><div><b>${tlabel(t)}</b><small>${tm(t.t)} · ${t.lots} lot · ${t.reason}</small></div><span class="num ${t.pnl>=0?'up':'down'}">${rss(t.pnl)}</span></li>`).join('')+'</ul>':'<p class="empty">Abhi koi band trade nahi.</p>');
+  pSig=pSigNow();
+}
+function updatePaperLive(){
+  const root=$('v-paper'),set=(f,t)=>{const el=root.querySelector('[data-f="'+f+'"]');if(el)el.textContent=t};
+  const eq=pEquity();
+  set('eq',rs(eq));set('open',rss(pOpenPnl()));set('tot',rss(eq-P0));set('lim',rs(pLimLeft()));
+  P.positions.forEach(o=>{
+    const pr=premNow(o),pnl=posPnl(o),el=root.querySelector('[data-f="pl'+o.id+'"]'),bar=root.querySelector('[data-f="bar'+o.id+'"]');
+    set('p'+o.id,pr.toFixed(1));
+    if(el){el.textContent=rss(pnl);el.className='num pnl '+(pnl>=0?'up':'down')}
+    if(bar)bar.style.left=clamp((pr-o.sl0)/(o.t2-o.sl0)*100,0,100).toFixed(1)+'%';
+  });
+}
+function refreshPaper(){if(pSigNow()!==pSig)renderPaper();else updatePaperLive()}
+
+/* ---------- router and events ---------- */
+const SECS=['live','mood','scorecard','btst','zero-hero','paper','guru','learn','risk'];
+function curSec(){return state.tab==='ideas'?state.idea:state.tab}
+function renderCur(){
+  const c=curSec();
+  if(c==='live'){renderLive();renderLog()}
+  if(c==='mood')renderMood();
+  if(c==='scorecard')renderScore();
+  if(c==='btst')renderBtst();
+  if(c==='zero-hero')renderZH();
+  if(c==='paper')renderPaper();
+  if(c==='learn'&&typeof lnRender==='function')lnRender();
+}
+function route(){
+  let h=(location.hash||'#learn').slice(1);
+  if(h==='btst'||h==='zero-hero'){state.idea=h;h='ideas'}
+  if(!TABS.includes(h))h='learn';
+  if(typeof tabOpen==='function'&&!tabOpen(h)){h='learn';try{history.replaceState(null,'','#learn')}catch(e){}}
+  if(typeof navRefresh==='function')navRefresh();
+  state.tab=h;
+  const c=curSec();
+  SECS.forEach(t=>{$('v-'+t).hidden=t!==c});
+  document.querySelectorAll('#nav a').forEach(a=>{if(a.dataset.t===h)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+  document.querySelectorAll('.idea-seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.idea===state.idea)));
+  $('idxRow').hidden=!['live','mood','scorecard','zero-hero'].includes(c);
+  if(c==='live')unseen[state.ix]=false;
+  if(c==='risk'){$('rIx').value=state.ix;$('rLot').value=INDICES[state.ix].lot;calcRisk()}
+  else renderCur();
+  updateChips();window.scrollTo(0,0);G('tab',c);
+}
+document.querySelectorAll('[data-disc]').forEach(p=>p.textContent=DISC);
+pLoad();
+buildChips();
+$('idxRow').addEventListener('click',e=>{
+  const b=e.target.closest('.chip');if(!b)return;
+  state.ix=b.dataset.ix;unseen[state.ix]=false;
+  renderCur();
+  updateChips();
+});
+document.querySelector('#v-scorecard .seg').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  state.side=b.dataset.side;
+  document.querySelectorAll('#v-scorecard .seg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  renderScore();
+});
+$('rank').addEventListener('click',e=>{const b=e.target.closest('.row');if(!b)return;state.sel=b.dataset.sid;renderScore()});
+$('riskForm').addEventListener('input',calcRisk);
+$('riskForm').addEventListener('submit',e=>e.preventDefault());
+$('rIx').addEventListener('change',()=>{$('rLot').value=INDICES[$('rIx').value].lot;calcRisk()});
+$('demoFire').addEventListener('click',()=>{
+  const su=SETUPS[Math.floor(Math.random()*SETUPS.length)];
+  fire(state.ix,su.id,su.id==='ois'?'bear':su.id==='oil'?'bull':bestPick([state.ix]).b);
+});
+$('snd').addEventListener('click',()=>{
+  soundOn=!soundOn;$('snd').setAttribute('aria-pressed',String(soundOn));
+  if(soundOn&&!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}
+  beep();
+});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.idea-seg button');
+  if(b){state.idea=b.dataset.idea;route()}
+});
+$('log').addEventListener('click',e=>{
+  const b=e.target.closest('.lrow');if(!b)return;
+  const ev=EV.find(x=>String(x.id)===b.dataset.id);
+  if(ev){state.ev=ev;state.ix=ev.k;renderSetupCard();updateChips();window.scrollTo(0,0)}
+});
+$('setupCard').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const ev=pickEv();if(!ev)return;
+  if(b.dataset.act==='speak'){say(evText(ev));return}
+  if(b.dataset.act==='paper'){
+    const r=paperEnter(ev);renderSetupCard();
+    if(r==='ok')miniToast('Paper trade lag gaya','Virtual paisa se trade liya. Live P&L Paper tab mein dikhega.','Paper dekho',()=>{location.hash='#paper'});
+    else miniToast('Trade nahi laga',r==='lock'?'Aaj ki loss limit poori ho chuki hai.':r==='dup'?'Ye setup pehle se khula hai.':'Wallet ya risk limit ke hisaab se 1 lot bhi nahi bana.');
+  }
+});
+$('v-paper').addEventListener('click',e=>{
+  const ex=e.target.closest('[data-exit]');
+  if(ex){const o=P.positions.find(x=>String(x.id)===ex.dataset.exit);if(o){const pnl=paperClose(o,'Manual exit');miniToast('Paper trade band',tlabel(o)+': '+rss(pnl));renderPaper()}return}
+  if(e.target.closest('[data-reset]')){
+    if(pConfirm&&Date.now()-pConfirm<4000){P.cash=P0;P.positions=[];P.trades=[];pConfirm=0;pSave();renderSetupCard();renderPaper()}
+    else{pConfirm=Date.now();renderPaper();setTimeout(()=>{pConfirm=0;if(state.tab==='paper')renderPaper()},4100)}
+  }
+});
+$('vc').addEventListener('click',()=>{
+  voiceOn=!voiceOn;$('vc').setAttribute('aria-pressed',String(voiceOn));
+  if(voiceOn)say('awaaz chalu hai');else{try{window.speechSynthesis.cancel()}catch(x){}}
+});
+window.addEventListener('hashchange',route);
+
+/* one tick per second for all three indices */
+function tickAll(){
+  const now=Date.now();
+  KEYS.forEach(k=>{const s=S[k],tk=stepState(s);tk.t=now;const d=detect(s);if(d)fire(k,d.id,d.bias)});
+  paperTick();
+  updateChips();
+  if(state.tab==='live')renderLive();
+  if(state.tab==='mood')renderMood();
+  if(state.tab==='paper')refreshPaper();
+}
+setInterval(tickAll,1000);
+function bestPick(keys){
+  let best=null;
+  keys.forEach(k=>['bull','bear'].forEach(bi=>{const sc=scoreSetup(k,S[k],bi,istHour());if(!best||sc.score>best.sc)best={k,b:bi,sc:sc.score}}));
+  return best;
+}
+setTimeout(()=>{const bp=bestPick(KEYS);fire(bp.k,'orb',bp.b)},7000);
+route();
+</script>
+<script id="guru">
+/* ===== Guru: AI coach (voice + chat + 30-stage course). Sirf shiksha, salah nahi ===== */
+const COACH_URL=''; /* yahan backend ka URL lagana hai (OpenAI). Khaali = offline coach */
+const GK='sr_guru_v1';
+const G_={lang:'hi',voice:true,cur:1,view:1,cnt:{enter:0,close:0,sl:0,brief:0,report:0},tabs:{},feed:[],rep:false,lastTab:{},news:0};
+(function(){try{const r=JSON.parse(localStorage.getItem(GK)||'null');if(!r)return;
+  if(r.lang==='en'||r.lang==='hi')G_.lang=r.lang;G_.voice=r.voice!==false;
+  if(Number.isInteger(r.cur)&&r.cur>=1&&r.cur<=30)G_.cur=r.cur;G_.view=G_.cur;
+  ['enter','close','sl','brief','report'].forEach(f=>{if(r.cnt&&Number.isFinite(r.cnt[f]))G_.cnt[f]=r.cnt[f]});
+  if(r.tabs&&typeof r.tabs==='object')['live','mood','scorecard','ideas','paper','risk'].forEach(t=>{if(r.tabs[t]===true)G_.tabs[t]=true})}catch(e){}})();
+function gSave(){try{localStorage.setItem(GK,JSON.stringify({lang:G_.lang,voice:G_.voice,cur:G_.cur,cnt:G_.cnt,tabs:G_.tabs}))}catch(e){}}
+const tx=o=>typeof o==='string'?o:(o[G_.lang]||o.hi);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const UI={
+  phase:[{hi:'buniyaad',en:'Basics'},{hi:'bazaar padhnaa',en:'Reading the market'},{hi:'setup',en:'Setups'},{hi:'risk aur discipline',en:'Risk and discipline'},{hi:'paper praiktis',en:'Paper practice'},{hi:'pro aadatein',en:'Pro habits'}],
+  tabn:{live:{hi:'live',en:'Live'},mood:{hi:'mood',en:'Mood'},scorecard:{hi:'scorecard',en:'Scorecard'},ideas:{hi:'ideas',en:'Ideas'},paper:{hi:'paper',en:'Paper'},risk:{hi:'risk',en:'Risk'}}
+};
+const ST=[
+ {th:'F&O kya hai',te:'What is F&O',h:'F&O yaani futures aur options. ye aise contract hain jinkee keemt kisee share yaa index ki chaal se bantee hai. inhen tay lot mein khareedaa-bechaa jaata hai, isliye paisaa tezi se ghat-badh saktaa hai.',e:'F&O means Futures and Options. These are contracts whose price depends on how a stock or index moves. They trade in fixed lots, so money can change quickly.',t:['read']},
+ {th:'Call aur Put',te:'Call and Put',h:'call (CE) tab fayda detaa hai jab bazaar upar jaaye. put (PE) tab fayda detaa hai jab bazaar neeche jaaye. option khareedne vaale ko sirf sahi disha nahi, sahi samay bhi chaahie.',e:'A Call (CE) gains when the market goes up. A Put (PE) gains when it goes down. An option buyer needs the right timing, not just the right direction.',t:['read']},
+ {th:'Nifty, Bank Nifty, Sensex',te:'Nifty, Bank Nifty, Sensex',h:'ye teenon index hain aur har ek ka lot size alg hai. app mein demo lot Nifty 75, Bank Nifty 30 aur Sensex 20 hain. asli trade se pehle apne brokr mein lot size zaroor jaancho.',e:'These are three indices with different lot sizes. The demo lots here are Nifty 75, Bank Nifty 30 and Sensex 20. Always confirm the lot size in your broker app before a real trade.',t:['read']},
+ {th:'premium, strike, expiry',te:'Premium, strike, expiry',h:'premium wo keemt hai jo tum option ke liye dete ho. strike wo levl hai jis par contract bana hai. ATM bhaav ke sabse paas ki strike hai, OTM door vaalee sastee strike hai, jiske chalne ke chaans kam hote hain.',e:'Premium is the price you pay for an option. Strike is the level the contract is built on. ATM is the strike nearest the price. OTM is cheaper and further away, and less likely to work.',t:['read']},
+ {th:'khareedaar banaam bechne vaalaa',te:'Buyer vs seller',h:'option khareedne vaale ka adhiktam nuksaan diyaa huaa premium hai. bechne vaale ka nuksaan bahut badaa ho saktaa hai aur margin bhi lagta hai. scorecard mein dekho: bechne mein jeet ka percent zyada dikhta hai, par haar kitnee badee hoti hai ye bhi dekho.',e:'An option buyer can lose at most the premium paid. A seller can lose far more and needs margin. In the Scorecard, selling often shows a higher win rate, so also check how large the losses are.',t:['tab','scorecard']},
+ {th:'live chart aur VWAP',te:'Live chart and VWAP',h:'VWAP din bhar ki average keemt hai, volume ke hisaab se. bhaav VWAP ke upar tike to kharidar mazboot maane jaate hain, neeche ho to bechne vaale. live tab mein patlee laain VWAP hai.',e:'VWAP is the volume-weighted average price of the day. Price holding above it suggests buyers are stronger, below it suggests sellers. The thin line on the Live chart is VWAP.',t:['tab','live']},
+ {th:'option chain aur OI',te:'Option chain and OI',h:'option chain mein har strike ka call aur put OI dikhta hai. jahan call OI sabse zyada ho wahan resistance maana jaata hai, jahan put OI sabse zyada ho wahan support. mood tab kholkar dekho.',e:'The option chain shows call and put open interest at each strike. The highest call OI is treated as resistance and the highest put OI as support. Open the Mood tab to see it.',t:['tab','mood']},
+ {th:'PCR',te:'PCR',h:'PCR yaani put OI bhaag call OI. 1.2 se upar ho to support mazboot maana jaata hai aur 0.8 se neeche ho to resistance bhaaree. ye sanket hai, guarantee nahi.',e:'PCR is put OI divided by call OI. Above 1.2 suggests firm support, below 0.8 suggests heavy resistance. It is a hint, not a guarantee.',t:['tab','mood']},
+ {th:'VIX aur ekspekted range',te:'VIX and expected range',h:'VIX bazaar ki ghabrahat naaptaa hai. isse andaazaa lagta hai ki aaj index lagbhag kitna hil saktaa hai. mood tab mein ye dayra dikhta hai. isse baahr jaana kam hota hai, par hota hai.',e:'VIX measures market nervousness and gives a rough range for the day. The Mood tab shows it. Moves outside the range are rarer but they happen.',t:['tab','mood']},
+ {th:'max pain aur expiry',te:'Max pain and expiry',h:'max pain wo levl hai jahan option bechne vaalon ko sabse kam bhugtaan karna padtaa hai. expiry ke din bhaav aksr iske aaspaas ghoomtaa hai, par hameshaa nahi. expiry par premium bahut tezi se ghattaa hai.',e:'Max pain is the level where option sellers pay out the least. On expiry day price often drifts near it, but not always. Premiums melt very fast on expiry.',t:['read']},
+ {th:'range breakout',te:'Range breakout',h:'shuruaatee minton ki oonchaaee yaa neechaaee toote to chaal banne ki ummeed rahtee hai. par jhoothe breakout bahut hote hain, isliye stop-loss ke binaa ise mat lo. scorecard mein iskaa pichle 100 ka record dekho.',e:'When the early high or low breaks, a move may follow. False breakouts are common, so never take it without a stop-loss. Check its last-100 record in the Scorecard.',t:['tab','scorecard']},
+ {th:'momentum burst',te:'Momentum burst',h:'kuch hee second mein tez chaal ek tarf ho to use momentum kehte hain. der se ghusne par bhaav palt saktaa hai. isliye entry ke saath hee baahr niklane ka levl tay rakho.',e:'A sharp one-sided move within seconds is momentum. Entering late can leave you caught in a reversal. Decide your exit level at the moment of entry.',t:['read']},
+ {th:'VWAP reclaim',te:'VWAP reclaim',h:'bhaav jab VWAP ko paar karke vaheen tik jaaye to ye setup banta hai. chhookr laut aaye to use signl mat maano. tiknaa hee asli shart hai.',e:'This forms when price crosses VWAP and stays there. If it just touches and returns, do not treat it as a signal. Holding is the real condition.',t:['read']},
+ {th:'OI build-up',te:'OI build-up',h:'bhaav ke saath OI badhe to nae saude aa rahe hain aur chaal mein dam maana jaata hai. bhaav badhe par OI ghate to puraane saude kat rahe hain, yaani chaal kamzor ho saktee hai.',e:'When price and OI rise together, new positions are building and the move has more weight. If price rises while OI falls, old positions are closing and the move may be weak.',t:['read']},
+ {th:'strength score aur pichle 100',te:'Strength score and last 100',h:'jeet ka percent aur average fayda-nuksaan donon dekho. 60% jeet bhi ghaate mein jaa saktee hai agar haar jeet se badee ho. pichle 100 ka aankda bhavishy ki guarantee nahi hai.',e:'Look at win rate and average gain versus loss together. Even a 60% win rate can lose money if losses are bigger than wins. The last 100 is not a guarantee of the future.',t:['tab','scorecard']},
+ {th:'poonji aur 2% niym',te:'Capital and the 2% rule',h:'ek trade mein kul poonji ka 1 se 2 percent se zyada jokhim mat lo. tab lagatar das haar bhi tumhein khatam nahi karengee. risk tab mein apni poonji daalkar dekho.',e:'Risk no more than 1 to 2 percent of capital on one trade. Then even ten losses in a row will not wipe you out. Enter your capital in the Risk tab and see.',t:['tab','risk']},
+ {th:'stop-loss',te:'Stop-loss',h:'stop-loss trade lene se pehle tay hota hai, baad mein nahi. use hataanaa yaa door khiskaanaa sabse badee galtiyon mein se hai. paper trade mein app ise khud pakdataa hai taaki tum aadat banaao.',e:'A stop-loss is decided before the trade, not after. Removing it or moving it further away is among the worst mistakes. In paper trades the app enforces it so you build the habit.',t:['read']},
+ {th:'target aur brekaeevn',te:'Targets and break-even',h:'target 1 chhoote hee stop-loss ko entry par le aao. tab jeetaa huaa trade haar mein nahi badlataa. target 2 bons ki tarh rakho.',e:'Once Target 1 is hit, move the stop-loss to your entry. A winning trade then cannot turn into a loss. Treat Target 2 as a bonus.',t:['read']},
+ {th:'din ki loss limit',te:'Daily loss limit',h:'din ka nuksaan tay seema, jaise 4 percent, chhoo le to us din trading band. paper wallet bhi tab nae trade lok kar detaa hai. yahi discipline asli khaate ko bachaataa hai.',e:'If the day loss touches a set limit, such as 4 percent, stop trading for the day. The paper wallet locks new trades at that point. This habit protects a real account.',t:['read']},
+ {th:'badlaa, overtrading, FOMO',te:'Revenge, overtrading, FOMO',h:'haar ke turant baad badle ka trade, din bhar mein bahut saare trade aur chhoot jaane ke dar se liyaa trade, ye teenon khaataa khaalee karte hain. har trade se pehle rukkar pucho: kya ye meraa plan hai?',e:'A revenge trade right after a loss, too many trades in a day, and trades taken out of fear of missing out all drain accounts. Before each trade, pause and ask: is this my plan?',t:['read']},
+ {th:'pahlaa paper trade',te:'Your first paper trade',h:'ab praiktis. live tab par koi setup card aaye to paper trade lo. setup ka intzaar na karna ho to demo setup button dabao. lot poonji aur risk ke hisaab se khud tay honge.',e:'Now practice. When a setup card appears on the Live tab, take a paper trade. If you do not want to wait, tap the demo setup button. Lots are sized from your capital and risk.',t:['enter',1]},
+ {th:'trade ko chalne do',te:'Let the trade play out',h:'ek paper trade ko stop-loss yaa target tak chalne do. beech mein ghabraakr niklanaa aadat ban jaaye to jeet chhotee aur haar badee hoti jaatee hai. paper tab mein uskaa baar dekhte raho.',e:'Let one paper trade run to its stop-loss or target. Exiting out of panic builds a habit of small wins and big losses. Watch its bar on the Paper tab.',t:['close',1]},
+ {th:'teen trade ka namoonaa',te:'A sample of three trades',h:'ek trade se kuch saabit nahi hota. kam se kam teen trade poore karo aur dekho ki jeet ka percent aur average fayda-nuksaan kaisa banta hai.',e:'One trade proves nothing. Complete at least three trades and see how your win rate and average gain versus loss turn out.',t:['close',3]},
+ {th:'stop-loss ka sammaan',te:'Respect the stop-loss',h:'ek trade ko stop-loss par katne do aur shaant rahkar agla plan dekho. stop-loss lagnaa asphaltaa nahi hai, ye kharchaa hai jo bade nuksaan se bachaataa hai.',e:'Let one trade get stopped out and calmly look at the next plan. A stop-loss hit is not failure. It is a cost that prevents a bigger loss.',t:['sl',1]},
+ {th:'theta: samay ka kharchaa',te:'Theta: the cost of time',h:'samay ke saath option ka premium ghattaa hai, ise theta kehte hain. expiry ke paas ye aur tez hota hai. isliye option khareedne par bhaav ka sahi disha mein jaldee chalnaa zaroori hai.',e:'An option premium falls as time passes. This is theta, and it speeds up near expiry. So a buyer needs price to move the right way quickly.',t:['read']},
+ {th:'zero-hero aur BTST',te:'Zero-hero and BTST',h:'zero-hero bahut saste option hain jo zyaadaatr zero par khatam hote hain aur kabhi-kabhaar kaee gunaa dete hain. BTST mein raat ka gap jokhim hai. donon ko sirf chhotee rakm se samjho. ideas tab kholo.',e:'Zero-hero options are very cheap and mostly expire worthless, rarely paying many times over. BTST carries overnight gap risk. Study both with small amounts only. Open the Ideas tab.',t:['tab','ideas']},
+ {th:'trade journal',te:'Trade journal',h:'har trade ke baad likho ki kyon liyaa aur plan ke hisaab se niklaa yaa nahi. paper tab ka journal kholkar apni aadatein pahchaano.',e:'After each trade, note why you took it and whether you exited as planned. Open the journal on the Paper tab and spot your habits.',t:['tab','paper']},
+ {th:'khabrein aur bazaar',te:'News and the market',h:'RBI, budget, global bazaar aur results gap aur tez chaal laate hain. khabar ke turant baad spread aur slippage badhtaa hai, isliye pehle chaal dekho, phir socho.',e:'RBI, the budget, global markets and results bring gaps and sharp moves. Right after news, spreads and slippage widen, so watch first and think second.',t:['read']},
+ {th:'agle din ki yojnaa',te:'Next-day plan',h:'raat ko tay karo ki gap-up, gap-down aur flat khulne par tum kya karoge. yeh bhavishyavani nahi, taiyari hai. neeche "kal ka brief" dabao.',e:'At night decide what you will do on a gap-up, gap-down or flat open. This is preparation, not prediction. Tap "Tomorrow brief" below.',t:['brief']},
+ {th:'final report card',te:'Final report card',h:'aakhri stage: apna vyavhaar jaancho. report card dekho ki dhairya, jokhim, overtrading aur badle ke trade mein tum kahan khade ho. neeche "report card" dabao.',e:'Final stage: check your behaviour. Open the report card to see where you stand on patience, risk, overtrading and revenge trades. Tap "Report card" below.',t:['report']}
+];
+function taskText(t){
+  const k=t[0];
+  if(k==='read')return{hi:'padhkar "samajh gaya" dabao.',en:'Read it and tap "Got it".'};
+  if(k==='tab')return{hi:UI.tabn[t[1]].hi+' tab kholo.',en:'Open the '+UI.tabn[t[1]].en+' tab.'};
+  if(k==='enter')return{hi:'kam se kam '+t[1]+' paper trade lo.',en:'Take at least '+t[1]+' paper trade.'};
+  if(k==='close')return{hi:'kul '+t[1]+' paper trade poore karo (ab tak '+G_.cnt.close+').',en:'Complete '+t[1]+' paper trades in total (so far '+G_.cnt.close+').'};
+  if(k==='sl')return{hi:'ek trade stop-loss par katne do.',en:'Let one trade hit its stop-loss.'};
+  if(k==='brief')return{hi:'"kal ka brief" dabao.',en:'Tap "Tomorrow brief".'};
+  return{hi:'"report card" dabao.',en:'Tap "Report card".'};
+}
+function taskDone(n){
+  const t=ST[n-1].t,k=t[0];
+  if(k==='read')return true;
+  if(k==='tab')return !!G_.tabs[t[1]];
+  if(k==='enter')return G_.cnt.enter>=t[1];
+  if(k==='close')return G_.cnt.close>=t[1];
+  if(k==='sl')return G_.cnt.sl>=t[1];
+  if(k==='brief')return G_.cnt.brief>=1;
+  return G_.cnt.report>=1;
+}
+
+/* ---------- voice ---------- */
+function speak(text,force){
+  const ss=window.speechSynthesis;
+  if(!ss){if(force)miniToast('Awaaz nahi chal sakti','Is browser mein voice support nahi hai. Chrome mein kholo.');return}
+  if(!text)return;
+  if(!force&&!G_.voice)return;
+  if(!(navigator.userActivation&&navigator.userActivation.hasBeenActive))return;
+  try{
+    ss.cancel();
+    const vs=ss.getVoices();
+    const v=vs.find(x=>x.lang&&x.lang.toLowerCase().replace('_','-')==='en-in')||vs.find(x=>x.lang&&x.lang.toLowerCase().indexOf('hi')===0)||vs.find(x=>x.lang&&x.lang.toLowerCase().indexOf('en')===0);
+    text.split(/(?<=[..!?])\s+/).filter(Boolean).forEach(p=>{const u=new SpeechSynthesisUtterance(p);u.lang='en-IN';if(v)u.voice=v;u.rate=.95;ss.speak(u)});try{ss.resume()}catch(e){}
+  }catch(e){}
+}
+
+/* ---------- feed ---------- */
+function say2(m,o){
+  o=o||{};
+  G_.feed.push({w:'c',m:m,t:Date.now(),id:++G_.news+1000*0});
+  if(G_.feed.length>40)G_.feed.shift();
+  gUpdate();
+  if(o.speak!==false)speak(tx(m));
+}
+function userSays(txt){G_.feed.push({w:'u',m:txt,t:Date.now()});if(G_.feed.length>40)G_.feed.shift();gUpdate()}
+function lastCoach(){for(let i=G_.feed.length-1;i>=0;i--)if(G_.feed[i].w==='c')return G_.feed[i];return null}
+
+/* ---------- live commentary builders ---------- */
+function buyShare(s){let b=0,sl=0;s.ticks.slice(-10).forEach(t=>{b+=t.buy;sl+=t.sell});return Math.round(b/(b+sl||1)*100)}
+function cLive(){
+  const k=state.ix,s=S[k],c=(s.price-s.open)/s.open*100,last=s.ticks[s.ticks.length-1],bp=buyShare(s),up=s.price>last.vwap;
+  return{
+    hi:HI_IX[k]+' abhi '+nf(s.price)+' par hai, aaj '+sg(c)+'%. bhaav VWAP ke '+(up?'upar':'neeche')+' hai, yaani '+(up?'kharidar':'bechne vaale')+' philhaal bhaaree dikhte hain. pichle 10 second mein khareedaaree ka dabaav '+bp+'% hai. dhyan rahe, yeh ordr-buk ka dabaav hai, asli khareed-bikree nahi.',
+    en:INDICES[k].short+' is at '+nf(s.price)+', '+sg(c)+'% today. Price is '+(up?'above':'below')+' VWAP, so '+(up?'buyers':'sellers')+' look heavier for now. Order-book pressure over the last 10 seconds is '+bp+'% buy. Note this is order-book pressure, not actual buying and selling.'};
+}
+function cMood(){
+  const k=state.ix,s=S[k],ch=chainFor(k),m=oneSigma(k,s.open);
+  return{
+    hi:'yeh option chain hai. '+HI_IX[k]+' mein sabse zyada call OI '+nfi(ch.res)+' par hai, yaani wahan resistance. sabse zyada put OI '+nfi(ch.sup)+' par hai, yaani support. PCR '+ch.pcr.toFixed(2)+' hai aur max pain '+nfi(ch.pain)+'. VIX ke hisaab se aaj ka samanya dayra '+nfi(s.open-m)+' se '+nfi(s.open+m)+' hai. ye demo data hai aur sanket hai, bhavishyavani nahi.',
+    en:'This is the option chain. For '+INDICES[k].short+', the highest call OI is at '+nfi(ch.res)+', which acts as resistance. The highest put OI is at '+nfi(ch.sup)+', which acts as support. PCR is '+ch.pcr.toFixed(2)+' and max pain is '+nfi(ch.pain)+'. By VIX, the normal range today is '+nfi(s.open-m)+' to '+nfi(s.open+m)+'. This is demo data and a hint, not a prediction.'};
+}
+function cScore(){
+  const k=state.ix,side=state.side;
+  const rows=SETUPS.map(su=>({su,a:stats(k,su.id,side)})).sort((p,q)=>q.a.exp-p.a.exp),t=rows[0],o=stats(k,t.su.id,side==='buy'?'sell':'buy');
+  const b=side==='buy'?t.a:o,sl=side==='buy'?o:t.a;
+  return{
+    hi:'pichle 100 trade mein '+HI_IX[k]+' par sabse achchhaa record '+HI_SU[t.su.id]+' ka rahaa. usmein khareedne vaalee tarf '+b.wins+' jeete aur bechne vaalee tarf '+sl.wins+'. bechne mein jeet zyada dikh saktee hai, par ek haar kaee jeeten khaa saktee hai, isliye average bhi dekho. yeh purana average hai, aage ki guarantee nahi.',
+    en:'Over the last 100 trades on '+INDICES[k].short+', the best record belongs to '+t.su.name+'. On the buying side '+b.wins+' won and on the selling side '+sl.wins+'. Selling can show more wins, but one loss can erase many wins, so check the average too. This is a past average, not a guarantee.'};
+}
+function cIdeas(){
+  const r=btstRows()[0];
+  return{
+    hi:'yahan BTST aur zero-hero hain. aaj ki soochee mein '+r.sym+' upar hai, pichle 100 mein '+r.win+' baar chala. BTST mein raat ka gap aapke khilaaph bhi jaa saktaa hai aur zero-hero zyaadaatr zero hote hain. inhen sirf chhotee rakm se parkho.',
+    en:'Here are BTST and zero-hero ideas. '+r.sym+' ranks first today and worked '+r.win+' times in the last 100. In BTST an overnight gap can go against you, and zero-heroes mostly expire worthless. Try them only with small amounts.'};
+}
+function cPaper(){
+  const eq=pEquity(),n=P.trades.length;
+  return{
+    hi:'yeh tumhara paper wallet hai. abhi kul '+rs(eq)+' hain aur '+n+' trade poore hue. din ki loss limit mein '+rs(pLimLeft())+' baakee hai. dhyan do ki tum plan ke hisaab se nikl rahe ho yaa ghabraakr.',
+    en:'This is your paper wallet. You have '+rs(eq)+' in total with '+n+' completed trades. '+rs(pLimLeft())+' is left in today\'s loss limit. Notice whether you exit by plan or out of panic.'};
+}
+function cRisk(){
+  const r=Math.round(state.cap*state.rp/100);
+  return{
+    hi:'yahan tay hota hai ki ek trade mein kitna jokhim lenaa hai. '+rs(state.cap)+' ki poonji aur '+state.rp+'% risk par ek trade mein zyada se zyada lagbhag '+rs(r)+' ka nuksaan manzoor hai. din ki loss limit '+state.dp+'% hai. pehle nuksaan ki seema tay karo, phir munafe ki baat.',
+    en:'This is where you decide how much to risk per trade. With '+rs(state.cap)+' capital and '+state.rp+'% risk, you accept losing about '+rs(r)+' on one trade. The daily loss limit is '+state.dp+'%. Fix the loss limit first, profit talk later.'};
+}
+const CT={live:cLive,mood:cMood,scorecard:cScore,ideas:cIdeas,paper:cPaper,risk:cRisk};
+const SX={
+ orb:{hi:'shuruaatee range tootee hai. jhoothaa breakout aam hai, isliye stop-loss zaroori hai.',en:'The early range broke. False breakouts are common, so a stop-loss matters.'},
+ mom:{hi:'kuch second mein tez ektarfaa chaal aayi hai. der se ghusnaa jokhim bharaa hai.',en:'A sharp one-sided move came within seconds. Entering late is risky.'},
+ vwap:{hi:'bhaav VWAP ko paar karke tikaa hai. tiknaa hee shart hai.',en:'Price crossed VWAP and held. Holding is the condition.'},
+ oil:{hi:'bhaav ke saath OI badhaa hai, yaani nae kharidar aa rahe hain.',en:'OI rose with price, meaning new longs are building.'},
+ ois:{hi:'bhaav ghataa aur OI badhaa hai, yaani nae bechne vaale aa rahe hain.',en:'Price fell while OI rose, meaning new shorts are building.'}
+};
+function cSetup(e){
+  const a=stats(e.k,e.sid,'buy'),b=stats(e.k,e.sid,'sell'),su=SETUPS.find(x=>x.id===e.sid),bull=e.bias==='bull';
+  return{
+    hi:HI_IX[e.k]+' mein '+HI_SU[e.sid]+' bana, '+(bull?'bullish':'bearish')+', strength '+e.score+' mein se 100. '+SX[e.sid].hi+' pichle 100 mein is setup par khareed vaalee tarf '+a.wins+' aur bechne vaalee tarf '+b.wins+' jeete. yeh purana average hai. paper trade lenaa ho to pehle stop-loss dekh lo.',
+    en:su.name+' formed on '+INDICES[e.k].short+', '+(bull?'bullish':'bearish')+', strength '+e.score+' out of 100. '+SX[e.sid].en+' In the last 100, '+a.wins+' won on the buying side and '+b.wins+' on the selling side. This is a past average. If you take a paper trade, look at the stop-loss first.'};
+}
+function cClose(t){
+  const win=t.pnl>0,sl=/SL|Stop/.test(t.reason),man=t.reason==='Manual exit',pnl=rss(t.pnl);
+  if(win)return{hi:'trade '+pnl+' par band huaa ('+(t.reason==='Target 2'?'target 2':man?'haath se nikle':'target')+'). achchhaa, par ek jeet se kuch saabit nahi hota. dekho ki agla trade bhi plan ke hisaab se hee ho.',en:'Trade closed at '+pnl+'. Nice, but one win proves nothing. Make sure the next trade also follows your plan.'};
+  if(sl)return{hi:'stop-loss laga aur '+pnl+' ka nuksaan huaa. yeh discipline hai: nuksaan utnaa hee rahaa jitnaa tay thaa. ab turant badle ka trade mat lo, thoda ruko.',en:'Stop-loss hit for '+pnl+'. This is discipline: the loss stayed as planned. Do not take a revenge trade right away, pause for a while.'};
+  return{hi:'tumne khud niklakr '+pnl+' ka nuksaan liyaa. agar ghabrahat mein nikle to ye aadat dekho. plan stop-loss par niklane ka thaa.',en:'You exited manually at '+pnl+'. If it was out of panic, notice that habit. The plan was to exit at the stop-loss.'};
+}
+const NEWS=[
+ {i:'banknifty',h:'RBI ne byaaj daren sthir rakheen',e:'RBI keeps interest rates unchanged',x:'bainking share aam taur par aisee khabar par hilte hain',y:'Banking stocks usually react to such news'},
+ {i:'nifty',h:'vaishvik bazaar kamzor khule',e:'Global markets open weak',x:'bhaarteey bazaar par bhi dabaav aa saktaa hai',y:'Indian markets can feel pressure too'},
+ {i:'nifty',h:'badee companies ke results ummeed se behtar',e:'Large caps report better-than-expected results',x:'index ke bhaaree share upar kheench sakte hain',y:'Heavyweights can pull the index higher'},
+ {i:'sensex',h:'videshee niveshkon ki bikvaalee badhee',e:'Foreign investors increase selling',x:'lagatar bikvaalee se bazaar par dabaav ban saktaa hai',y:'Persistent selling can weigh on the market'},
+ {i:'nifty',h:'kachche tel mein tez giraavt',e:'Crude oil falls sharply',x:'aam taur par yeh bhaarteey bazaar ke liye raaht maanee jaatee hai',y:'This is generally seen as a relief for India'}
+];
+function newsTick(){
+  if(state.tab==='guru'&&document.hidden)return;
+  const n=NEWS[Math.floor(Math.random()*NEWS.length)],k=n.i,s=S[k],T=s.ticks,a=T[Math.max(0,T.length-120)].p,c=(s.price-a)/a*100;
+  say2({
+    hi:'demo khabar: '+n.h+'. '+n.x+'. pichle 2 minute mein '+HI_IX[k]+' '+sg(c)+'% chala hai. khabar aate hee seedhe trade mat lo, pehle dekho ki chaal tiktee hai yaa nahi.',
+    en:'Demo headline: '+n.e+'. '+n.y+'. '+INDICES[k].short+' moved '+sg(c)+'% over the last 2 minutes. Do not trade straight on a headline; first see whether the move holds.'});
+}
+function briefFor(k){
+  const s=S[k],ch=chainFor(k),m=oneSigma(k,s.open);
+  return{
+    hi:HI_IX[k]+' aaj '+nf(s.price)+' par hai. kal ke liye agar-to yojnaa: agar gap-up khule aur '+nfi(ch.res)+' ke upar tike, to breakout ka mood, par pehle 15 minute dekhkar hee faisla. agar '+nfi(ch.sup)+' ke neeche khule, to dabaav ka mood, jaldbaazee mat karna. agar in donon ke beech khule, to range ka din, kam trade. samanya dayra lagbhag '+nfi(m)+' points hai. yeh bhavishyavani nahi, taiyari hai.',
+    en:INDICES[k].short+' is at '+nf(s.price)+' today. If-then plan for tomorrow: if it opens gap-up and holds above '+nfi(ch.res)+', that is a breakout mood, but decide only after the first 15 minutes. If it opens below '+nfi(ch.sup)+', that is a pressure mood, so do not rush. If it opens between the two, expect a range day with fewer trades. The normal range is about '+nfi(m)+' points. This is preparation, not prediction.'};
+}
+function doBrief(){
+  G_.cnt.brief++;gSave();
+  const ks=KEYS.filter(k=>k!==state.ix).concat([state.ix]);
+  ks.forEach(k=>say2(briefFor(k),{speak:k===state.ix}));
+}
+
+/* ---------- report card ---------- */
+function reportData(){
+  const T=P.trades.slice().reverse(),n=T.length;
+  if(!n)return null;
+  const wins=T.filter(t=>t.pnl>0),loss=T.filter(t=>t.pnl<=0);
+  const avgW=wins.length?wins.reduce((a,t)=>a+t.pnl,0)/wins.length:0,avgL=loss.length?Math.abs(loss.reduce((a,t)=>a+t.pnl,0)/loss.length):0;
+  const manual=T.filter(t=>t.reason==='Manual exit').length;
+  const patience=Math.round((1-manual/n)*100);
+  const ratio=avgL?avgW/avgL:(wins.length?2:0);
+  const rr=Math.round(clamp(ratio/1.5,0,1)*100);
+  const perDay={};T.forEach(t=>{const d=dayKey(t.t);perDay[d]=(perDay[d]||0)+1});
+  const mx=Math.max(...Object.values(perDay)),over=mx<=3?100:mx<=6?70:mx<=10?40:15;
+  let rev=0;const byT=T.slice().sort((a,b)=>a.t-b.t);
+  byT.forEach((t,i)=>{if(!t.ot)return;for(let j=i-1;j>=0;j--){const p=byT[j];if(p.t<=t.ot){if(p.pnl<0&&t.ot-p.t<120000)rev++;break}}});
+  const revS=Math.round(100-Math.min(100,rev/n*200));
+  const learn=Math.round((G_.cur-1+(taskDone(G_.cur)?1:0))/30*100);
+  const total=Math.round(patience*.25+rr*.25+over*.2+revS*.2+learn*.1);
+  const net=T.reduce((a,t)=>a+t.pnl,0);
+  return{n,win:Math.round(wins.length/n*100),net,patience,rr,over,revS,learn,total,ratio,mx,rev,manual};
+}
+function reportHtml(){
+  const r=reportData();
+  const head='<div class="eyebrow">'+tx({hi:'report card',en:'Report card'})+'</div>';
+  if(!r)return head+'<p class="empty" style="margin-top:8px">'+tx({hi:'abhi koi paper trade poora nahi huaa. kuch trade karo, phir report banegee.',en:'No completed paper trades yet. Trade a little and the report will build.'})+'</p>';
+  const lab=r.total>=80?{hi:'anushaasit',en:'Disciplined'}:r.total>=60?{hi:'sudhaar jaaree',en:'Improving'}:{hi:'abhi kachchaa',en:'Needs work'};
+  const rows=[
+    [{hi:'dhairya (yojnaa tak ruknaa)',en:'Patience (holding to plan)'},r.patience,{hi:r.manual+' trade haath se nikaale',en:r.manual+' trades exited manually'}],
+    [{hi:'jokhim banaam fayda',en:'Risk versus reward'},r.rr,{hi:'average jeet ÷ average haar = '+r.ratio.toFixed(2),en:'Average win ÷ average loss = '+r.ratio.toFixed(2)}],
+    [{hi:'overtrading',en:'Overtrading'},r.over,{hi:'ek din mein sabse zyada '+r.mx+' trade',en:'Most trades in one day: '+r.mx}],
+    [{hi:'badle ke trade',en:'Revenge trades'},r.revS,{hi:'haar ke 2 minute ke bheetr '+r.rev+' trade',en:r.rev+' trades within 2 minutes of a loss'}],
+    [{hi:'seekhne ki pragti',en:'Learning progress'},r.learn,{hi:'stage '+G_.cur+' / 30',en:'Stage '+G_.cur+' / 30'}]
+  ];
+  const w=rows.slice(0,4).sort((a,b)=>a[1]-b[1])[0];
+  const tip={
+    0:{hi:'agle 5 trade mein haath se niklane ki jagh stop-loss yaa target ka intzaar karo.',en:'For your next 5 trades, wait for the stop-loss or target instead of exiting by hand.'},
+    1:{hi:'aise setup chuno jahan target stop-loss se kam se kam dedh gunaa door ho.',en:'Prefer setups where the target is at least 1.5 times the stop-loss distance.'},
+    2:{hi:'din mein teen se zyada trade mat lo, gunvattaa gintee se zyada zaroori hai.',en:'Cap yourself at three trades a day. Quality matters more than count.'},
+    3:{hi:'haar ke baad kam se kam 10 minute ruko aur journal likho.',en:'After a loss wait at least 10 minutes and write a journal note.'}
+  }[rows.indexOf(w)];
+  return head+'<div style="display:flex;align-items:flex-end;gap:12px;margin:6px 0 8px"><div class="rep-score">'+r.total+'</div><div style="padding-bottom:4px"><b>'+tx(lab)+'</b><div class="hint" style="margin:0">'+tx({hi:'100 mein se, '+r.n+' trade par',en:'out of 100, from '+r.n+' trades'})+'</div></div></div>'
+   +'<div class="hint" style="margin:0 0 6px">'+tx({hi:'jeet '+r.win+'% · kul '+rss(r.net),en:'Win rate '+r.win+'% · net '+rss(r.net)})+'</div>'
+   +rows.map(x=>'<div class="rep-row"><span>'+tx(x[0])+'</span><b class="num">'+x[1]+'</b><i><s style="width:'+x[1]+'%"></s></i><small>'+tx(x[2])+'</small></div>').join('')
+   +'<div class="note" style="margin-top:12px"><b>'+tx({hi:'agla kadm: ',en:'Next step: '})+'</b>'+tx(tip)+'</div>'
+   +(r.n<10?'<p class="hint">'+tx({hi:'abhi 10 se kam trade hain, isliye yeh report sirf jhalk hai.',en:'Fewer than 10 trades so far, so this report is only a preview.'})+'</p>':'');
+}
+
+/* ---------- chat ---------- */
+const FAQ=[
+ [/call|put|\bce\b|\bpe\b|call|put/i,{hi:'call (CE) bazaar upar jaane par fayda detaa hai aur put (PE) neeche jaane par. khareedne vaale ka nuksaan sirf diyaa huaa premium hota hai.',en:'A Call (CE) gains when the market rises and a Put (PE) when it falls. A buyer can lose at most the premium paid.'}],
+ [/option chain|chen|chain/i,{hi:'option chain har strike ka call aur put OI dikhaatee hai. mood tab mein support, resistance aur PCR isee se bane hain.',en:'The option chain lists call and put OI at each strike. Support, resistance and PCR in the Mood tab come from it.'}],
+ [/\boi\b|open interest|oaaee|OI/i,{hi:'OI yaani khule hue saudon ki sankhyaa. bhaav ke saath OI badhe to chaal mein dam maana jaata hai, ghate to puraane saude kat rahe hote hain.',en:'OI is the number of open contracts. Rising OI with price suggests conviction, falling OI suggests positions closing.'}],
+ [/pcr/i,{hi:'PCR put OI bhaag call OI hai. 1.2 se upar support mazboot aur 0.8 se neeche resistance bhaaree maana jaata hai. yeh sanket hai, guarantee nahi.',en:'PCR is put OI divided by call OI. Above 1.2 suggests firm support and below 0.8 heavy resistance. A hint, not a guarantee.'}],
+ [/vix|viks/i,{hi:'VIX bazaar ki ghabrahat naaptaa hai. oonchaa VIX yaani bade utaar-chadhaav ki ummeed aur mahnge option.',en:'VIX measures market nervousness. A high VIX means bigger expected swings and pricier options.'}],
+ [/stop|sl\b|stop/i,{hi:'stop-loss wo levl hai jahan tum haar maankar nikl jaate ho taaki nuksaan badaa na ho. ise trade se pehle tay karo aur baad mein mat khiskaao.',en:'A stop-loss is the level where you exit to keep a loss small. Set it before the trade and never move it away afterwards.'}],
+ [/theta|time decay|theta/i,{hi:'theta yaani samay ke saath premium ka ghatnaa. expiry ke paas yeh sabse tez hota hai.',en:'Theta is the premium lost as time passes. It is fastest close to expiry.'}],
+ [/lot|lot/i,{hi:'lot ek contract ki nyoontam maatraa hai. app mein demo lot Nifty 75, Bank Nifty 30, Sensex 20 hain. asli trade se pehle brokr mein jaancho.',en:'A lot is the minimum contract quantity. Demo lots here are Nifty 75, Bank Nifty 30, Sensex 20. Verify with your broker before a real trade.'}],
+ [/expiry|expiry/i,{hi:'expiry wo din hai jab option khatam ho jaata hai. us din premium bahut tezi se ghattaa hai, isliye shuruaat mein saavdhaan raho.',en:'Expiry is the day an option ends. Premiums decay very fast that day, so beginners should be careful.'}],
+ [/max ?pain|maiks/i,{hi:'max pain wo strike hai jahan option bechne vaalon ka kul bhugtaan sabse kam hota hai. bhaav aksr expiry par iske paas rehta hai, par hameshaa nahi.',en:'Max pain is the strike where option sellers pay out the least. Price often hovers near it at expiry, but not always.'}],
+ [/revenge|badlaa|fomo|lalach|laalch|dar|fear|nuksaan|loss|haar/i,{hi:'haar ke baad badle ka trade sabse mahngaa hota hai. ruko, paani piyo, journal mein likho ki kya galat huaa, aur phir plan dekho. niym: din ki loss limit par trading band.',en:'A revenge trade after a loss is the most expensive kind. Pause, drink water, write what went wrong, then look at the plan. Rule: stop at the daily loss limit.'}],
+ [/buy|sell|khareed|bech|kya karu|kya karoon|kya karoon|salah|salaah|advice|tip|profit|munaaph/i,{hi:'main yeh nahi bataataa ki abhi kharido yaa becho. main setup ka purana record, jokhim ka hisaab aur tumhara discipline samjhata hoon. faisla tumhara hai. chaaho to pehle paper trade mein aazmaao.',en:'I do not tell you to buy or sell right now. I explain the setup record, the risk maths and your discipline. The decision is yours. Try it on a paper trade first if you like.'}],
+ [/hello|hi\b|hey|namaste|namaste|hailo/i,{hi:'namaste! main tumhara guru hoon. stage poore karo, paper trade karo aur kuch bhi pucho, main saral bhasha mein samjhaunga.',en:'Hello! I am your guru. Finish the stages, take paper trades and ask me anything; I will explain it simply.'}]
+];
+function localAnswer(q){
+  for(const f of FAQ)if(f[0].test(q))return f[1];
+  return{hi:'is par mere paas abhi seedhaa jawab nahi hai. tum "option chain", "PCR", "stop-loss", "theta" yaa "lot" jaise shabd puch sakte ho. asli AI judne par main khulkar har sawal ka jawab doongaa.',en:'I do not have a direct answer for that yet. Try words like "option chain", "PCR", "stop-loss", "theta" or "lot". Once the real AI is connected I will answer anything.'};
+}
+function ask(q){
+  q=String(q||'').trim().slice(0,300);if(!q)return;
+  userSays(q);
+  const ctx={ix:state.ix,price:S[state.ix].price,stage:G_.cur,lang:G_.lang,trades:P.trades.length};
+  if(COACH_URL){
+    fetch(COACH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:q,ctx:ctx})})
+      .then(r=>r.json()).then(d=>{if(d&&typeof d.a==='string')say2({hi:d.a,en:d.a});else say2(localAnswer(q))}).catch(()=>say2(localAnswer(q)));
+  }else say2(localAnswer(q));
+}
+function micAsk(){
+  const R=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!R){say2({hi:'is browser mein bolkar poochhnaa nahi chalta. Chrome mein aazmaao yaa taaip karo.',en:'Voice input is not supported in this browser. Try Chrome or type instead.'},{speak:false});return}
+  try{const r=new R();r.lang=G_.lang==='hi'?'hi-IN':'en-IN';r.onresult=ev=>{ask(ev.results[0][0].transcript)};r.onerror=()=>{};r.start()}catch(e){}
+}
+
+/* ---------- render ---------- */
+function ago(t){const m=Math.round((Date.now()-t)/60000);return m<1?tx({hi:'abhi',en:'now'}):m+tx({hi:' minute pehle',en:' min ago'})}
+function gUpdate(){
+  const lc=lastCoach();
+  const gt=$('gsText');
+  if(gt&&lc)gt.textContent=tx(lc.m);
+  if(state.tab==='guru')gRender(true);
+}
+function gRender(feedOnly){
+  const n=G_.view,st=ST[n-1];
+  const fd=$('gFeed');
+  const nearBottom=fd.scrollHeight-fd.scrollTop-fd.clientHeight<60;
+  fd.innerHTML=G_.feed.length?G_.feed.map((f,i)=>f.w==='u'?'<div class="bub u">'+esc(f.m)+'</div>':'<div class="bub c">'+esc(tx(f.m))+'<small>'+ago(f.t)+'<button type="button" data-rp="'+i+'">'+tx({hi:'phir suno',en:'Replay'})+'</button></small></div>').join(''):'<p class="empty">'+tx({hi:'guru tumhare saath tab kholne, setup banne aur trade band hone par boltaa rahega.',en:'The guru will speak as you open tabs, setups form and trades close.'})+'</p>';
+  if(nearBottom||!feedOnly)fd.scrollTop=fd.scrollHeight;
+  if(feedOnly===true&&$('gStage').dataset.k===n+'|'+G_.cur+'|'+G_.lang+'|'+taskDone(n)+'|'+G_.cnt.close+'|'+G_.rep)return;
+  $('gPhase').textContent=tx(UI.phase[Math.floor((G_.cur-1)/5)]).toUpperCase();
+  $('gTitle').textContent=tx({hi:'stage '+G_.cur+' / 30 · '+ST[G_.cur-1].th,en:'Stage '+G_.cur+' / 30 · '+ST[G_.cur-1].te});
+  $('gProg').style.width=((G_.cur-1+(taskDone(G_.cur)?1:0))/30*100)+'%';
+  document.querySelectorAll('[data-gl]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.gl===G_.lang)));
+  const gv=$('gVoice');gv.textContent=tx({hi:G_.voice?'awaaz chalu':'awaaz band',en:G_.voice?'Voice on':'Voice off'});gv.setAttribute('aria-pressed',String(G_.voice));
+  const ok=taskDone(n),past=n<G_.cur,tt=taskText(st.t);
+  let btn;
+  if(past)btn='<button class="btn ghost" type="button" data-gact="listen">'+tx({hi:'phir suno',en:'Listen again'})+'</button>';
+  else if(n===30)btn='<button class="btn" type="button" data-gact="finish"'+(ok?'':' disabled')+'>'+tx({hi:'kors poora',en:'Finish course'})+'</button>';
+  else btn='<button class="btn" type="button" data-gact="next"'+(ok?'':' disabled')+'>'+(st.t[0]==='read'?tx({hi:'samajh gaya, agla stage',en:'Got it, next stage'}):tx({hi:'agla stage',en:'Next stage'}))+'</button>';
+  $('gStage').innerHTML='<div class="eyebrow">'+tx({hi:'stage '+n,en:'Stage '+n})+' · '+tx(UI.phase[Math.floor((n-1)/5)])+(past?' · '+tx({hi:'poora',en:'done'}):'')+'</div><h2 style="font-size:18px;margin-top:4px">'+esc(tx({hi:st.th,en:st.te}))+'</h2><p class="g-less">'+esc(tx({hi:st.h,en:st.e}))+'</p>'
+    +(past?'':'<div class="g-task '+(ok?'ok':'')+'"><b>'+(ok?'✓':'!')+'</b><span>'+esc(tx(tt))+'</span></div>')
+    +'<div class="g-row">'+(past?'':'<button class="btn ghost" type="button" data-gact="listen">'+tx({hi:'suno',en:'Listen'})+'</button>')+btn+'</div>';
+  $('gStage').dataset.k=n+'|'+G_.cur+'|'+G_.lang+'|'+taskDone(n)+'|'+G_.cnt.close+'|'+G_.rep;
+  $('gMapT').textContent=tx({hi:'30 stage ka nakshaa',en:'30-stage map'});
+  $('gGrid').innerHTML=ST.map((s,i)=>{const k=i+1,c=k<G_.cur?'done':k===G_.cur?'cur':'';return '<button type="button" data-gs="'+k+'" class="'+c+'" aria-pressed="'+(k===G_.view)+'"'+(k>G_.cur?' disabled':'')+' aria-label="Stage '+k+'">'+k+'</button>'}).join('');
+  $('gChatT').textContent=tx({hi:'guru se baat karo',en:'Talk to the guru'});
+  $('gIn').placeholder=tx({hi:'jaise: option chain kya hai?',en:'e.g. What is an option chain?'});
+  $('gSend').textContent=tx({hi:'bhejo',en:'Send'});
+  $('gMic').textContent=tx({hi:'bolo',en:'Speak'});
+  $('gQuick').innerHTML=['<button type="button" data-q="brief">'+tx({hi:'kal ka brief',en:'Tomorrow brief'})+'</button>','<button type="button" data-q="news">'+tx({hi:'khabar ka asr',en:'News impact'})+'</button>','<button type="button" data-q="report">'+tx({hi:'report card',en:'Report card'})+'</button>','<button type="button" data-q="what">'+tx({hi:'ye tab kya hai?',en:'What is this tab?'})+'</button>'].join('');
+  $('gNote').textContent=tx({hi:'demo mein stage tum apni raftaar se kholte ho. asli kors mein roz ek stage khulegaa aur bazaar asli samay par chalegaa. guru sirf shikshaa detaa hai, khareedne-bechne ki salaah nahi. abhi awaaz phone ki apni awaaz hai; asli AI awaaz baad mein judegee.',en:'In this demo you open stages at your own pace. In the real course one stage opens each day and the market runs in real time. The guru only teaches and gives no buy or sell advice. The voice is currently your phone\'s own voice; a natural AI voice comes later.'});
+  const rp=$('gReport');rp.hidden=!G_.rep;if(G_.rep)rp.innerHTML=reportHtml();
+}
+function guruRender(){gRender(false)}
+
+/* ---------- hooks from the app ---------- */
+function guruOn(ev,d){
+  if(ev==='tab'){
+    const t=d==='btst'||d==='zero-hero'?'ideas':d;
+    $('gStrip').hidden=(t==='guru'||t==='learn');
+    if(t==='guru'){gRender(false);return}
+    const first=!G_.tabs[t];G_.tabs[t]=true;gSave();
+    if(CT[t]&&(Date.now()-(G_.lastTab[t]||0)>45000)){G_.lastTab[t]=Date.now();say2(CT[t]())}
+    else gUpdate();
+    return;
+  }
+  if(ev==='setup'){say2(cSetup(d));return}
+  if(ev==='enter'){G_.cnt.enter++;gSave();say2({hi:'paper trade lag gaya. ab stop-loss aur target app dekhegaa. tumhara kaam shaant rehna hai.',en:'Paper trade placed. The app now watches the stop-loss and targets. Your job is to stay calm.'});return}
+  if(ev==='close'){G_.cnt.close++;if(/SL|Stop/.test(d.reason))G_.cnt.sl++;gSave();say2(cClose(d));return}
+}
+
+/* ---------- events ---------- */
+$('gStrip').addEventListener('click',e=>{
+  if(e.target.closest('#gsListen')){const lc=lastCoach();if(lc)speak(tx(lc.m),true);return}
+  if(e.target.closest('#gsMute')){G_.voice=!G_.voice;if(!G_.voice&&window.speechSynthesis)speechSynthesis.cancel();gSave();$('gsMute').textContent=G_.voice?'🔊':'🔇';gUpdate();return}
+  location.hash='#guru';
+});
+$('v-guru').addEventListener('click',e=>{
+  const l=e.target.closest('[data-gl]');
+  if(l){G_.lang=l.dataset.gl;gSave();$('gStage').dataset.k='';gUpdate();gRender(false);return}
+  if(e.target.closest('#gVoice')){G_.voice=!G_.voice;if(!G_.voice&&window.speechSynthesis)speechSynthesis.cancel();gSave();gRender(false);return}
+  const gs=e.target.closest('[data-gs]');
+  if(gs){G_.view=+gs.dataset.gs;gRender(false);speak(tx({hi:ST[G_.view-1].th+'. '+ST[G_.view-1].h,en:ST[G_.view-1].te+'. '+ST[G_.view-1].e}));return}
+  const ga=e.target.closest('[data-gact]');
+  if(ga){
+    const a=ga.dataset.gact,st=ST[G_.view-1];
+    if(a==='listen'){speak(tx({hi:st.th+'. '+st.h,en:st.te+'. '+st.e}),true);return}
+    if(a==='next'&&taskDone(G_.cur)&&G_.cur<30){G_.cur++;G_.view=G_.cur;gSave();gRender(false);const s2=ST[G_.cur-1];speak(tx({hi:'stage '+G_.cur+'. '+s2.th+'. '+s2.h,en:'Stage '+G_.cur+'. '+s2.te+'. '+s2.e}));window.scrollTo(0,0)}
+    if(a==='finish'&&taskDone(30)){G_.rep=true;gRender(false);say2({hi:'badhai ho, 30 stage poore hue. report card dekho aur kamzor hisse par agle 30 trade mein kaam karo. yaad rakho, seekhna jaaree rehta hai.',en:'Congratulations, all 30 stages are complete. Study the report card and work on the weakest part over your next 30 trades. Learning never stops.'})}
+    return;
+  }
+  const rp=e.target.closest('[data-rp]');
+  if(rp){const f=G_.feed[+rp.dataset.rp];if(f&&f.w==='c')speak(tx(f.m),true);return}
+  const q=e.target.closest('[data-q]');
+  if(q){
+    const a=q.dataset.q;
+    if(a==='brief')doBrief();
+    else if(a==='news')newsTick();
+    else if(a==='report'){G_.cnt.report++;G_.rep=true;gSave();gRender(false);say2({hi:'yeh tumhara report card hai. sabse kamzor hisse par agla dhyan do.',en:'Here is your report card. Focus next on the weakest area.'})}
+    else if(a==='what'){const t=state.tab==='ideas'?'ideas':state.tab;say2(CT[state.tab]?CT[state.tab]():CT.live())}
+    gRender(false);
+  }
+});
+$('gForm').addEventListener('submit',e=>{e.preventDefault();const i=$('gIn');ask(i.value);i.value=''});
+$('gMic').addEventListener('click',micAsk);
+window.addEventListener('beforeunload',()=>{try{speechSynthesis.cancel()}catch(e){}});
+setInterval(()=>{if(document.hidden)return;const r=Math.random();if(r<.45&&Date.now()-(G_.lastNews||0)>110000){G_.lastNews=Date.now();newsTick()}},30000);
+(function(){
+  const lc={hi:'namaste! main tumhara guru hoon. main har tab, har setup aur har paper trade par saral bhasha mein bataaoongaa. stage 1 se shuru karo.',en:'Hello! I am your guru. I will explain every tab, setup and paper trade in simple words. Start from Stage 1.'};
+  G_.feed.push({w:'c',m:lc,t:Date.now()});
+  $('gsText').textContent=tx(lc);
+  $('gsMute').textContent=G_.voice?'🔊':'🔇';
+  guruOn('tab',state.tab);
+})();
+</script>
+<script id="learn">
+const LESSONS=[
+{t:"F&O kya hai",s:["F&O ka matlab hai Futures aur Options. Ye derivatives hain, yaani inki keemat kisi aur cheez (share ya index) ki chaal se banti hai.","Share kharidne par tum company ka hissa lete ho. F&O mein tum sirf ek contract lete ho ki bhaav upar jayega ya neeche.","Futures mein dono taraf ki zimmedari hoti hai. Options mein kharidne wale ko haq milta hai, zimmedari nahi. Isliye options kharidne wale ka nuksaan seemit hota hai.","F&O fixed lot size mein hota hai, jaise ek lot mein 75 quantity. Isliye ek chhoti si chaal bhi paise ko tezi se badal sakti hai.","Yaad rakho: F&O mein bahut log paisa ganwate hain. Hum yahan seekhne aaye hain, jaldi ameer hone nahi."]},
+{t:"Call aur Put",s:["Call option: ek tay keemat (strike) par kharidne ka haq, zimmedari nahi. Bazaar upar jaye to call ka bhaav badhta hai.","Put option: ek tay keemat par bechne ka haq. Bazaar neeche jaye to put ka bhaav badhta hai.","Example: Nifty 25,800 par hai. 25,800 CE kharida aur Nifty 25,900 gaya, to call ka bhaav badhega. 25,800 PE kharida aur Nifty 25,700 gaya, to put ka bhaav badhega.","Sirf disha sahi hona kaafi nahi. Chaal tay samay ke andar aur kaafi badi honi chahiye, warna premium ghat sakta hai.","Yaad rakho: CE matlab call, PE matlab put. Kharidne wala maximum premium hi ganwa sakta hai."]},
+{t:"Index aur lot size",s:["Nifty 50 aur Sensex bade shares ke index hain. Bank Nifty sirf bade banks ka index hai, isliye zyada tezi se hilta hai.","Index options cash-settled hote hain: expiry par share nahi milte, sirf faida ya nuksaan paise mein aata hai.","Lot size ek contract ki quantity hai. App mein demo lot Nifty 75, Bank Nifty 30, Sensex 20 hain. Asli lot size exchange badalta rehta hai, broker mein check karo.","Ek lot ki keemat = premium x lot size. Premium 100 aur lot 75 ho to ek lot ₹7,500 ka hua.","Yaad rakho: trade se pehle hamesha lot size aur lagne wala paisa check karo."]},
+{t:"Premium, strike, expiry",s:["Premium wo keemat hai jo tum option kharidne ke liye dete ho. Ye bazaar mein roz upar neeche hoti hai.","Strike wo level hai jis par contract bana hai. Jo strike bhaav ke sabse paas ho wo ATM hai.","Call mein bhaav se neeche ki strike ITM aur upar ki OTM hai. Put mein ulta: upar ki strike ITM, neeche ki OTM. OTM sasta hota hai par chalne ke chance kam.","Premium = intrinsic value + time value. Time value expiry ke paas ghatti jati hai, aur expiry par OTM option aam taur par zero ke paas hota hai.","Yaad rakho: sasta premium matlab kam chance. Kam daam mein zyada kamai ki guarantee nahi."]},
+{t:"Kharidna aur bechna: risk",s:["Option kharidne wale (buyer) ka nuksaan sirf diya hua premium. Faida bahut bada ho sakta hai.","Option bechne wale (seller) ko premium turant milta hai, par bhaav ulta chale to nuksaan bahut bada ho sakta hai. Naked call mein upar koi seema nahi.","Seller ko margin (zamanat) rakhna padta hai. Isliye bechne ke liye zyada paisa chahiye.","Selling mein jeet ka percent aksar zyada dikhta hai, par ek bada nuksaan kai chhoti jeeton ko khatam kar sakta hai.","Yaad rakho: win rate ke saath har trade ka average faida aur nuksaan bhi dekho."]},
+{t:"Live chart aur VWAP",s:["Live chart mein price har second badalta hai. Tez chaal ke baad aksar thoda rukna ya palatna dekha jata hai.","Candle ek time period ka open, high, low, close dikhati hai. Lambi candle tezi, chhoti candle rukawat batati hai.","VWAP volume ke hisaab se din bhar ka average bhaav hai. Bhaav VWAP ke upar tike to kharidar mazboot maane jaate hain.","Bhaav VWAP ke neeche tike to bechne wale mazboot maane jaate hain. Ye sanket hai, guarantee nahi.","Ab Live tab khul gaya hai. Wahan pehle sirf price, VWAP aur buy/sell dabav ko dekhna seekho."]},
+{t:"Option chain aur OI",s:["Option chain mein har strike ka call aur put dikhta hai: premium, volume aur OI.","OI (Open Interest) abhi khule hue contracts ki ginti hai. Volume us din hue sauda hain, OI ab bhi bache hue sauda.","Jis strike par call OI sabse zyada, wahan resistance (upar rukawat) maana jata hai. Jahan put OI sabse zyada, wahan support.","Ye isliye kyunki option sellers wahan apna level bachane ki koshish karte hain. Par level toot bhi jate hain.","Mood tab khul gaya hai. Wahan support aur resistance khud dhoondo. OI sanket hai, guarantee nahi."]},
+{t:"PCR, support aur resistance",s:["PCR = Put OI ÷ Call OI. 1 ke aas paas neutral maana jata hai.","PCR 1.2 se upar: put OI zyada, support mazboot dikhta hai. 0.8 se neeche: call OI zyada, resistance bhari.","Bahut zyada PCR ka matlab ye bhi ho sakta hai ki bazaar ek taraf bahut jhuk gaya hai aur palat sakta hai.","PCR akela nahi dekhte. Bhaav, VWAP aur OI ke saath milakar dekho.","Yaad rakho: koi bhi ek indicator bazaar ko poora nahi samjhata."]},
+{t:"VIX aur expected range",s:["VIX bazaar ki ghabrahat naapta hai. VIX upar ho to bade utaar-chadhaav ki ummeed aur option mehnge.","Mota hisaab: aaj ka 1 sigma range = Spot x VIX ÷ 100 ÷ √252. Ye Mood tab mein dikhta hai.","Bhaav is range ke andar lagbhag 68% samay rehta hai, yaani 32% baar bahar bhi jata hai.","Jab VIX upar ho to option kharidna mehnga aur bechna zyada premium wala hota hai, par risk bhi bada hota hai.","Yaad rakho: range andaza hai, deewar nahi."]},
+{t:"Max pain aur expiry",s:["Max pain wo strike hai jahan option sellers ko kul sabse kam payout karna padta hai.","Expiry ke din bhaav aksar uske aas paas ghoomta dikhta hai, par hamesha nahi.","Expiry par premium bahut tezi se ghatta hai (theta). OTM option kai baar kuch minute mein zero ke paas pahunch jata hai.","Expiry ke din chaal tez aur ulti-seedhi ho sakti hai. Shuruat mein expiry ke din trade avoid karna samajhdari hai.","Yaad rakho: expiry kisi ke liye mauka hai, kisi ke liye jaal. Pehle seekho, phir socho."]},
+{t:"Range breakout aur momentum",s:["Range breakout: shuru ke minutes ki sabse upar ya neeche ki line toote to chaal banne ki ummeed. Par jhoote breakout kaafi hote hain.","Momentum burst: kuch second mein tez ek-tarfa chaal. Der se ghusne par bhaav palat sakta hai.","Har setup ke saath stop-loss pehle se tay hota hai. Bina stop-loss ke setup lena jua hai.","Scorecard tab khul gaya hai. Wahan har setup ka pichle 100 ka record hai. Buying aur selling dono side ki jeet dekho.","Yaad rakho: setup sanket hai. Kai setups lagatar fail bhi hote hain."]},
+{t:"VWAP reclaim aur OI buildup",s:["VWAP reclaim: bhaav VWAP ko paar karke wahin tik jaye. Chhoo kar laut aaye to wo sanket nahi.","OI long buildup: bhaav badhe aur OI bhi badhe, yaani naye kharidar aa rahe hain.","OI short buildup: bhaav gire aur OI badhe, yaani naye bechne wale aa rahe hain.","Bhaav badhe par OI ghate to purane sauda kat rahe hain (short covering), chaal kamzor ho sakti hai.","Yaad rakho: OI ko bhaav ke saath jodkar padho, akela OI adhura hai."]},
+{t:"Pichle 100 ke aankde",s:["'Pichle 100 mein 60 jeete' ka matlab aage bhi 60% nahi hota. Ye sirf purana average hai.","Expectancy = (jeet% x average faida) − (haar% x average nuksaan). Sirf positive expectancy wala tareeka tikta hai.","60% jeet bhi ghate mein ja sakti hai agar haar jeet se badi ho. 40% jeet bhi kamai de sakti hai agar jeet haar se kaafi badi ho.","Kam trade ka sample bharosemand nahi. 100 se zyada trade aur alag-alag bazaar halat mein dekhna chahiye.","Yaad rakho: aankde disha dete hain, bharosa nahi."]},
+{t:"Poonji, risk aur stop-loss",s:["Ek trade mein kul poonji ka 1 se 2% se zyada jokhim mat lo. Tab lagatar 10 haar bhi tumhe khatam nahi karengi.","Stop-loss trade lene se pehle tay hota hai. Use hatana ya door khiskana sabse badi galtiyon mein se ek hai.","Lots = Risk rupaye ÷ ((entry − stop-loss) x lot size). Risk tab mein ye khud nikalta hai.","Target 1 chhoone par stop-loss entry par le aao, taki jeeta hua trade haar na bane.","Risk tab khul gaya hai. Yaad rakho: pehle nuksaan ki seema tay karo, phir munafe ki baat karo."]},
+{t:"Paper trading shuru",s:["Ab paper wallet khulega: ₹5,00,000 virtual paisa, asli nahi. Yahan galtiyan sasti hain, isliye yahin seekho.","Setup card se 'Paper trade lo' dabao. Stop-loss, target 1 aur target 2 app khud pakadta hai.","Har trade par lagbhag ₹60 charges aur 0.5% slippage judta hai, taki result asli ke kareeb rahe.","Din ki loss limit (default 4%) poori ho to naye trade lock ho jaate hain. Ye aadat asli khate ko bachati hai.","Paper tab khul gaya hai. Yaad rakho: paper mein bhi plan ke hisaab se chalo, jaise paisa asli ho."]},
+{t:"Option kharidna: theta aur samay",s:["Option ka premium samay ke saath ghatta hai, ise theta kehte hain. Expiry ke paas ye aur tez hota hai.","Isliye kharidne wale ko sirf disha nahi, samay bhi sahi chahiye. Bhaav der se chala to premium kha jata hai.","Shuruat mein bahut OTM option mat kharido. Wo sasta lagta hai par zyadatar zero hota hai.","Kharidne ke baad jitni der rukte ho, utna theta kharch hota hai. Plan mein time limit bhi rakho.","Yaad rakho: theta kharidne wale ka dushman aur bechne wale ka dost hai."]},
+{t:"Greeks: delta, gamma, vega",s:["Delta: bhaav 1 point badhne par premium kitna badhega. ATM option ka delta lagbhag 0.5 hota hai.","Gamma: delta kitni tezi se badalta hai. Expiry ke paas gamma bada hota hai, isliye chaal tez hoti hai.","Vega: volatility (IV) badhne par premium kitna badhega. IV girne par premium sasta ho jata hai, chahe bhaav na hile.","Theta samay ka asar hai. Kharidne wale par theta ka, bechne wale par gamma ka khatra zyada rehta hai.","Yaad rakho: premium sirf bhaav se nahi, samay aur volatility se bhi badalta hai."]},
+{t:"Discipline aur psychology",s:["Revenge trade: haar ke turant baad badla lene wala trade. Ye sabse mehnga trade hota hai.","Overtrading: din mein bahut saare trade. Zyada trade ka matlab zyada charges aur zyada galtiyan.","FOMO: chhut jane ke dar se liya hua trade. Chhooti hui chaal ke peeche mat bhaago, agla setup aayega.","Har trade ke baad likho: kyun liya, plan ke hisaab se nikla ya nahi. Paper tab ka journal yahi hai.","Yaad rakho: bazaar ko harana nahi hai, apni aadatein sudharni hain."]},
+{t:"Khabrein aur gap",s:["RBI, budget, global bazaar, nateeje aur geopolitics gap aur tez chaal laate hain.","Khabar ke turant baad spread aur slippage badh jata hai, yaani entry aur exit mehnga padta hai.","Gap-up ya gap-down: bazaar pichle close se door khulta hai. Gap ke baad pehle 15 minute chaal aksar unsthir rehti hai.","Khabar sunte hi trade mat lo. Pehle dekho ki chaal tikti hai ya nahi.","Yaad rakho: khabar ke baad pehla jhatka aksar bheed ko fasa deta hai."]},
+{t:"BTST aur zero-hero",s:["BTST (aaj kharido, kal becho): raat ke gap ka risk. Gap tumhare khilaf bhi ja sakta hai aur stop-loss ko paar kar sakta hai.","Zero-hero: bahut sasta OTM option, jo zyadatar zero par khatam hota hai aur kabhi kabhar kai guna deta hai.","Ye dono lottery jaise khel hain. Sirf utna paisa lagao jo ganwana manzoor ho.","Zero-hero ke liye alag chhota budget rakho aur use apni mukhya poonji se alag maano.","Ideas tab khul gaya hai. Yaad rakho: kabhi kabhar kai guna milne se roz roz ka nuksaan nahi dhulta."]},
+{t:"Option selling ki buniyaad",s:["Option bechne par tumhe premium turant milta hai. Agar option expiry par OTM rahe to wo premium tumhara munafa hai.","Seller ka maximum faida sirf premium hota hai. Nuksaan kai guna ho sakta hai.","Isliye seller aksar sahi hota hai par kabhi kabhi bahut bada galat. Ye seedhi chadhne aur lift se girne jaisa hai.","Selling ka faida: theta tumhare saath. Khatra: achanak badi chaal (gap, khabar) aur margin call.","Yaad rakho: selling chhoti jeet ka khel hai jisme ek badi haar sab kha sakti hai."]},
+{t:"Margin aur naked selling ka khatra",s:["Naked selling: bina kisi suraksha ke option bechna. Margin bahut lagta hai, ek lot par lakhon mein.","Naked call bechne par bhaav bahut badhe to nuksaan bahut bada ho sakta hai, jiski koi upari seema nahi.","Margin ka matlab broker tumhari poonji rokta hai. Bhaav ulta chale to extra margin dena padta hai, warna broker position kaat deta hai.","Naked selling shuruat karne walon ke liye nahi hai. Hum ise sirf samajhne ke liye padh rahe hain, trade ke liye nahi.","Yaad rakho: bina hedge ke selling aag se khelna hai."]},
+{t:"Hedge: credit spread",s:["Hedge ka matlab: ek position ke saath doosri suraksha wali position. Bechne wale option ke saath door ka option kharidna.","Bull put spread: ek put becho aur usse neeche ki strike ka put kharido. Bazaar ruka rahe ya badhe to faida.","Bear call spread: ek call becho aur usse upar ki strike ka call kharido. Bazaar ruka rahe ya gire to faida.","Max faida = mila hua net premium. Max nuksaan = strike ka antar − net premium. Dono pehle se pata hote hain.","Yaad rakho: hedge se kamai kam hoti hai par nuksaan ki seema tay ho jati hai."]},
+{t:"Iron condor aur strangle",s:["Short strangle: ek OTM call aur ek OTM put dono bechna. Dono taraf bada risk, isliye ye unhedged hai.","Iron condor: strangle ke saath dono taraf door ke call aur put kharidna. Isse dono taraf ka risk tay ho jata hai.","Iron condor tab theek jab bazaar range mein rehne ki ummeed ho. Bada trend ya gap aaye to nuksaan seemit par poora ho sakta hai.","Max nuksaan = ek taraf ki wing width − kul mila premium. Wings jitni door, risk utna zyada par premium kam.","Yaad rakho: iron condor paisa chhaapne ki machine nahi, tay risk wala trade hai."]},
+{t:"Selling mein stop-loss aur adjustment",s:["Selling mein bhi stop-loss zaroori hai: jaise mile premium ka 1.5 ya 2 guna nuksaan hone par nikalna.","Adjustment: bhaav ek taraf bhaage to us taraf ka hissa kaatna ya door ki strike le jana. Isse nuksaan badh bhi sakta hai, bina seekhe mat karo.","Kabhi kabhi sabse achha adjustment hai nikal jana. Haare hue trade ko 'theek ho jayega' soch kar mat rakho.","Har selling trade ka plan pehle likho: entry, hedge, stop-loss, aur kab nikalna hai.","Yaad rakho: bechne wale ko pehle bachna seekhna hai, kamana baad mein."]},
+{t:"Expiry din selling aur gamma",s:["Expiry ke din premium bahut tezi se girta hai, isliye selling aakarshak lagti hai.","Par gamma bada hone se chhoti chaal par bhi option ka bhaav bahut tezi se badalta hai. Kuch minute mein bada nuksaan ho sakta hai.","Expiry din ke gap aur news spike mein seller ka stop-loss slippage ke saath paar ho jata hai.","Shuruati sellers ke liye behtar hai ki expiry din chhoti size ya sirf hedged position rakhein, ya na rakhein.","Yaad rakho: jahan premium sabse mota dikhe, wahan risk bhi sabse bada hota hai."]},
+{t:"Seller ke liye poonji suraksha",s:["Selling mein bhi ek trade mein kul poonji ka 1 se 2% jokhim, aur hedge ke saath hi.","Margin ka sirf 40 se 50% ke aas paas istemal karo, baaki buffer rakho taki achanak chaal mein margin call na aaye.","Ek hi disha mein kai sauda mat rakho. Sab kuch ek expiry aur ek index par lagana concentration risk hai.","Roz ki loss limit seller par bhi lagu hoti hai. Limit lage to us din band.","Yaad rakho: seller ki umra uski suraksha se naapi jaati hai, kamai se nahi."]},
+{t:"Agle din ki yojana",s:["Raat ko tay karo: gap-up, gap-down aur flat khulne par tum kya karoge. Ye bhavishyavani nahi, taiyari hai.","Support, resistance aur max pain ke levels likh lo. Subah unhe dekh kar hi faisla lo.","Pehle 15 minute dekhne ke baad hi trade lo, jab tak koi saaf plan na ho.","Roz ek hi routine rakho: raat ko plan, subah levels, trade ke baad journal.","Yaad rakho: jo roz ek hi tareeke se chalta hai, uski galtiyan gin sakte hain aur sudhar sakte hain."]},
+{t:"Apna report card padhna",s:["Report card tumhara asli vyavhaar dikhata hai: dhairya, jokhim aur faida ka anupaat, overtrading aur badle ke trade.","Win rate akela mat dekho. Average jeet ÷ average haar bhi dekho, aur sabse badi haar bhi.","Jo score sabse kam ho wahi tumhara agla kaam hai. Ek samay mein ek hi aadat sudharo.","30 se zyada paper trade ke baad hi apni aadat ke baare mein pakka kuch kehna sahi hai.","Yaad rakho: report card sharminda karne ke liye nahi, sudharne ke liye hai."]},
+{t:"Antim samiksha: F&O ke sach",s:["Positive: seemit jokhim ke saath seekha hua trader bhi bazaar mein tik sakta hai. Hedge aur stop-loss se nuksaan par kaaboo rehta hai.","Negative: zyadatar naye trader F&O mein paisa ganwate hain. Leverage faida aur nuksaan dono ko badhata hai.","Negative: transaction charges, slippage aur tax kamai ko khate hain. Chhota munafa kai baar charges mein hi chala jata hai.","Positive: daily limit, journal aur paper practice se aadatein sudharti hain, aur sudhari hui aadat poonji ki sabse badi suraksha hai.","Yaad rakho: ye course shiksha hai, salah nahi. Asli paise se pehle chhote size se shuru karo, aur sirf wahi paisa lagao jo ganwana manzoor ho."]}
+];
+const QS={
+1:["Derivative ka matlab?|Keemat kisi aur cheez ki chaal se bane|Sirf sone ka sauda|Bank ka loan|Company ka dividend","F&O ka poora naam?|Futures aur Options|Funds aur Options|Finance aur Orders|Fixed aur Open","Options kharidne wale ka maximum nuksaan?|Diya hua premium|Asimit|Lot size ka double|Margin","F&O kis size mein hota hai?|Tay lot size|Ek share|Koi bhi quantity|Sirf 100 ka","Futures mein zimmedari kiski hoti hai?|Dono ki|Sirf kharidne wale ki|Sirf bechne wale ki|Kisi ki nahi","Share aur F&O mein farak?|F&O mein contract hota hai, hissa nahi|Dono mein company ka hissa milta hai|F&O mein koi risk nahi|Share mein lot hota hai","Leverage ka asar?|Faida aur nuksaan dono badhata hai|Sirf faida badhata hai|Sirf nuksaan badhata hai|Kuch nahi","Is course ka maksad?|Seekhna aur samajhna|Jaldi ameer banna|Guarantee munafa|Tips lena","Lot size ka asar?|Chhoti chaal bhi paise ko tezi se badal sakti hai|Paise par asar nahi|Sirf nuksaan hota hai|Sirf faida hota hai","Derivative ka example?|Nifty ka call option|Ghar ki rent|FD|Sone ka sikka"],
+2:["Call option kab faida deta hai?|Bazaar upar jaye|Bazaar neeche jaye|Kabhi nahi|Sirf expiry par","Put option ka haq?|Tay keemat par bechne ka|Tay keemat par kharidne ka|Dividend ka|Voting ka","CE kiske liye likha jata hai?|Call option|Put option|Cash|Expiry","PE kiske liye likha jata hai?|Put option|Premium entry|Profit exit|Price equity","Nifty 25,800 par. Tum 25,800 CE kharidte ho. Faida kab?|Nifty kaafi upar jaye|Nifty gire|Nifty ruka rahe|Hamesha","Sirf disha sahi hone par bhi nuksaan kyun ho sakta hai?|Samay ya chaal kaafi na ho to premium ghat sakta hai|Disha ka matlab nahi|Broker rok leta hai|Lot size badal jata hai","Kaunsa option giravat par faida deta hai?|Put|Call|Dono nahi|Dono hamesha","Option kharidne wale ko kya milta hai?|Haq, zimmedari nahi|Zimmedari|Dividend|Voting"],
+3:["Bank Nifty kiska index hai?|Sirf bade banks ka|Sab companies ka|Sirf IT ka|Sirf auto ka","Index option kaise settle hota hai?|Cash mein|Share dekar|Sone mein|Settle nahi hota","Lot size kya hai?|Ek contract ki quantity|Option ka daam|Broker ki fees|Expiry ki tareekh","Premium 100, lot 75 ho to ek lot ki keemat?|₹7,500|₹750|₹175|₹100","In teeno mein aksar sabse tez kaun hilta hai?|Bank Nifty|Nifty hamesha|Teeno barabar|Koi nahi","Asli lot size kahan check karni chahiye?|Broker ya exchange mein|Dost se|Yaad se|Ad mein","Sensex kis exchange ka index hai?|BSE|NSE|MCX|NCDEX","Expiry par index option mein share milte hain?|Nahi, sirf paise ka hisaab|Haan|Kabhi kabhi|Sirf Nifty mein"],
+4:["Premium kya hai?|Option kharidne ki keemat|Broker ka tax|Lot size|Expiry","ATM strike kaun si hai?|Bhaav ke sabse paas wali|Sabse door wali|Sabse sasti|Sabse mehngi","Call ke liye bhaav se neeche ki strike?|ITM|OTM|ATM|Expiry","Put ke liye bhaav se neeche ki strike?|OTM|ITM|ATM|Strike hi nahi","Premium = ?|Intrinsic value + time value|Intrinsic − time|Lot x tax|Volume + OI","Expiry par OTM option aam taur par?|Zero ke paas|Double|Same|Sabse mehnga","OTM option ke baare mein sahi?|Sasta par chalne ke chance kam|Mehnga aur pakka|Free|Margin free","Time value expiry ke paas?|Ghatti hai|Badhti hai|Fixed|Negative"],
+5:["Buyer ka max nuksaan?|Diya hua premium|Asimit|Margin ka double|Zero","Naked call seller ka nuksaan?|Bahut bada, upar seema nahi|Seemit|Zero|Premium tak","Seller ko kya rakhna padta hai?|Margin|Dividend|Voting|Ticket","Selling mein win rate aksar?|Zyada dikhta hai|Hamesha kam|Zero|Kisi ko pata nahi","Win rate ke saath aur kya dekhna chahiye?|Average faida aur nuksaan|Logo ka color|Broker ka naam|Kuch nahi","Seller ka max faida?|Mila hua premium|Asimit|Lot size|Margin","Naye seekhne wale ke liye kaunsa risk samajhna aasaan hai?|Option kharidne ka (seemit)|Naked selling ka|Dono barabar|Koi nahi","Ek bada nuksaan kya kar sakta hai?|Kai chhoti jeeton ko khatam|Kuch nahi|Jeet badhata hai|Margin ghatata hai"],
+6:["VWAP ka matlab?|Volume weighted average price|Very wide asset price|Value with average profit|Volume without price","Bhaav VWAP ke upar tike to?|Kharidar mazboot maane jaate hain|Bechne wale mazboot|Bazaar band|Kuch nahi","Candle kya dikhati hai?|Open, High, Low, Close|Sirf volume|Sirf OI|Premium","Lambi candle aksar kya batati hai?|Tez chaal|Rukawat|Holiday|Expiry","Bhaav VWAP ke neeche tike to?|Bechne wale mazboot maane jaate hain|Kharidar mazboot|Pakki giravat|Pakki tezi","VWAP kis cheez ka average hai?|Volume ke hisaab se price ka|Sirf time ka|Sirf OI ka|Sirf lot ka","Live tab mein pehle kya dekhna seekho?|Price, VWAP, dabav|Sirf news|Sirf OI|Sirf tips","VWAP signal hai ya guarantee?|Sanket|Guarantee|Kanoon|Tax"],
+7:["Option chain mein kya dikhta hai?|Har strike ka call aur put data|Sirf share ka daam|Sirf news|Broker charge","OI kya hai?|Abhi khule hue contracts|Aaj hue sauda|Premium|Lot","Volume aur OI mein farak?|Volume aaj ke sauda, OI bache hue khule sauda|Dono same|OI sirf call|Volume sirf put","Sabse zyada call OI wala strike aksar?|Resistance|Support|Expiry|Margin","Sabse zyada put OI wala strike aksar?|Support|Resistance|Gap|Tax","Kya ye levels hamesha tikte hain?|Nahi, toot bhi jaate hain|Haan hamesha|Sirf Nifty mein|Sirf subah","Option chain app ke kis tab mein hai?|Mood|Risk|Paper|Guru","OI ko kaisa maane?|Sanket|Guarantee|Rule|Kanoon"],
+8:["PCR = ?|Put OI ÷ Call OI|Call OI ÷ Put OI|Put + Call|Premium ÷ Lot","PCR 1.2 se upar ka matlab?|Put OI zyada, support mazboot|Call OI zyada|Bazaar band|Expiry","PCR 0.8 se neeche ka matlab?|Call OI zyada, resistance bhari|Put OI zyada|Neutral|Gap","PCR 1 ke aas paas ko?|Neutral maana jata hai|Tezi|Giravat|Expiry","Bahut zyada PCR ka ek matlab?|Bazaar ek taraf bahut jhuk gaya, palat sakta hai|Hamesha tezi|Hamesha giravat|Kuch nahi","PCR kaise dekhna chahiye?|Bhaav, VWAP, OI ke saath|Akela|Sirf news se|Sirf dost se","Support kya hai?|Neeche ki rukawat ka level|Upar ki rukawat|Premium|Lot","Resistance kya hai?|Upar ki rukawat ka level|Neeche ki|Tax|Margin"],
+9:["VIX kya naapta hai?|Bazaar ki ghabrahat|Share ka daam|Lot size|Tax","VIX upar ho to option?|Mehnge hote hain|Sasste|Free|Band","1 sigma range ka formula?|Spot x VIX ÷ 100 ÷ √252|Spot + VIX|Spot x lot|VIX ÷ spot","1 sigma range mein bhaav lagbhag kitne % rehta hai?|68%|99%|10%|100%","Bhaav range se bahar?|Kuch baar jata hai|Kabhi nahi|Hamesha|Sirf Monday","Expected range ek ___ hai.|Andaza|Deewar|Kanoon|Guarantee","Ye range app mein kahan dikhti hai?|Mood tab|Risk tab|Paper tab|Ideas tab","VIX upar ho to selling mein?|Zyada premium par zyada risk|Bina risk|Free|Mana hai"],
+10:["Max pain kya hai?|Jahan sellers ka payout sabse kam|Jahan buyers ko sabse zyada|Sabse sasta strike|Lot","Expiry par bhaav aksar max pain ke?|Aas paas ghoomta dikhta|Door rehta|Hamesha upar|Hamesha neeche","Expiry par premium?|Tezi se ghatta|Badhta|Fixed|Double","Kya max pain hamesha sach hota hai?|Nahi|Haan|Sirf Nifty mein|Sirf Sensex mein","Shuruat mein expiry din?|Trade avoid karna samajhdari|Sabse zyada trade|Lot double|Margin hata do","Theta kya hai?|Samay se premium ka ghatna|Volume|OI|Lot","Expiry par chaal?|Tez aur ulti-seedhi ho sakti|Hamesha dheemi|Band|Fixed","OTM option expiry par kuch minute mein?|Zero ke paas pahunch sakta|Double|Same|Margin"],
+11:["Range breakout kab banta hai?|Shuru ke minutes ki line tootne par|Raat ko|Holiday par|Tax par","Breakout ka bada khatra?|Jhoota breakout|Kuch nahi|Zero|Margin","Momentum burst kya hai?|Kuch second mein tez ek-tarfa chaal|Dheemi chaal|Band bazaar|Gap","Der se ghusne par?|Bhaav palat sakta|Hamesha faida|Zero|Tax","Setup lene se pehle?|Stop-loss tay hona chahiye|Kuch nahi|Lot double|Tips","Scorecard mein kya hai?|Setup ka pichle 100 ka record|Broker ki fees|News|Lot","Scorecard mein kaunsi sides hoti hain?|Buying aur selling|Sirf buying|Sirf selling|Koi nahi","Setup kya hai?|Sanket|Guarantee|Kanoon|Rule"],
+12:["VWAP reclaim kya hai?|Bhaav VWAP paar karke tik jaye|Sirf chhoo kar laute|VWAP ghate|Band","Sirf chhoo kar lautna?|Sanket nahi maana jata|Pakka sanket|Tax|Lot","OI long buildup?|Bhaav badhe aur OI badhe|Bhaav gire OI badhe|Bhaav badhe OI ghate|Kuch nahi","OI short buildup?|Bhaav gire aur OI badhe|Bhaav badhe OI badhe|Dono ghate|Kuch nahi","Bhaav badhe par OI ghate?|Purane sauda kat rahe, chaal kamzor ho sakti|Naye kharidar|Pakki tezi|Giravat","OI badhna ka matlab?|Naye sauda aa rahe|Sauda band|Expiry|Tax","OI ko kaise padhna?|Bhaav ke saath jodkar|Akela|Sirf call se|Sirf put se","Reclaim mein asli shart?|Tikna|Chhoona|Volume zero|Gap"],
+13:["Pichle 100 mein 60 jeete, aage?|Guarantee nahi, sirf purana average|Guarantee 60%|Hamesha 100|Zero","Expectancy?|Jeet% x avg faida − haar% x avg nuksaan|Sirf jeet%|Sirf haar%|Lot x premium","60% jeet bhi ghate mein ja sakti hai jab?|Haar jeet se badi ho|Kabhi nahi|Win rate zyada ho|Lot chhota ho","40% jeet kab kamai de sakti hai?|Jeet haar se kaafi badi ho|Kabhi nahi|Loss badi ho|Charges zero ho","Kam trade ka sample?|Bharosemand nahi|Pakka|Best|Guarantee","Behtar sample?|100+ trade, alag halat|5 trade|1 trade|Koi nahi","Aankde kya dete hain?|Disha|Bharosa|Guarantee|Paisa","Win rate ke saath dekho?|Average jeet aur haar|Logo|Naam|Time zone"],
+14:["Ek trade mein jokhim?|Poonji ka 1-2%|50%|Poori poonji|Koi limit nahi","Stop-loss kab tay hota hai?|Trade se pehle|Trade ke baad|Kabhi nahi|Jab nuksaan ho","Stop-loss door khiskana?|Badi galti|Achhi aadat|Zaroori|Niyam","Target 1 par stop-loss?|Entry par le aao|Hata do|Door karo|Double","Lots ka formula?|Risk ÷ ((entry − stop-loss) x lot size)|Risk x lot size|Entry + stop-loss|Poonji ÷ 100","Lagatar 10 haar 2% risk par?|Poonji lagbhag 18% ghatti|Poori khatam|Kuch nahi|Double","Pehle kya tay karo?|Nuksaan ki seema|Munafa|Lot double|Tips","Risk tab mein kya nikalta hai?|Lots aur risk|Tax|News|Quiz"],
+15:["Paper wallet kitna hai?|₹5,00,000 virtual|₹1,000 asli|₹10 lakh asli|Koi nahi","Paper trade kyun?|Galtiyan sasti seekhne ke liye|Asli paisa kamane|Tips|Kuch nahi","Charges kitne judte hain?|Lagbhag ₹60 aur 0.5% slippage|Zero|₹10,000|50%","Din ki loss limit poori ho to?|Naye trade lock|Double trade|Limit hata do|Kuch nahi","Stop-loss aur target kaun pakadta hai?|App|Tum haath se|Broker call|Koi nahi","Paper mein bhi?|Plan ke hisaab se chalo|Plan bhool jao|Random trade|Lot double","Slippage kya hai?|Expected aur asli bhaav ka antar|Margin|Tax|Lot","Default daily loss limit?|4%|40%|0%|100%"],
+16:["Theta kiska dushman hai?|Kharidne wale ka|Bechne wale ka|Broker ka|Exchange ka","Premium samay ke saath?|Ghatta hai|Badhta hai|Fixed rehta|Double hota","Kya sirf disha kaafi hai?|Nahi, samay bhi sahi chahiye|Haan|Kabhi nahi|Sirf Nifty mein","Bahut OTM option?|Sasta par zyadatar zero|Hamesha double|Safe|Margin free","Plan mein kya rakhein?|Time limit bhi|Kuch nahi|Lot double|Tips","Der tak ruke to?|Theta zyada kharch hota|Faida hota|Free|Zero","Theta kiske saath hota hai?|Seller ke|Buyer ke|Broker ke|Koi nahi","Expiry ke paas theta?|Aur tez|Dheema|Zero|Negative"],
+17:["Delta kya hai?|Bhaav 1 point badhne par premium ka badlav|Samay ka asar|IV ka asar|Lot","ATM option ka delta lagbhag?|0.5|5|0|100","Gamma kya hai?|Delta kitni tezi se badalta|Premium|Tax|Lot","Vega kya hai?|IV badhne par premium ka badlav|Samay|Disha|Lot","IV girne par premium?|Sasta ho sakta|Mehnga|Same|Double","Expiry ke paas gamma?|Bada|Chhota|Zero|Fixed","Theta kya hai?|Samay ka asar|Volatility|Disha|Lot","Premium kinse badalta hai?|Bhaav, samay, volatility|Sirf bhaav|Sirf samay|Koi nahi"],
+18:["Revenge trade kya hai?|Haar ke turant baad badla|Planned trade|Hedge|Setup","Overtrading ka nuksaan?|Zyada charges aur galtiyan|Zyada faida pakka|Kuch nahi|Tax kam","FOMO kya hai?|Chhut jane ka dar|Planned trade|Hedge|Margin","Chhooti chaal ke baad?|Agle setup ka intezaar|Peeche bhaago|Lot double|Revenge","Trade ke baad kya karo?|Journal likho|Kuch nahi|Delete karo|Lot double","Maksad kya hai?|Aadatein sudharna|Bazaar ko harana|Jaldi ameer banna|Tips","Haar ke baad?|Ruko, journal likho, phir plan dekho|Turant trade|Lot double|Stop-loss hata do","Journal kahan hai?|Paper tab|Risk tab|Mood tab|Ideas tab"],
+19:["Khabar ke baad spread?|Badh jata hai|Ghatta hai|Zero|Fixed","Gap-up kya hai?|Pichle close se upar khulna|Neeche khulna|Same khulna|Band","Gap ke baad pehle 15 minute?|Aksar unsthir|Hamesha shant|Band|Fixed","Khabar sunte hi trade?|Mat lo, pehle chaal dekho|Turant lo|Double lo|Hamesha lo","Gap laane wale events?|RBI, budget, nateeje|Sirf holiday|Sirf Sunday|Kuch nahi","Khabar par slippage?|Badhta hai|Ghatta hai|Zero|Fixed","Khabar ke baad pehla jhatka?|Bheed ko fasa sakta|Hamesha sahi|Free|Guarantee","Gap-down kya hai?|Pichle close se neeche khulna|Upar khulna|Same|Band"],
+20:["BTST ka risk?|Raat ka gap|Kuch nahi|Zero|Tax free","BTST ka matlab?|Aaj kharido kal becho|Buy tomorrow sell today|Band|Tax","Zero-hero kya hai?|Sasta OTM, zyadatar zero|Pakka faida|Hedge|Futures","Zero-hero ka budget?|Alag aur chhota|Poori poonji|Margin|Double","Ye dono khel?|Lottery jaise|Pakki kamai|Zero risk|FD jaise","Sirf utna paisa lagao jo?|Ganwana manzoor ho|Udhaar ka ho|Poora ho|Ghar ka ho","Kabhi kabhar kai guna milne se?|Roz ka nuksaan nahi dhulta|Dhul jata hai|Guarantee|Tax","Gap stop-loss ko?|Paar kar sakta|Kabhi nahi|Double|Fix karta"],
+21:["Seller ko premium?|Turant milta hai|Expiry ke baad|Kabhi nahi|Broker rakhta","Seller ka max faida?|Premium|Asimit|Margin|Lot","Seller ka nuksaan?|Kai guna ho sakta|Seemit zero|Premium tak|Zero","Selling mein kaun saath hota hai?|Theta|Gamma|Vega|Delta","Selling ka bada khatra?|Achanak badi chaal|Kuch nahi|Theta|Premium","Seller aksar?|Sahi par kabhi bahut bada galat|Hamesha sahi|Hamesha galat|Kuch nahi","OTM option expiry par ho to premium?|Seller ka munafa|Buyer ka|Broker ka|Tax","Selling kaisa khel hai?|Chhoti jeet, ek badi haar sab kha sakti|Pakka|Zero risk|Free"],
+22:["Naked selling kya hai?|Bina suraksha ke bechna|Hedge|Buy|Futures","Naked call mein nuksaan?|Upar seema nahi|Seemit|Zero|Premium","Margin call kya hai?|Extra margin ki maang|Free paisa|Bonus|Tax","Margin na de to?|Broker position kaat sakta|Kuch nahi|Bonus|Free","Naked selling kiske liye?|Shuruat walon ke liye nahi|Sab ke liye|Free|Pakka","Hum ise kyun padhte hain?|Samajhne ke liye, trade ke liye nahi|Trade ke liye|Tips|Kuch nahi","Margin kya hai?|Broker ki rokee hui poonji|Free|Fees|Tax","Bina hedge selling?|Aag se khelna|Safe|Free|Zero risk"],
+23:["Hedge kya hai?|Suraksha wali position|Sirf sell|Sirf buy|Futures","Bull put spread?|Put becho, neeche ka put kharido|Call becho|Dono kharido|Futures","Bear call spread?|Call becho, upar ka call kharido|Put becho|Dono becho|Futures","Spread ka max faida?|Net premium|Asimit|Strike ka antar|Lot","Spread ka max nuksaan?|Strike ka antar − net premium|Asimit|Zero|Lot","Hedge se?|Kamai kam, nuksaan tay|Kamai double|Risk zero|Margin zero","Spread mein nuksaan?|Pehle se pata|Pata nahi|Asimit|Zero","Bull put spread ka faida kab?|Bazaar ruka rahe ya badhe|Bahut gire|Gap-down|Kabhi nahi"],
+24:["Short strangle kya hai?|OTM call aur put dono bechna|Dono kharidna|Futures|Hedge","Short strangle ka risk?|Dono taraf bada|Zero|Seemit|Kuch nahi","Iron condor kya hai?|Strangle + door ke call aur put kharidna|Naked|Futures|Single leg","Iron condor kab theek?|Bazaar range mein ho|Bada trend|Gap|Khabar","Iron condor ka max nuksaan?|Wing width − kul premium|Asimit|Zero|Lot","Wings door ho to?|Risk zyada, premium kam|Risk kam, premium zyada|Same|Zero","Bada trend aaye to?|Max nuksaan tak ja sakta|Faida|Zero|Safe","Iron condor kaisa trade hai?|Tay risk wala|Paisa machine|Free|Zero risk"],
+25:["Selling mein stop-loss?|Mile premium ka 1.5-2 guna|Zero|Kabhi nahi|100 guna","Adjustment kya hai?|Position badalna|Nikalna nahi|Double karna|Delete karna","Sabse achha adjustment kabhi kabhi?|Nikal jana|Hamesha rukna|Double karna|Hedge hatana","Haare hue trade ko?|'Theek ho jayega' soch kar mat rakho|Rakho|Double karo|Free samjho","Trade se pehle likho?|Entry, hedge, stop-loss, exit|Kuch nahi|Tips|Lot","Adjustment se nuksaan?|Badh bhi sakta|Hamesha ghatta|Zero|Free","Seller ko pehle?|Bachna seekhna|Kamana|Double karna|Tips","Selling mein stop-loss zaroori hai ya nahi?|Zaroori hai|Zaroori nahi|Mana hai|Free hai"],
+26:["Expiry din gamma?|Bada|Chhota|Zero|Fixed","Expiry din selling?|Aakarshak par risky|Safe|Free|Zero risk","Gamma bada ho to?|Chhoti chaal par bhi bada badlav|Kuch nahi|Zero|Fixed","Slippage seller ke stop-loss ko?|Paar kar sakta|Kabhi nahi|Safe|Free","Shuruati seller?|Chhoti size ya hedged ya na rakhe|Poori size|Double size|Naked","Mota premium matlab?|Mota risk|Zero risk|Free|Safe","News spike seller ke liye?|Khatarnak|Safe|Free|Zero","Expiry din premium?|Tezi se girta|Badhta|Fixed|Double"],
+27:["Selling mein ek trade ka jokhim?|1-2%, hedge ke saath|50%|Poora|Koi limit nahi","Margin istemal?|40-50% ke aas paas, buffer rakho|100%|200%|Zero","Buffer kyun?|Margin call se bachne|Bekaar|Tax|Fees","Ek hi index aur expiry par sab?|Concentration risk|Safe|Free|Zero","Daily loss limit?|Seller par bhi lagu|Sirf buyer par|Kisi par nahi|Sirf broker par","Limit lage to?|Us din band|Double|Naya trade|Ignore","Seller ki umra?|Suraksha se naapi jaati|Kamai se|Lot se|Tips se","Selling hedge ke saath?|Hamesha|Kabhi nahi|Optional|Mana hai"],
+28:["Raat ko kya tay karo?|Gap-up, gap-down, flat par kya karoge|Kuch nahi|Lot|Tips","Ye yojana?|Taiyari, bhavishyavani nahi|Bhavishyavani|Guarantee|Kanoon","Kaunse levels likho?|Support, resistance, max pain|Kuch nahi|Lot|Tax","Pehle 15 minute?|Dekho, phir trade|Turant lo|Double lo|Band","Routine?|Roz ek jaisa|Roz alag|Kuch nahi|Random","Trade ke baad?|Journal|Kuch nahi|Delete|Lot","Subah kya dekho?|Levels|Sirf trade|Tips|Kuch nahi","Roz ek tareeka rakhne se?|Galtiyan gin kar sudhar sakte|Mushkil hota|Free|Zero"],
+29:["Report card kya dikhata hai?|Asli vyavhaar|Sirf profit|Tips|News","Win rate akela?|Kaafi nahi|Kaafi hai|Best hai|Free","Average jeet ÷ average haar?|Zaroor dekho|Mat dekho|Free|Tax","Sabse kam score?|Agla kaam|Ignore karo|Free|Tax","Ek samay mein?|Ek aadat sudharo|Sab|Kuch nahi|Random","Kitne trade ke baad pakka?|30 se zyada|1|2|Koi nahi","Report card ka maksad?|Sudharna|Sharminda karna|Tips|Free","Sabse badi haar kyun dekhein?|Jokhim samajhne|Kuch nahi|Free|Tax"],
+30:["Leverage?|Faida aur nuksaan dono badhata|Sirf faida|Sirf nuksaan|Kuch nahi","Zyadatar naye trader?|Paisa ganwate hain|Kamate hain|Barabar|Kuch nahi","Charges, slippage, tax?|Kamai khate hain|Kuch nahi|Badhate hain|Free","Sudhari hui aadat?|Poonji ki badi suraksha|Bekaar|Free|Tax","Ye course?|Shiksha, salah nahi|Salah|Guarantee|Tips","Asli paise se pehle?|Chhote size se shuru|Poora lagao|Udhaar lo|Double karo","Sirf wahi paisa lagao jo?|Ganwana manzoor ho|Udhaar ka ho|Poora ho|Ghar ka ho","Hedge aur stop-loss se?|Nuksaan par kaaboo|Faida guarantee|Free|Zero"]
+};
+const PQS=["Iron condor: wings 100 point, kul net credit 30 point, lot 75. Max nuksaan?|₹5,250|₹2,250|₹7,500|Asimit","Bull put spread: 25,800 put becha, 25,700 put kharida, credit 40 point. Break-even?|25,760|25,840|25,700|25,800","Premium 120, stop-loss 90, lot 75. Ek lot ka risk?|₹2,250|₹9,000|₹6,750|₹30","Risk ₹10,000 aur ek lot ka risk ₹2,500. Lots?|4|2|10|40","Jeet 40%, average jeet ₹3,000, average haar ₹1,500. Expectancy?|+₹300|−₹300|+₹1,500|₹0","Jeet 70%, average jeet ₹500, average haar ₹1,500. Expectancy?|−₹100|+₹100|+₹350|+₹800","Call strike 25,800, premium 120. Break-even?|25,920|25,680|25,800|26,000","Put kharida: strike 25,800, premium 100. Break-even?|25,700|25,900|25,800|25,600","Nifty 25,800, VIX 14. Roz ka 1 sigma lagbhag?|228 point|14 point|2,280 point|3,612 point","PCR 1.4 hai par bhaav VWAP ke neeche tik raha hai. Sahi soch?|Sanket mile-jule, akela PCR kaafi nahi|Pakki tezi|Pakki giravat|PCR bekaar hai","Gamma ke baare mein sahi?|Expiry ke paas ATM option ka gamma sabse bada|Gamma zero rehta|Gamma sirf buyer ka|Gamma samay hai","IV girne par, bhaav na hile to ATM call?|Premium ghat sakta (vega)|Premium badhta|Same|Double","Naked short put ka max nuksaan?|(Strike − premium) x lot tak, bahut bada par seemit|Asimit|Sirf premium|Zero","Credit spread aur naked mein sahi?|Spread mein max nuksaan pehle se tay|Naked mein risk kam|Spread mein asimit risk|Dono same","Margin buffer kyun?|Achanak chaal mein margin call se bachne|Tax|Fees|Bekaar","Seller ke liye theta aur gamma?|Theta kamai deta, gamma risk badhata|Dono kamai|Dono nuksaan|Koi sambandh nahi","Daily limit 4% aur capital ₹5,00,000. Limit?|₹20,000|₹4,000|₹40,000|₹2,000","2% risk aur capital ₹5,00,000. Ek trade ka max risk?|₹10,000|₹1,000|₹25,000|₹5,000","Ek din mein 10 trade, har trade par charges aur slippage ₹250. Kul?|₹2,500|₹250|₹25,000|₹25","Max pain ke baare mein sahi?|Sirf sanket, guarantee nahi|Pakka target|Rule|Kanoon","OI badhe aur bhaav gire?|Short buildup|Long buildup|Short covering|Neutral","Bhaav badhe aur OI ghate?|Short covering|Long buildup|Short buildup|Neutral","BTST ka khatra?|Raat ka gap stop-loss ko paar kar sakta|Gap nahi hota|Free|Zero","Revenge trade ka sahi ilaaj?|Ruko, journal likho, limit par band|Lot double|Stop-loss hata do|Jaldi trade lo","Iron condor ke liye sabse bada khatra?|Bada trend ya gap|Range|Theta|Samay","Short strangle aur iron condor mein farak?|Condor mein door ke options kharide jaate, risk tay|Koi nahi|Strangle safe|Condor naked","Expiry din seller ka risk?|Gamma, gap aur slippage|Koi nahi|Theta|Premium","Jeet 40%, average jeet = 2 x average haar. Expectancy?|Positive|Negative|Zero|Pata nahi","Sample ke baare mein sahi?|20 trade ka record bharosemand nahi|20 trade pakka|1 trade kaafi|Koi nahi","Gap ke baad stop-loss hamesha tay bhaav par nikalta hai. Sahi ya galat?|Galat, gap mein slippage ho sakti|Sahi hamesha|Sirf Nifty mein|Sirf Sensex mein"];
+
+/* ===== Learn: 30 lessons, quizzes, pro test, gating, certificate ===== */
+const LK='sr_learn_v1';
+const L_={passed:{},day:'',today:0,bonus:0,proFail:'',name:'',certId:'',certDate:'',view:'home',n:1,si:0,qz:null,seen:{}};
+(function(){try{const r=JSON.parse(localStorage.getItem(LK)||'null');if(!r)return;
+  if(r.passed&&typeof r.passed==='object')for(let i=1;i<=30;i++){const v=r.passed[i];if(Number.isFinite(v)&&v>=0&&v<=100)L_.passed[i]=v;else break}
+  ['day','proFail','name','certId','certDate'].forEach(f=>{if(typeof r[f]==='string')L_[f]=r[f].slice(0,60)});
+  ['today','bonus'].forEach(f=>{if(Number.isFinite(r[f])&&r[f]>=0&&r[f]<=300)L_[f]=r[f]});
+}catch(e){}})();
+function lnSave(){try{localStorage.setItem(LK,JSON.stringify({passed:L_.passed,day:L_.day,today:L_.today,bonus:L_.bonus,proFail:L_.proFail,name:L_.name,certId:L_.certId,certDate:L_.certDate}))}catch(e){}}
+const TAB_NEED={live:6,mood:7,scorecard:11,risk:14,paper:15,ideas:20};
+const TAB_NAME={live:'Live',mood:'Mood',scorecard:'Scorecard',risk:'Risk',paper:'Paper',ideas:'Ideas'};
+const passedN=()=>Object.keys(L_.passed).length;
+function tabOpen(t){if(t==='btst'||t==='zero-hero')t='ideas';const need=TAB_NEED[t];return !need||passedN()>=need-1}
+function dayReset(){const d=dayKey(Date.now());if(L_.day!==d){L_.day=d;L_.today=0;L_.bonus=0;lnSave()}}
+const capToday=()=>10+L_.bonus;
+function navRefresh(){document.querySelectorAll('#nav a').forEach(a=>{a.hidden=!tabOpen(a.dataset.t)})}
+function syncGuru(){G_.cur=Math.min(30,passedN()+1);G_.view=G_.cur;if(typeof gSave==='function')gSave()}
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const QB=[];Object.keys(QS).forEach(n=>QS[n].forEach(s=>{const p=s.split('|');QB.push({l:+n,q:p[0],o:p.slice(1)})}));
+function prep(q){const o=q.o.map((t,i)=>({t:t,c:i===0}));const s=shuf(o);return{q:q.q,o:s.map(x=>x.t),a:s.findIndex(x=>x.c)}}
+function drawLesson(n){
+  const cur=QB.filter(q=>q.l===n),prev=QB.filter(q=>q.l<n);
+  let out=shuf(cur).slice(0,prev.length?6:10);
+  out=out.concat(shuf(prev).slice(0,10-out.length));
+  if(out.length<10)out=out.concat(shuf(cur.filter(q=>out.indexOf(q)<0)).slice(0,10-out.length));
+  return shuf(out).map(prep);
+}
+const drawPro=()=>shuf(PQS.map(s=>{const p=s.split('|');return{q:p[0],o:p.slice(1)}})).map(prep);
+const esc2=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const body=()=>$('lnBody');
+function toastNew(before){
+  navRefresh();
+  Object.keys(TAB_NEED).forEach(t=>{if(!before[t]&&tabOpen(t))miniToast('Naya tab khula: '+TAB_NAME[t],'Ab neeche menu mein '+TAB_NAME[t]+' dikhega.','Kholo',()=>{location.hash='#'+t})});
+}
+function openMap(){const m={};Object.keys(TAB_NEED).forEach(t=>m[t]=tabOpen(t));return m}
+
+/* ---------- views ---------- */
+function vHome(){
+  dayReset();
+  const p=passedN(),nx=p+1,done=p>=30,limit=!done&&L_.today>=capToday();
+  const avg=p?Math.round(Object.values(L_.passed).reduce((a,b)=>a+b,0)/p):0;
+  let main;
+  if(done)main='<div class="card g-hero"><div class="eyebrow">Course poora</div><h2>Badhai ho! 30 lesson khatam</h2><p style="font-size:13.5px;line-height:1.6">Ab apna certificate aur report card dekho.</p><button class="btn ln-w" type="button" data-ln="cert">Certificate dekho</button></div>';
+  else if(limit){
+    const pf=L_.proFail===L_.day;
+    main='<div class="card"><div class="eyebrow">Aaj ki limit poori</div><h2 style="font-size:18px;margin:4px 0 8px">Aaj '+L_.today+' lesson ho gaye</h2><p class="g-less" style="font-size:14px">Roz '+capToday()+' lesson tak ki limit hai taaki cheezein dimag mein baithein. Kal naya din khulega. Jaldi karna ho to Pro Test do: 30 mushkil sawal, 80% (24 sahi) chahiye. Pass hue to usi din agle 10 lesson khulenge.</p>'
+      +(pf?'<div class="note">Aaj ka Pro Test pass nahi hua. Ab kal dobara try kar sakte ho.</div>':'<button class="btn ln-w" type="button" data-ln="pro">Pro Test shuru karo</button>')+'</div>';
+  }else main='<div class="card g-hero"><div class="eyebrow">Lesson '+nx+' / 30</div><h2>'+esc2(LESSONS[nx-1].t)+'</h2><div class="g-bar"><i style="width:'+(p/30*100)+'%"></i></div><button class="btn ln-w" type="button" data-ln="start" data-n="'+nx+'" style="background:#fff;color:var(--a);margin-top:14px">'+(L_.seen[nx]?'Lesson dobara shuru karo':'Lesson shuru karo')+'</button></div>';
+  const rows=LESSONS.map((l,i)=>{const n=i+1,ok=n<=p,cur=n===nx&&!done,lock=n>nx||(n===nx&&limit&&!done);
+    return '<button class="lrow2'+(ok?' ok':'')+(cur?' cur':'')+'" type="button" '+(lock?'disabled':'data-ln="'+(ok?'reread':'start')+'" data-n="'+n+'"')+'><b>'+(ok?'✓':n)+'</b><span>'+esc2(l.t)+'</span><small>'+(ok?L_.passed[n]+'%':lock?'Lock':'Agla')+'</small></button>'}).join('');
+  return '<div><h2 style="font-size:20px">Seekho</h2><p class="lead" style="margin-top:4px">Ek ek lesson, phir 10 sawal ka quiz. Pass hone ke liye kam se kam 50% chahiye. Bazaar ke tabs usi hisaab se khulte jaate hain.</p></div>'
+    +main
+    +'<div class="card"><div class="ln-stats"><div><small>Poore</small><b class="num">'+p+' / 30</b></div><div><small>Aaj</small><b class="num">'+L_.today+' / '+capToday()+'</b></div><div><small>Quiz average</small><b class="num">'+(p?avg+'%':'-')+'</b></div></div></div>'
+    +'<div class="card"><h2 style="margin-bottom:6px">Saare lesson</h2><div class="lrows">'+rows+'</div></div>'
+    +'<p class="disc" data-disc>'+DISC+'</p>';
+}
+function vLesson(){
+  const n=L_.n,l=LESSONS[n-1],i=L_.si,last=i===l.s.length-1;
+  return '<div class="card"><div class="eyebrow">Lesson '+n+' / 30 · slide '+(i+1)+' / '+l.s.length+'</div><h2 style="font-size:19px;margin:4px 0 12px">'+esc2(l.t)+'</h2><div class="dots">'+l.s.map((_,k)=>'<i class="'+(k<=i?'on':'')+'"></i>').join('')+'</div><p class="ln-slide">'+esc2(l.s[i])+'</p><div class="g-row"><button class="btn ghost" type="button" data-ln="say">Suno</button>'+(i>0?'<button class="btn ghost" type="button" data-ln="prev">Peeche</button>':'')+'<button class="btn" type="button" data-ln="next">'+(last?'Quiz do (10 sawal)':'Agla')+'</button></div></div><button class="btn ghost ln-w" type="button" data-ln="home">Menu par jao</button>';
+}
+function vQuiz(){
+  const z=L_.qz,q=z.qs[z.i],tot=z.qs.length,ans=z.picked!==null;
+  return '<div class="card"><div class="eyebrow">'+(z.mode==='pro'?'Pro Test':'Lesson '+z.n+' quiz')+' · sawal '+(z.i+1)+' / '+tot+'</div><div class="dots" style="margin-top:8px">'+z.qs.map((_,k)=>'<i class="'+(k<=z.i?'on':'')+'"></i>').join('')+'</div><p class="ln-q">'+esc2(q.q)+'</p>'
+    +q.o.map((t,k)=>'<button class="opt'+(ans?(k===q.a?' ok':k===z.picked?' bad':''):'')+'" type="button" data-ln="pick" data-k="'+k+'"'+(ans?' disabled':'')+'>'+esc2(t)+'</button>').join('')
+    +(ans?'<p class="hint" style="margin-top:10px">'+(z.picked===q.a?'Sahi jawab.':'Galat. Sahi jawab upar hara dikh raha hai.')+'</p><button class="btn ln-w" type="button" data-ln="qnext">'+(z.i===tot-1?'Result dekho':'Agla sawal')+'</button>':'')+'</div>';
+}
+function vResult(){
+  const z=L_.qz,tot=z.qs.length,sc=z.score,pct=Math.round(sc/tot*100),need=z.mode==='pro'?80:50,ok=pct>=need;
+  const wrong=z.qs.filter((q,i)=>z.ans[i]!==q.a);
+  let act;
+  if(z.mode==='pro')act=ok?'<button class="btn ln-w" type="button" data-ln="home">Agle 10 lesson khul gaye. Aage badho</button>':'<button class="btn ln-w" type="button" data-ln="home">Menu par jao</button>';
+  else if(ok)act=(z.n>=30?'<button class="btn ln-w" type="button" data-ln="cert">Certificate dekho</button>':'<button class="btn ln-w" type="button" data-ln="home">Menu par jao</button>');
+  else act='<button class="btn ln-w" type="button" data-ln="retry">Naye sawal, dobara quiz</button><button class="btn ghost ln-w" type="button" data-ln="start" data-n="'+z.n+'">Lesson dobara padho</button>';
+  return '<div class="card g-hero"><div class="eyebrow">'+(z.mode==='pro'?'Pro Test':'Lesson '+z.n)+' result</div><div class="rep-score" style="margin:6px 0">'+sc+' / '+tot+'</div><h2>'+(ok?'Pass ('+pct+'%)':'Pass nahi hua ('+pct+'%)')+'</h2><p style="font-size:13.5px">'+(z.mode==='pro'?'Pass hone ke liye 80% chahiye.':'Pass hone ke liye 50% chahiye.')+(z.msg?' '+z.msg:'')+'</p></div>'
+    +(wrong.length?'<div class="card"><h2 style="margin-bottom:8px">Galat jawab ka hisaab</h2>'+wrong.map(q=>'<div class="rep-row"><span>'+esc2(q.q)+'</span><small style="color:var(--up)">Sahi: '+esc2(q.o[q.a])+'</small></div>').join('')+'</div>':'')
+    +'<div style="display:flex;flex-direction:column;gap:10px">'+act+'</div>';
+}
+function certData(){
+  const p=passedN(),avg=p?Math.round(Object.values(L_.passed).reduce((a,b)=>a+b,0)/p):0,rd=reportData();
+  const pos=[],neg=[];
+  if(avg>=70)pos.push('Quiz average '+avg+'%: concepts saaf hain.');else neg.push('Quiz average '+avg+'%: kamzor lessons dobara padho.');
+  if(!rd){neg.push('Paper trade ka record nahi hai. Kam se kam 30 paper trade karo.')}
+  else{
+    if(rd.n<30)neg.push('Sirf '+rd.n+' paper trade hue. Pakki aadat jaanne ke liye 30+ chahiye.');else pos.push(rd.n+' paper trade ka acha sample.');
+    if(rd.patience>=70)pos.push('Dhairya acha hai ('+rd.patience+'/100): plan tak ruke.');else neg.push('Dhairya kam ('+rd.patience+'/100): haath se jaldi nikal jaate ho.');
+    if(rd.rr>=60)pos.push('Jokhim aur faida ka anupaat theek hai.');else neg.push('Average haar jeet se badi hai. Target stop-loss se bada rakho.');
+    if(rd.over>=70)pos.push('Din mein trade ki ginti kaaboo mein hai.');else neg.push('Overtrading: din mein bahut trade (sabse zyada '+rd.mx+').');
+    if(rd.revS>=80)pos.push('Badle ke trade bahut kam.');else neg.push('Haar ke turant baad '+rd.rev+' trade liye. Ruko aur journal likho.');
+    if(rd.net>0)pos.push('Paper mein kul munafa '+rss(rd.net)+'.');else neg.push('Paper mein kul nuksaan '+rss(rd.net)+'. Plan par wapas jao.');
+  }
+  return{avg,rd,pos,neg};
+}
+function drawCert(d){
+  const c=document.createElement('canvas');c.width=1200;c.height=850;const x=c.getContext('2d');
+  x.fillStyle='#FFFFFF';x.fillRect(0,0,1200,850);
+  const g=x.createLinearGradient(0,0,1200,850);g.addColorStop(0,'#1D4ED8');g.addColorStop(1,'#0891B2');
+  x.strokeStyle=g;x.lineWidth=14;x.strokeRect(30,30,1140,790);x.lineWidth=3;x.strokeRect(56,56,1088,738);
+  x.textAlign='center';
+  x.fillStyle=g;x.font='700 24px sans-serif';x.fillText('SETUP RADAR',600,125);
+  x.fillStyle='#0B1B2E';x.font='700 58px Georgia,serif';x.fillText('Certificate of Completion',600,205);
+  x.fillStyle='#5A6B7F';x.font='400 24px sans-serif';x.fillText('Yeh pramanit kiya jata hai ki',600,275);
+  x.fillStyle='#0B1B2E';x.font='700 66px Georgia,serif';x.fillText(L_.name,600,360,980);
+  x.strokeStyle='#D7E0EC';x.lineWidth=2;x.beginPath();x.moveTo(250,385);x.lineTo(950,385);x.stroke();
+  x.fillStyle='#34475C';x.font='400 26px sans-serif';
+  x.fillText('ne Setup Radar F&O Course ke 30 lessons aur quizzes poore kiye.',600,445,1000);
+  x.fillText('Option buying, option selling aur hedging ke buniyadi paath shamil.',600,485,1000);
+  x.font='700 28px sans-serif';x.fillStyle='#1D4ED8';
+  x.fillText('Lessons 30 / 30   ·   Quiz average '+d.avg+'%',600,560);
+  if(d.rd){x.fillText('Paper trades '+d.rd.n+'   ·   Discipline score '+d.rd.total+' / 100',600,605)}
+  x.fillStyle='#5A6B7F';x.font='400 22px sans-serif';
+  x.fillText('Tareekh: '+L_.certDate+'     Certificate no.: '+L_.certId,600,690);
+  x.font='400 17px sans-serif';
+  x.fillText('Yeh sirf shikshan ka certificate hai. Yeh SEBI ya kisi regulator ki manyata nahi hai aur nivesh salah nahi hai.',600,740,1040);
+  x.fillText('Option trading mein poori poonji doob sakti hai.',600,765);
+  return c.toDataURL('image/png');
+}
+function vCert(){
+  if(passedN()<30)return '<div class="card"><p class="empty">Certificate 30 lesson poore hone par milega.</p></div><button class="btn ghost ln-w" type="button" data-ln="home">Menu</button>';
+  if(!L_.name)return '<div class="card"><div class="eyebrow">Certificate</div><h2 style="margin:4px 0 8px">Certificate par kaunsa naam likhein?</h2><form id="lnNameForm" class="ask"><input id="lnName" type="text" maxlength="40" autocomplete="name" placeholder="Poora naam"><button class="go" type="submit">Banao</button></form></div>';
+  const d=certData(),img=drawCert(d);
+  return '<div class="card"><img src="'+img+'" alt="Certificate" style="width:100%;border-radius:10px;border:1px solid var(--line)"><a class="btn ln-w" download="Setup-Radar-Certificate.png" href="'+img+'" style="margin-top:12px">Certificate download karo</a><p class="hint" style="margin-top:8px">Download na chale to image par dabakar rakho aur save karo.</p></div>'
+    +'<div class="card"><h2 style="margin-bottom:8px">Tumhara report card</h2>'+(d.rd?reportHtml():'<p class="empty">Paper trade nahi hue, isliye vyavhaar score nahi bana.</p>')+'</div>'
+    +'<div class="card"><h2 style="margin-bottom:6px">Positive baatein</h2><ul class="ln-list">'+(d.pos.length?d.pos.map(t=>'<li>'+esc2(t)+'</li>').join(''):'<li>Abhi koi nahi. Practice se banengi.</li>')+'</ul><h2 style="margin:14px 0 6px">Sudhaar ke points</h2><ul class="ln-list neg">'+(d.neg.length?d.neg.map(t=>'<li>'+esc2(t)+'</li>').join(''):'<li>Koi bada kamzor point nahi mila.</li>')+'</ul></div>'
+    +'<button class="btn ghost ln-w" type="button" data-ln="home">Menu</button><p class="disc" data-disc>'+DISC+'</p>';
+}
+function lnRender(){
+  if(!$('lnBody'))return;
+  const v=L_.view;
+  body().innerHTML=v==='lesson'?vLesson():v==='quiz'?vQuiz():v==='result'?vResult():v==='cert'?vCert():vHome();
+  if(v==='lesson'&&L_.speakOnRender){L_.speakOnRender=false}
+  navRefresh();
+}
+function slideSpeak(force){const l=LESSONS[L_.n-1];speak(l.s[L_.si],force)}
+function finishQuiz(){
+  const z=L_.qz,tot=z.qs.length,pct=Math.round(z.score/tot*100),before=openMap();
+  dayReset();
+  if(z.mode==='pro'){
+    if(pct>=80){L_.bonus+=10;z.msg='Agle 10 lesson aaj ke liye khul gaye.'}
+    else{L_.proFail=L_.day;z.msg='Aaj dobara Pro Test nahi de sakte. Kal try karo.'}
+  }else if(pct>=50){
+    const first=!(z.n in L_.passed);
+    if(first&&z.n===passedN()+1){L_.passed[z.n]=pct;L_.today++}
+    else if(z.n in L_.passed&&pct>L_.passed[z.n])L_.passed[z.n]=pct;
+    syncGuru();
+  }
+  lnSave();L_.view='result';lnRender();toastNew(before);window.scrollTo(0,0);
+  if(typeof say2==='function'&&z.mode==='lesson'&&pct>=50&&!(z.n in {}))say2({hi:'Lesson '+z.n+' pass. Achha kaam. Agla lesson jab taiyar ho tab shuru karo.',en:'Lesson '+z.n+' passed. Good work. Start the next one when you are ready.'},{speak:true});
+}
+function startQuiz(mode,n){L_.qz={mode:mode,n:n,qs:mode==='pro'?drawPro():drawLesson(n),i:0,ans:[],picked:null,score:0};L_.view='quiz';lnRender();window.scrollTo(0,0)}
+
+/* ---------- events ---------- */
+$('v-learn').addEventListener('click',e=>{
+  const b=e.target.closest('[data-ln]');if(!b)return;
+  const a=b.dataset.ln,n=+b.dataset.n;
+  dayReset();
+  if(a==='start'||a==='reread'){
+    if(a==='start'&&n>passedN()+1)return;
+    if(a==='start'&&n===passedN()+1&&L_.today>=capToday()){lnRender();return}
+    L_.n=n;L_.si=0;L_.seen[n]=true;L_.view='lesson';lnRender();window.scrollTo(0,0);slideSpeak(false);return;
+  }
+  if(a==='next'){const l=LESSONS[L_.n-1];if(L_.si<l.s.length-1){L_.si++;lnRender();slideSpeak(false)}else startQuiz('lesson',L_.n);return}
+  if(a==='prev'){if(L_.si>0){L_.si--;lnRender();slideSpeak(false)}return}
+  if(a==='say'){slideSpeak(true);return}
+  if(a==='home'){L_.view='home';lnRender();window.scrollTo(0,0);return}
+  if(a==='pro'){if(L_.today>=capToday()&&L_.proFail!==L_.day&&passedN()<30)startQuiz('pro',0);return}
+  if(a==='retry'){startQuiz('lesson',L_.qz.n);return}
+  if(a==='pick'){const z=L_.qz;if(z.picked!==null)return;const k=+b.dataset.k;z.picked=k;z.ans[z.i]=k;if(k===z.qs[z.i].a)z.score++;lnRender();return}
+  if(a==='qnext'){const z=L_.qz;if(z.i<z.qs.length-1){z.i++;z.picked=null;lnRender();window.scrollTo(0,0)}else finishQuiz();return}
+  if(a==='cert'){L_.view='cert';lnRender();window.scrollTo(0,0);return}
+});
+$('v-learn').addEventListener('submit',e=>{
+  if(e.target.id!=='lnNameForm')return;e.preventDefault();
+  const v=($('lnName').value||'').trim().slice(0,40);if(!v)return;
+  L_.name=v;L_.certDate=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  if(!L_.certId)L_.certId='SR-'+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase();
+  lnSave();lnRender();
+});
+
+/* ---------- guru tab becomes chat only ---------- */
+taskDone=function(n){return !!L_.passed[n]};
+gRender=function(feedOnly){
+  const fd=$('gFeed'),near=fd.scrollHeight-fd.scrollTop-fd.clientHeight<60;
+  fd.innerHTML=G_.feed.length?G_.feed.map((f,i)=>f.w==='u'?'<div class="bub u">'+esc(f.m)+'</div>':'<div class="bub c">'+esc(tx(f.m))+'<small>'+ago(f.t)+'<button type="button" data-rp="'+i+'">'+tx({hi:'Phir suno',en:'Replay'})+'</button></small></div>').join(''):'<p class="empty">'+tx({hi:'Guru tab kholne, setup banne aur trade band hone par bolta rahega.',en:'The guru will speak as you open tabs, setups form and trades close.'})+'</p>';
+  if(near||!feedOnly)fd.scrollTop=fd.scrollHeight;
+  $('gStage').hidden=true;$('gGrid').parentElement.hidden=true;
+  $('gPhase').textContent='LESSON '+Math.min(30,passedN()+1)+' / 30';
+  $('gTitle').textContent=tx({hi:'Guru: tumhara coach',en:'Guru: your coach'});
+  $('gProg').style.width=(passedN()/30*100)+'%';
+  document.querySelectorAll('[data-gl]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.gl===G_.lang)));
+  const gv=$('gVoice');gv.textContent=tx({hi:G_.voice?'Awaaz chalu':'Awaaz band',en:G_.voice?'Voice on':'Voice off'});gv.setAttribute('aria-pressed',String(G_.voice));
+  $('gChatT').textContent=tx({hi:'Guru se baat karo',en:'Talk to the guru'});
+  $('gIn').placeholder=tx({hi:'Jaise: option chain kya hai?',en:'e.g. What is an option chain?'});
+  $('gSend').textContent=tx({hi:'Bhejo',en:'Send'});$('gMic').textContent=tx({hi:'Bolo',en:'Speak'});
+  const q=[];
+  if(tabOpen('mood'))q.push('<button type="button" data-q="brief">'+tx({hi:'Kal ka brief',en:'Tomorrow brief'})+'</button>');
+  if(tabOpen('live'))q.push('<button type="button" data-q="news">'+tx({hi:'Khabar ka asar',en:'News impact'})+'</button>');
+  q.push('<button type="button" data-q="report">'+tx({hi:'Report card',en:'Report card'})+'</button>');
+  q.push('<button type="button" data-q="what">'+tx({hi:'Ye tab kya hai?',en:'What is this tab?'})+'</button>');
+  $('gQuick').innerHTML=q.join('');
+  $('gNote').textContent=tx({hi:'Guru sirf shiksha deta hai, khareedne-bechne ki salah nahi. Awaaz abhi phone ki apni voice hai. Lesson ka text abhi sirf Hinglish mein hai.',en:'The guru only teaches and gives no buy or sell advice. The voice is currently your phone\'s own voice. Lesson text is Hinglish only for now.'});
+  const rp=$('gReport');rp.hidden=!G_.rep;if(G_.rep)rp.innerHTML=reportHtml();
+};
+const _newsTick=newsTick;newsTick=function(){if(!tabOpen('live'))return;_newsTick()};
+syncGuru();navRefresh();
+if(!location.hash||location.hash==='#live'&&!tabOpen('live'))history.replaceState(null,'','#learn');
+route();
+</script>
+<script>if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(function(){})}</script>
