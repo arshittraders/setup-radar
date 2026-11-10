@@ -591,6 +591,18 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     </form>
     <div class="res" id="riskOut" aria-live="polite"></div>
     <div id="riskWarn"></div>
+    <div class="card" id="tcCard" style="display:flex;flex-direction:column;gap:12px">
+      <div><h2>Trade Check: apna plan jaancho</h2><p class="lead" style="margin-top:4px">Upar capital, premium, SL aur lot size bharo. Yahan apna plan daalo. App logic se batayega ki kya kamzor hai.</p></div>
+      <div class="grid2">
+        <div class="fld"><label for="tcSetup">Setup</label><select id="tcSetup"><option value="orb">Range Breakout</option><option value="mom">Momentum Burst</option><option value="vwap">VWAP Reclaim</option><option value="oil">OI Long Buildup</option><option value="ois">OI Short Buildup</option></select></div>
+        <div class="fld"><label for="tcDir">Direction</label><select id="tcDir"><option value="ce">Bullish (CE)</option><option value="pe">Bearish (PE)</option></select></div>
+        <div class="fld"><label for="tcSide">Option</label><select id="tcSide"><option value="buy">Kharidna</option><option value="sell">Bechna</option></select></div>
+        <div class="fld"><label for="tcLots">Lots</label><input id="tcLots" type="number" inputmode="numeric" value="2" min="1"></div>
+        <div class="fld"><label for="tcTg">Target (% premium)</label><input id="tcTg" type="number" inputmode="decimal" value="60" min="0" step="1"></div>
+      </div>
+      <button class="btn" type="button" id="tcGo" style="width:100%">Trade Check karo</button>
+    </div>
+    <div id="tcOut"></div>
     <p class="disc" data-disc></p>
   </section>
 </main>
@@ -2335,6 +2347,59 @@ document.addEventListener('click',e=>{
 });
 </script>
 
+<script id="tcheck">
+/* ===== Trade Check: user ke apne plan ki logic-jaanch (salah nahi) ===== */
+function tcFake(cs){
+  if(cs.length<26)return{k:'na'};
+  const rg=cs.slice(-25,-6),hi=Math.max.apply(null,rg.map(c=>c.h)),lo=Math.min.apply(null,rg.map(c=>c.l)),rc=cs.slice(-6),last=cs[cs.length-1];
+  const up=rc.some(c=>c.c>hi),dn=rc.some(c=>c.c<lo);
+  if(up&&last.c<=hi)return{k:'fakeUp',hi:hi,lo:lo};
+  if(dn&&last.c>=lo)return{k:'fakeDn',hi:hi,lo:lo};
+  if(last.c>hi)return{k:'holdUp',hi:hi,lo:lo};
+  if(last.c<lo)return{k:'holdDn',hi:hi,lo:lo};
+  return{k:'in',hi:hi,lo:lo};
+}
+function tcRun(){
+  const g=id=>parseFloat($(id).value)||0,cap=g('rCap'),rp=g('rRisk'),prem=g('rPrem'),sl=g('rSl'),lot=g('rLot'),lots=g('tcLots'),tg=g('tcTg');
+  const ix=$('rIx').value,sid=$('tcSetup').value,dir=$('tcDir').value,side=$('tcSide').value;
+  const out=[];const add=(st,t,d)=>out.push({st:st,t:t,d:d});
+  const risk=lots*prem*lot*sl/100,riskP=cap?risk/cap*100:0,used=lots*prem*lot,usedP=cap?used/cap*100:0;
+  add(riskP<=rp?'ok':'bad','Risk per trade','Is plan mein stop-loss lagne par '+rs(risk)+' ('+riskP.toFixed(1)+'% capital) jaayega. Tumhari limit '+rp+'% hai.'+(riskP<=rp?'':' Lot kam karo ya stop-loss paas rakho.'));
+  add(usedP<=15?'ok':usedP<=30?'warn':'bad','Capital ka hissa',rs(used)+' ('+usedP.toFixed(0)+'%) ek trade mein phasega.'+(usedP>30?' Ek hi trade mein itna paisa zyada hai.':''));
+  add(sl<=0?'bad':sl<=50?'ok':'warn','Stop-loss',sl<=0?'Stop-loss nahi hai. Bina stop-loss ka trade sabse bada khatra hai.':sl<=50?'Stop-loss premium ka '+sl+'% hai.':'Stop-loss '+sl+'% bahut chauda hai, ek galti mein aadha paisa jaayega.');
+  const be=sl+tg>0?sl/(sl+tg)*100:0;
+  add(tg<=0?'warn':tg>=sl*1.5?'ok':tg>=sl?'warn':'bad','Risk : Reward',tg<=0?'Target daalo to R:R nikalunga.':'Risk '+sl+'% aur target '+tg+'% hai (1:'+(tg/Math.max(sl,1)).toFixed(1)+'). Break-even ke liye '+be.toFixed(0)+'% trades jeetne chahiye (charges chhod kar).');
+  const d=new Date(Date.now()+19800000),mm=d.getUTCHours()*60+d.getUTCMinutes(),wd=d.getUTCDay();
+  let tmv;
+  if(wd===0||wd===6)tmv=['warn','Weekend hai, market band hai. Ye jaanch sirf practice ke liye.'];
+  else if(mm<555)tmv=['warn','Market abhi khula nahi.'];
+  else if(mm<585)tmv=['warn','Shuru ke 15 minute: move tez aur jhoothe breakout zyada hote hain.'];
+  else if(mm>=900)tmv=['warn','Closing ke paas: theta tez hota hai aur move ulte bhi ho sakte hain.'];
+  else if(mm>=690&&mm<810)tmv=['warn','Dopahar ka sust time: moves chhote aur jhoothe ho sakte hain.'];
+  else tmv=['ok','Time-window theek-thaak active hai.'];
+  add(tmv[0],'Time',tmv[1]);
+  let fb;const cs=candlesOf(S[ix],5),f=tcFake(cs),bull=dir==='ce';
+  if(f.k==='na')fb=['warn','Chart par abhi kaafi candle nahi bane. Thodi der baad dobara jaancho.'];
+  else if((f.k==='fakeUp'&&bull)||(f.k==='fakeDn'&&!bull))fb=['bad','Fake breakout ka sanket: price range ('+nfi(f.lo)+' se '+nfi(f.hi)+') ke bahar gaya tha par wapas andar aa gaya. Isi taraf ka trade jhoothe breakout mein phans sakta hai.'];
+  else if(f.k==='fakeUp'||f.k==='fakeDn')fb=['warn','Ek taraf ka breakout wapas andar aa gaya (fake breakout). Tumhara plan ulti taraf ka hai, par ye confirm nahi karta ki move chalega.'];
+  else if((f.k==='holdUp'&&bull)||(f.k==='holdDn'&&!bull))fb=['ok','Range ke bahar price tika hua hai, tumhare plan ki taraf. Isse breakout confirm nahi hota, bas ab tak wapas andar nahi aaya.'];
+  else if(f.k==='holdUp'||f.k==='holdDn')fb=['warn','Price tumhare plan ki ulti taraf range ke bahar tika hai.'];
+  else fb=['warn','Price abhi range ke andar hai ('+nfi(f.lo)+' se '+nfi(f.hi)+'). Koi breakout bana nahi.'];
+  add(fb[0],'Fake breakout jaanch',fb[1]);
+  const su=SETUPS.find(x=>x.id===sid),rec=EV.find(e=>e.k===ix&&e.sid===sid&&Date.now()-e.t<=300000);
+  add(rec?(rec.bias===(bull?'bull':'bear')?'ok':'warn'):'warn','Setup ki shart ('+su.name+')',rec?'Haan, pichle 5 minute mein ye setup bana tha (strength '+rec.score+'/100, '+(rec.bias==='bull'?'bullish':'bearish')+').'+(rec.bias===(bull?'bull':'bear')?'':' Par tumhari direction us se alag hai.'):'Abhi is setup ki shart poori nahi dikhti.');
+  const a=stats(ix,sid,side);
+  const recTxt='Is setup ke pichle 100 SIMULATED trades mein '+a.wins+' jeete ('+(side==='buy'?'option kharidna':'option bechna')+'). Ye demo statistics hain, asli backtest nahi.';
+  const okN=out.filter(x=>x.st==='ok').length;
+  const ic={ok:'✓',warn:'!',bad:'✗'},cl={ok:'up',warn:'',bad:'down'};
+  $('tcOut').innerHTML='<div class="card"><div class="eyebrow">Trade Check</div><div class="num" style="font-size:26px;font-weight:700;margin:4px 0">'+okN+' / '+out.length+' <span class="lead" style="font-size:13px;font-weight:500">checks theek</span></div>'
+   +'<ul class="tl">'+out.map(x=>'<li><div><b class="'+cl[x.st]+'">'+ic[x.st]+' '+x.t+'</b><small>'+x.d+'</small></div></li>').join('')+'</ul>'
+   +'<div class="note" style="margin-top:12px"><b>Purana record:</b> '+recTxt+' Ye aage ki guarantee ya prediction nahi hai.</div>'
+   +'<p class="hint">Ye tumhare apne plan ki logic-jaanch hai, buy/sell ki salah nahi. Hum kisi ko trade lene ko nahi kehte. Faisla aur risk poori tarah tumhara. Trade apne broker mein khud lo.</p></div>';
+}
+document.addEventListener('click',e=>{if(e.target.closest('#tcGo'))tcRun()});
+</script>
+
 <script id="learn">
 const LDEV=[
 ["एफ एंड ओ का मतलब है फ्यूचर्स और ऑप्शन्स। ये डेरिवेटिव्स हैं, यानी इनकी कीमत किसी और चीज़, जैसे शेयर या इंडेक्स की चाल से बनती है।","शेयर खरीदने पर तुम कंपनी का हिस्सा लेते हो। एफ एंड ओ में तुम सिर्फ़ एक कॉन्ट्रैक्ट लेते हो कि भाव ऊपर जाएगा या नीचे।","फ्यूचर्स में दोनों तरफ़ की ज़िम्मेदारी होती है। ऑप्शन्स में खरीदने वाले को हक़ मिलता है, ज़िम्मेदारी नहीं। इसलिए ऑप्शन खरीदने वाले का नुकसान सीमित होता है।","एफ एंड ओ तय लॉट साइज़ में होता है, जैसे एक लॉट में 75 क्वांटिटी। इसलिए एक छोटी सी चाल भी पैसे को तेज़ी से बदल सकती है।","याद रखो: एफ एंड ओ में बहुत लोग पैसा गँवाते हैं। हम यहाँ सीखने आए हैं, जल्दी अमीर होने नहीं।"],
@@ -2449,7 +2514,7 @@ const TAB_NAME={live:'Live',mood:'Mood',scorecard:'Scorecard',risk:'Risk',paper:
 const passedN=()=>Object.keys(L_.passed).length;
 function tabOpen(){return true}
 function dayReset(){const d=dayKey(Date.now());if(L_.day!==d){L_.day=d;L_.today=0;L_.bonus=0;lnSave()}}
-const capToday=()=>10+L_.bonus;
+const capToday=()=>2+L_.bonus;
 function navRefresh(){}
 function syncGuru(){G_.cur=Math.min(30,passedN()+1);G_.view=G_.cur;if(typeof gSave==='function')gSave()}
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -2480,12 +2545,12 @@ function vHome(){
   if(done)main='<div class="card g-hero"><div class="eyebrow">Course poora</div><h2>Badhai ho! 30 lesson khatam</h2><p style="font-size:13.5px;line-height:1.6">Ab apna certificate aur report card dekho.</p><button class="btn ln-w" type="button" data-ln="cert">Certificate dekho</button></div>';
   else if(limit){
     const pf=L_.proFail===L_.day;
-    main='<div class="card"><div class="eyebrow">Aaj ki limit poori</div><h2 style="font-size:18px;margin:4px 0 8px">Aaj '+L_.today+' lesson ho gaye</h2><p class="g-less" style="font-size:14px">Roz '+capToday()+' lesson tak ki limit hai taaki cheezein dimag mein baithein. Kal naya din khulega. Jaldi karna ho to Pro Test do: 30 mushkil sawal, 80% (24 sahi) chahiye. Pass hue to usi din agle 10 lesson khulenge.</p>'
+    main='<div class="card"><div class="eyebrow">Aaj ki limit poori</div><h2 style="font-size:18px;margin:4px 0 8px">Aaj '+L_.today+' lesson ho gaye</h2><p class="g-less" style="font-size:14px">Roz '+capToday()+' lesson tak ki limit hai taaki cheezein dimag mein baithein. Kal naya din khulega. Jaldi karna ho to Pro Test do: 30 mushkil sawal, 80% (24 sahi) chahiye. Pass hue to usi din agle 4 lesson khulenge.</p>'
       +(pf?'<div class="note">Aaj ka Pro Test pass nahi hua. Ab kal dobara try kar sakte ho.</div>':'<button class="btn ln-w" type="button" data-ln="pro">Pro Test shuru karo</button>')+'</div>';
-  }else main='<div class="card g-hero"><div class="eyebrow">Lesson '+nx+' / 30</div><h2>'+esc2(LESSONS[nx-1].t)+'</h2><div class="g-bar"><i style="width:'+(p/30*100)+'%"></i></div><button class="btn ln-w" type="button" data-ln="start" data-n="'+nx+'" style="background:#fff;color:var(--a);margin-top:14px">'+(L_.seen[nx]?'Lesson dobara shuru karo':'Lesson shuru karo')+'</button></div>';
+  }else main='<div class="card g-hero"><div class="eyebrow">Din '+Math.ceil(nx/2)+' / 15 · Lesson '+nx+' / 30</div><h2>'+esc2(LESSONS[nx-1].t)+'</h2><div class="g-bar"><i style="width:'+(p/30*100)+'%"></i></div><button class="btn ln-w" type="button" data-ln="start" data-n="'+nx+'" style="background:#fff;color:var(--a);margin-top:14px">'+(L_.seen[nx]?'Lesson dobara shuru karo':'Lesson shuru karo')+'</button></div>';
   const rows=LESSONS.map((l,i)=>{const n=i+1,ok=n<=p,cur=n===nx&&!done,lock=n>nx;
     return '<button class="lrow2'+(ok?' ok':'')+(cur?' cur':'')+'" type="button" '+(lock?'disabled':'data-ln="'+(ok?'reread':'start')+'" data-n="'+n+'"')+'><b>'+(ok?'✓':n)+'</b><span>'+esc2(l.t)+'</span><small>'+(ok?L_.passed[n]+'%':lock?'Lock':'Agla')+'</small></button>'}).join('');
-  return '<div><h2 style="font-size:20px">Tutorial</h2><p class="lead" style="margin-top:4px">Ek ek lesson, phir 10 sawal ka quiz. Pass hone ke liye kam se kam 50% chahiye. Sab tabs khule hain, tum seekhte hue unhe use kar sakte ho.</p></div>'
+  return '<div><h2 style="font-size:20px">Tutorial</h2><p class="lead" style="margin-top:4px">15 din ka course: roz 2 lesson, har lesson ke baad 10 sawal ka quiz. Pass hone ke liye kam se kam 50% chahiye. Sab tabs khule hain, tum seekhte hue unhe use kar sakte ho.</p></div>'
     +'<div class="card lab-card"><div class="eyebrow">Naya</div><h2 style="font-size:17px;margin:4px 0 6px">Payoff Lab</h2><p class="lead" style="margin:0 0 10px">Slider khiskao aur dekho: expiry par option kharidne, bechne aur hedge karne par kitna faida ya nuksaan hota hai.</p><button class="btn ln-w" type="button" data-ln="lab">Payoff Lab kholo</button></div>'
     +main
     +'<div class="card"><div class="ln-stats"><div><small>Poore</small><b class="num">'+p+' / 30</b></div><div><small>Aaj</small><b class="num">'+L_.today+' / '+capToday()+'</b></div><div><small>Quiz average</small><b class="num">'+(p?avg+'%':'-')+'</b></div></div></div>'
@@ -2506,7 +2571,7 @@ function vResult(){
   const z=L_.qz,tot=z.qs.length,sc=z.score,pct=Math.round(sc/tot*100),need=z.mode==='pro'?80:50,ok=pct>=need;
   const wrong=z.qs.filter((q,i)=>z.ans[i]!==q.a);
   let act;
-  if(z.mode==='pro')act=ok?'<button class="btn ln-w" type="button" data-ln="home">Agle 10 lesson khul gaye. Aage badho</button>':'<button class="btn ln-w" type="button" data-ln="home">Menu par jao</button>';
+  if(z.mode==='pro')act=ok?'<button class="btn ln-w" type="button" data-ln="home">Agle 4 lesson khul gaye. Aage badho</button>':'<button class="btn ln-w" type="button" data-ln="home">Menu par jao</button>';
   else if(ok)act=(z.n>=30?'<button class="btn ln-w" type="button" data-ln="cert">Certificate dekho</button>':'<button class="btn ln-w" type="button" data-ln="home">Menu par jao</button>');
   else act='<button class="btn ln-w" type="button" data-ln="retry">Naye sawal, dobara quiz</button><button class="btn ghost ln-w" type="button" data-ln="start" data-n="'+z.n+'">Lesson dobara padho</button>';
   return '<div class="card g-hero"><div class="eyebrow">'+(z.mode==='pro'?'Pro Test':'Lesson '+z.n)+' result</div><div class="rep-score" style="margin:6px 0">'+sc+' / '+tot+'</div><h2>'+(ok?'Pass ('+pct+'%)':'Pass nahi hua ('+pct+'%)')+'</h2><p style="font-size:13.5px">'+(z.mode==='pro'?'Pass hone ke liye 80% chahiye.':'Pass hone ke liye 50% chahiye.')+(z.msg?' '+z.msg:'')+'</p></div>'
@@ -2623,7 +2688,7 @@ function finishQuiz(){
   const z=L_.qz,tot=z.qs.length,pct=Math.round(z.score/tot*100),before=openMap();
   dayReset();
   if(z.mode==='pro'){
-    if(pct>=80){L_.bonus+=10;z.msg='Agle 10 lesson aaj ke liye khul gaye.'}
+    if(pct>=80){L_.bonus+=4;z.msg='Agle 4 lesson aaj ke liye khul gaye.'}
     else{L_.proFail=L_.day;z.msg='Aaj dobara Pro Test nahi de sakte. Kal try karo.'}
   }else if(pct>=50){
     const first=!(z.n in L_.passed);
