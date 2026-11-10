@@ -1889,7 +1889,7 @@ function say2(m,o){
   G_.feed.push({w:'c',m:m,t:Date.now(),id:++G_.news+1000*0});
   if(G_.feed.length>40)G_.feed.shift();
   gUpdate();
-  if(o.speak!==false&&!((o.auto||G_.autoNews)&&aiBusy()))speak(rtx(m));
+  if(o.speak!==false&&!((o.auto||G_.autoNews)&&aiBusy()))speak(rtx(m),!!o.force);
 }
 function aiBusy(){return !!((AI.au&&!AI.au.paused&&!AI.au.ended)||Date.now()-(G_.lastAsk||0)<45000)}
 function userSays(txt){G_.feed.push({w:'u',m:txt,t:Date.now()});if(G_.feed.length>40)G_.feed.shift();gUpdate()}
@@ -2048,8 +2048,9 @@ function localAnswer(q){
   for(const f of FAQ)if(f[0].test(q))return f[1];
   return{hi:'इस पर मेरे पास अभी सीधा जवाब नहीं है। तुम "ऑप्शन चेन", "PCR", "स्टॉप-लॉस", "थीटा" या "लॉट" जैसे शब्द पूछ सकते हो। असली AI जुड़ने पर मैं खुलकर हर सवाल का जवाब दूँगा।',en:'I do not have a direct answer for that yet. Try words like "option chain", "PCR", "stop-loss", "theta" or "lot". Once the real AI is connected I will answer anything.'};
 }
-function ask(q){
+function ask(q,viaVoice){
   q=String(q||'').trim().slice(0,300);if(!q)return;
+  const O=viaVoice?{force:true}:{speak:false};
   G_.lastAsk=Date.now();
   userSays(q);
   const s0=S[state.ix],ch0=chainFor(state.ix),c0=cxCtx(state.ix);
@@ -2057,13 +2058,13 @@ function ask(q){
   const hist=G_.feed.slice(-8,-1).map(f=>({role:f.w==='u'?'user':'assistant',content:f.w==='u'?f.m:rtx(f.m)}));
   if(AI.on&&COACH_URL){
     fetch(COACH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:q,ctx:ctx,lang:G_.lang,hist:hist})})
-      .then(r=>r.json()).then(d=>{if(d&&d.ok&&typeof d.a==='string'&&d.a)say2({hi:d.a,en:d.a});else say2(localAnswer(q))}).catch(()=>say2(localAnswer(q)));
-  }else say2(localAnswer(q));
+      .then(r=>r.json()).then(d=>{if(d&&d.ok&&typeof d.a==='string'&&d.a)say2({hi:d.a,en:d.a},O);else say2(localAnswer(q),O)}).catch(()=>say2(localAnswer(q),O));
+  }else say2(localAnswer(q),O);
 }
 function micAsk(){
   const R=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!R){say2({hi:'इस ब्राउज़र में बोलकर पूछना नहीं चलता। Chrome में आज़माओ या टाइप करो।',en:'Voice input is not supported in this browser. Try Chrome or type instead.'},{speak:false});return}
-  try{const r=new R();r.lang=G_.lang==='hi'?'hi-IN':'en-IN';r.onresult=ev=>{ask(ev.results[0][0].transcript)};r.onerror=()=>{};r.start()}catch(e){}
+  try{const r=new R();r.lang=G_.lang==='hi'?'hi-IN':'en-IN';r.onresult=ev=>{ask(ev.results[0][0].transcript,true)};r.onerror=()=>{};r.start()}catch(e){}
 }
 
 /* ---------- render ---------- */
@@ -2078,7 +2079,7 @@ function gRender(feedOnly){
   const n=G_.view,st=ST[n-1];
   const fd=$('gFeed');
   const nearBottom=fd.scrollHeight-fd.scrollTop-fd.clientHeight<60;
-  fd.innerHTML=G_.feed.length?G_.feed.map((f,i)=>f.w==='u'?'<div class="bub u">'+esc(f.m)+'</div>':'<div class="bub c">'+esc(tx(f.m))+'<small>'+ago(f.t)+'<button type="button" data-rp="'+i+'">'+tx({hi:'फिर सुनो',en:'Replay'})+'</button></small></div>').join(''):'<p class="empty">'+tx({hi:'गुरु तुम्हारे साथ टैब खोलने, सेटअप बनने और ट्रेड बंद होने पर बोलता रहेगा।',en:'The guru will speak as you open tabs, setups form and trades close.'})+'</p>';
+  fd.innerHTML=G_.feed.length?G_.feed.map((f,i)=>f.w==='u'?'<div class="bub u">'+esc(f.m)+'</div>':'<div class="bub c">'+esc(tx(f.m))+'<small>'+ago(f.t)+'<button type="button" data-rp="'+i+'">'+tx({hi:'🔊 सुनो',en:'🔊 Listen'})+'</button></small></div>').join(''):'<p class="empty">'+tx({hi:'गुरु तुम्हारे साथ टैब खोलने, सेटअप बनने और ट्रेड बंद होने पर बोलता रहेगा।',en:'The guru will speak as you open tabs, setups form and trades close.'})+'</p>';
   if(nearBottom||!feedOnly)fd.scrollTop=fd.scrollHeight;
   if(feedOnly===true&&$('gStage').dataset.k===n+'|'+G_.cur+'|'+G_.lang+'|'+taskDone(n)+'|'+G_.cnt.close+'|'+G_.rep)return;
   $('gPhase').textContent=tx(UI.phase[Math.floor((G_.cur-1)/5)]).toUpperCase();
