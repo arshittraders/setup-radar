@@ -2504,7 +2504,7 @@ $('v-learn').addEventListener('submit',e=>{
 taskDone=function(n){return !!L_.passed[n]};
 gRender=function(feedOnly){
   const fd=$('gFeed'),near=fd.scrollHeight-fd.scrollTop-fd.clientHeight<60;
-  fd.innerHTML=G_.feed.length?G_.feed.map((f,i)=>f.w==='u'?'<div class="bub u">'+esc(f.m)+'</div>':'<div class="bub c">'+esc(tx(f.m))+'<small>'+ago(f.t)+'<button type="button" data-rp="'+i+'">'+tx({hi:'Phir suno',en:'Replay'})+'</button></small></div>').join(''):'<p class="empty">'+tx({hi:'Guru tab kholne, setup banne aur trade band hone par bolta rahega.',en:'The guru will speak as you open tabs, setups form and trades close.'})+'</p>';
+  fd.innerHTML=G_.feed.length?G_.feed.map((f,i)=>f.w==='u'?'<div class="bub u">'+esc(f.m)+'</div>':'<div class="bub c">'+esc(tx(f.m))+'<small>'+ago(f.t)+'<button type="button" data-rp="'+i+'">'+tx({hi:'🔊 Suno',en:'🔊 Listen'})+'</button></small></div>').join(''):'<p class="empty">'+tx({hi:'Guru tab kholne, setup banne aur trade band hone par bolta rahega.',en:'The guru will speak as you open tabs, setups form and trades close.'})+'</p>';
   if(near||!feedOnly)fd.scrollTop=fd.scrollHeight;
   $('gStage').hidden=true;$('gGrid').parentElement.hidden=true;
   $('gPhase').textContent='LESSON '+Math.min(30,passedN()+1)+' / 30';
