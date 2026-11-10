@@ -348,9 +348,9 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .ln-w{width:100%}
 .ln-slide{font:600 19px/1.65 var(--f-display);margin:16px 0 18px;color:var(--ink)}
 .ln-q{font:700 17px/1.5 var(--f-display);margin:14px 0 4px}
-.dots{display:flex;gap:5px}
-.dots i{flex:1;height:5px;border-radius:9px;background:var(--line)}
-.dots i.on{background:var(--grad)}
+.pdots{display:flex;gap:5px}
+.pdots i{flex:1;height:5px;border-radius:9px;background:var(--line)}
+.pdots i.on{background:var(--grad)}
 .opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:13px 14px;margin-top:10px;font:600 14.5px/1.4 var(--f-body);min-height:48px}
 .opt.ok{background:var(--up-bg);border-color:var(--up);color:var(--up)}
 .opt.bad{background:var(--down-bg);border-color:var(--down);color:var(--down)}
@@ -391,7 +391,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
         <span class="name">Setup Radar</span>
       </div>
       <div class="head-actions">
-        <span class="demo-chip">DEMO DATA</span>
+        <span class="demo-chip">SIMULATED</span>
         <button class="icon-btn" id="vc" aria-pressed="false" aria-label="Hindi voice alert on ya off">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>
         </button>
@@ -428,7 +428,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     <a class="card strip" id="moodStrip" href="#mood"></a>
 
     <div class="card">
-      <div class="card-head"><h2>Buy vs Sell, har 1 second</h2><span class="live-tag">LIVE</span></div>
+      <div class="card-head"><h2>Buy vs Sell, har 1 second</h2><span class="live-tag" id="lvTag">DEMO</span></div>
       <div class="meter" aria-hidden="true"><div class="m-buy" id="mBuy"></div><div class="m-sell" id="mSell"></div></div>
       <div class="meter-labels"><span class="b" id="mBuyT">Buy 50%</span><span class="s" id="mSellT">Sell 50%</span></div>
       <svg id="bars" viewBox="0 0 320 96" role="img" aria-label="Pichle 40 second ka net buy ya sell"></svg>
@@ -437,7 +437,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     </div>
 
     <div class="card">
-      <div class="card-head"><h2>Aaj ke setups</h2><button type="button" class="cb" id="lvPop" aria-pressed="true" style="margin-left:auto;margin-right:8px">Popup: on</button><span class="lock"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Bante hi lock, edit nahi</span></div>
+      <div class="card-head"><h2>Setups (demo)</h2><button type="button" class="cb" id="lvPop" aria-pressed="true" style="margin-left:auto;margin-right:8px">Popup: on</button><span class="lock"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Bante hi lock, edit nahi</span></div>
       <ul class="log" id="log"></ul>
     </div>
 
@@ -461,7 +461,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
   <section id="v-scorecard" hidden>
     <div>
       <h2 style="font-size:20px">Setup Scorecard</h2>
-      <p class="lead" style="margin-top:4px">Har setup ke pichle 100 trade ka asli hisaab. Pehle side chuno, phir setup dabao.</p>
+      <p class="lead" style="margin-top:4px">Har setup ke pichle 100 SIMULATED trade ka illustrative hisaab (verified backtest nahi). Pehle side chuno, phir setup dabao.</p>
     </div>
     <div class="seg" role="group" aria-label="Option side">
       <button type="button" data-side="buy" aria-pressed="true">Option Buying</button>
@@ -521,9 +521,16 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     <div class="card wal" id="pWallet"></div>
     <div id="pPos" style="display:flex;flex-direction:column;gap:12px"></div>
     <div class="card" id="pStats" hidden></div>
+    <div class="card" id="pDisc" hidden></div>
     <div class="card" id="pTrades"></div>
     <div class="note">Paper trade demo market pe chalte hain, isliye asli paisa ya asli order kuch nahi lagta. Har trade pe ~₹60 charges aur 0.5% slippage joda jaata hai taaki result asli ke kareeb rahe. Data sirf is phone ke browser mein save hota hai.</div>
     <p class="disc" data-disc></p>
+  </section>
+
+  <!-- REPLAY -->
+  <section id="v-replay" hidden>
+    <div><h2 style="font-size:20px">Replay Practice</h2><p class="lead" style="margin-top:4px">Simulated din, candle by candle. Decision lo, phir result dekho.</p></div>
+    <div id="rpBody"></div>
   </section>
 
   <!-- LEARN -->
@@ -598,6 +605,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     <a href="#chain" data-t="chain"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M3.5 14.5h17M12 4.5v15"/></svg>Chain</a>
     <a href="#ideas" data-t="ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Ideas</a>
     <a href="#paper" data-t="paper"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M16 14.5h2"/></svg>Paper</a>
+    <a href="#replay" data-t="replay"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5-10-6.5z"/></svg>Replay</a>
     <a href="#guru" data-t="guru"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></svg>Guru</a>
     <a href="#risk" data-t="risk"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/></svg>Risk</a>
     <a href="#learn" data-t="learn"><svg viewBox="0 0 24 24"><path d="M4 5.5C6 4.5 9 4.5 12 6c3-1.5 6-1.5 8-.5V19c-2-1-5-1-8 .5-3-1.5-6-1.5-8-.5V5.5z"/><path d="M12 6v13.5"/></svg>Tutorial</a>
@@ -768,13 +776,13 @@ const nf=(v,d=2)=>v.toLocaleString('en-IN',{minimumFractionDigits:d,maximumFract
 const sg=(v,d=2)=>(v>=0?'+':'')+v.toFixed(d);
 const Kf=v=>v>=1000?(v/1000).toFixed(1)+'K':String(v);
 const tm=t=>new Date(t).toLocaleTimeString('en-GB',{timeZone:'Asia/Kolkata',hour12:false});
-const TABS=['learn','live','mood','scorecard','chain','ideas','paper','guru','risk'];
+const TABS=['learn','live','mood','scorecard','chain','ideas','paper','replay','guru','risk'];
 function G(ev,d){if(typeof guruOn==='function'){try{guruOn(ev,d)}catch(e){}}}
 const state={ix:'nifty',side:'buy',sel:null,tab:'live',idea:'btst',ev:null,cap:500000,rp:2,dp:4};
 const S={},EV=[],unseen={};
 var LIVE={on:false,chain:{},chainAt:{},hist:{},fail:0,last:0};
 let soundOn=false,voiceOn=false,audioCtx=null,evSeq=0;
-const DISC='Ye pichle 100 setups ka average hai. Aage ka koi prediction ya guarantee nahi hai. Ye investment advice nahi hai, sirf data hai. Options mein poori premium doob sakti hai.';
+const DISC='Ye pichle 100 SIMULATED setups ka illustrative average hai (demo statistics, verified backtest nahi). Aage ka koi prediction ya guarantee nahi hai. Ye investment advice nahi hai, sirf data hai. Options mein poori premium doob sakti hai.';
 
 /* seed 140 seconds of history so every chart is full on first paint */
 (function seed(){
@@ -1229,7 +1237,7 @@ function renderPaper(){
     $('pStats').innerHTML=`<h2 style="margin-bottom:10px">Tumhara record</h2><dl class="metrics" style="margin:0"><div><dt>Trades</dt><dd>${n}</dd></div><div><dt>Win rate</dt><dd>${Math.round(w/n*100)}%</dd><small>${w} jeete, ${n-w} haare</small></div><div><dt>Net P&amp;L</dt><dd class="${net>=0?'up':'down'}">${rss(net)}</dd></div><div><dt>Sabse badi haar</dt><dd class="down">${rss(Math.min(...T.map(t=>t.pnl)))}</dd></div></dl>`;
   }
   $('pTrades').innerHTML='<h2 style="margin-bottom:6px">Trade journal</h2>'+(n?'<ul class="tl">'+T.slice(0,15).map(t=>`<li><div><b>${tlabel(t)}</b><small>${tm(t.t)} · ${t.lots} lot · ${t.reason}</small></div><span class="num ${t.pnl>=0?'up':'down'}">${rss(t.pnl)}</span></li>`).join('')+'</ul>':'<p class="empty">Abhi koi band trade nahi.</p>');
-  pSig=pSigNow();
+  pSig=pSigNow();if(typeof renderDisc==='function')renderDisc();
 }
 function updatePaperLive(){
   const root=$('v-paper'),set=(f,t)=>{const el=root.querySelector('[data-f="'+f+'"]');if(el)el.textContent=t};
@@ -1494,7 +1502,7 @@ function liveBadge(err){
   if(err&&LIVE.fail>=3){el.textContent='LIVE · ERROR';el.style.background='#FCE8EB';el.style.color='#D92D43';el.title=err;return}
   if(LIVE.mkt&&!LIVE.mkt.open){el.textContent=LIVE.mkt.holiday?'BAZAAR BAND · CHHUTTI':'BAZAAR BAND';el.style.background='#FFF4DB';el.style.color='#8A5A00';el.title=(LIVE.mkt.holiday||'Market band hai')+'. Ye aakhri bhaav hai.';return}
   const age=(Date.now()-LIVE.last)/1000,t=new Date(LIVE.last).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  el.textContent='LIVE '+t;el.style.background='#E2F5EC';el.style.color='#087A52';el.title='Upstox data, '+Math.round(age)+'s pehle';
+  el.textContent='LIVE '+t;{const lt=document.getElementById('lvTag');if(lt)lt.textContent='LIVE'}el.style.background='#E2F5EC';el.style.color='#087A52';el.title='Upstox data, '+Math.round(age)+'s pehle';
 }
 function liveMapHist(cs){return cs.map(c=>{const t=Date.parse(c.t),id=Math.floor(t/60000);return{id:id,t:t,o:c.o,h:c.h,l:c.l,c:c.c,bu:c.c>=c.o?(c.v||0):0,se:c.c<c.o?(c.v||0):0,n:id,vw:c.vw!=null?c.vw:c.c,oi:c.oi||0,v:c.v||0}})}
 async function liveLoadHist(k){const j=await api('candles?ix='+k);LIVE.hist[k]=liveMapHist(j.candles||[])}
@@ -1593,7 +1601,7 @@ async function liveNews(manual){
   }catch(e){if(manual)say2({hi:'ख़बर अभी नहीं आ पाई। थोड़ी देर बाद कोशिश करो।',en:'Could not fetch news right now. Try again shortly.'})}
 }
 
-const SECS=['live','mood','scorecard','chain','btst','zero-hero','paper','guru','learn','risk'];
+const SECS=['live','mood','scorecard','chain','btst','zero-hero','paper','replay','guru','learn','risk'];
 function curSec(){return state.tab==='ideas'?state.idea:state.tab}
 function renderCur(){
   const c=curSec();
@@ -1604,6 +1612,7 @@ function renderCur(){
   if(c==='chain')renderChainTab();
   if(c==='zero-hero')renderZH();
   if(c==='paper')renderPaper();
+  if(c==='replay'&&typeof renderReplay==='function')renderReplay();
   if(c==='learn'&&typeof lnRender==='function')lnRender();
 }
 function route(){
@@ -2168,6 +2177,164 @@ setInterval(()=>{if(document.hidden)return;const r=Math.random();if(r<.45&&Date.
   guruOn('tab',state.tab);
 })();
 </script>
+<script id="extra">
+/* ===== Mistake Detector + Discipline Score + Report Card, and Historical Replay (simulated) ===== */
+const DISC_TIPS={
+ over:['Overtrading','Ek din mein 3 se zyada trade. Din ke 2-3 achhe setup hi kaafi hain.'],
+ revenge:['Badla-trade','Loss ke 3 minute ke andar naya trade liya. Loss ke baad thoda ruko aur trade review karo.'],
+ size:['Loss ke baad lot badhaya','Haar ke baad size badhane se nuksaan tezi se badhta hai. Lot wahi ya kam rakho.'],
+ weak:['Kamzor setup','Strength 50 se kam wale setup liye. Aise setup par ya to skip karo ya risk kam rakho.'],
+ early:['Jaldi profit book','Chhote profit par nikal gaye. Plan ke hisaab se Target 1 tak ruko.'],
+ side:['Ek hi taraf lagatar','Lagatar 3 trade ek hi taraf (CE ya PE). Market palat sakta hai, ek hi view mat pakdo.'],
+ limit:['Daily limit paar','Din ki loss limit toot gayi. Limit lagte hi practice rok do.']
+};
+const DISC_W={over:6,revenge:10,size:8,weak:5,early:4,side:3,limit:12};
+function discAnalyse(T){
+  const tr=T.slice().sort((a,b)=>(a.ot||a.t)-(b.ot||b.t)),m={over:0,revenge:0,size:0,weak:0,early:0,side:0,limit:0},day={};
+  let prev=null;
+  tr.forEach((t,i)=>{
+    const d=dayKey(t.ot||t.t);day[d]=day[d]||{n:0,pnl:0};day[d].n++;day[d].pnl+=t.pnl;
+    if(day[d].n>3)m.over++;
+    if(prev&&prev.pnl<0){if((t.ot||t.t)-prev.t<180000)m.revenge++;if(t.lots>prev.lots)m.size++}
+    if(t.score<50)m.weak++;
+    if(t.reason==='Manual exit'&&t.pnl>0&&t.exit<t.entry*1.1)m.early++;
+    if(i>=2&&tr[i-1].type===t.type&&tr[i-2].type===t.type)m.side++;
+    prev=t;
+  });
+  Object.keys(day).forEach(d=>{if(-day[d].pnl>P0*state.dp/100)m.limit++});
+  let pen=0;Object.keys(m).forEach(k=>pen+=DISC_W[k]*m[k]);
+  const n=tr.length,score=n<3?null:clamp(Math.round(100-100*pen/(n*20)),0,100);
+  return{m:m,score:score,n:n};
+}
+function renderDisc(){
+  const box=$('pDisc');if(!box)return;
+  const T=P.trades,n=T.length;
+  if(!n){box.hidden=true;return}
+  box.hidden=false;
+  const a=discAnalyse(T),wk=T.filter(t=>t.t>=Date.now()-7*864e5),w=wk.filter(t=>t.pnl>0).length,net=wk.reduce((s,t)=>s+t.pnl,0);
+  const avgCap=wk.length?wk.reduce((s,t)=>s+t.entry*t.lots*(INDICES[t.k]?INDICES[t.k].lot:75),0)/wk.length/P0*100:0;
+  let h='<div class="eyebrow">Discipline Score · Mistake Detector</div>';
+  if(a.score==null){h+='<p class="lead" style="margin-top:6px">Kam se kam 3 band trade ke baad tumhara discipline score aayega. Abhi '+n+' trade hain.</p>'}
+  else{
+    const lab=a.score>=80?'Achha discipline':a.score>=60?'Theek-thaak, sudhaar chahiye':'Risk aur discipline par kaam karo',col=a.score>=80?'var(--up)':a.score>=60?'var(--warn)':'var(--down)';
+    h+='<div style="display:flex;align-items:baseline;gap:10px;margin:6px 0 2px"><span class="num" style="font-size:34px;font-weight:700;color:'+col+'">'+a.score+'</span><span class="lead">/100 · '+lab+'</span></div><div class="g-bar" style="margin:6px 0 10px"><i style="width:'+a.score+'%"></i></div>';
+  }
+  const ks=Object.keys(a.m).filter(k=>a.m[k]>0).sort((x,y)=>a.m[y]*DISC_W[y]-a.m[x]*DISC_W[x]);
+  if(ks.length)h+='<ul class="tl">'+ks.slice(0,4).map(k=>'<li><div><b>'+DISC_TIPS[k][0]+' · '+a.m[k]+' baar</b><small>'+DISC_TIPS[k][1]+'</small></div></li>').join('')+'</ul>';
+  else if(a.score!=null)h+='<p class="lead">Koi badi galti nahi mili. Isi tarah plan follow karte raho.</p>';
+  h+='<h2 style="margin:14px 0 8px;font-size:14px">Weekly Report Card (pichle 7 din)</h2>';
+  if(!wk.length)h+='<p class="lead">Pichle 7 din mein koi trade nahi.</p>';
+  else h+='<dl class="metrics" style="margin:0"><div><dt>Paper trades</dt><dd>'+wk.length+'</dd></div><div><dt>Win rate</dt><dd>'+Math.round(w/wk.length*100)+'%</dd><small>'+w+' jeete, '+(wk.length-w)+' haare</small></div><div><dt>Net P&amp;L</dt><dd class="'+(net>=0?'up':'down')+'">'+rss(net)+'</dd></div><div><dt>Avg paisa lagaya</dt><dd>'+avgCap.toFixed(1)+'%</dd><small>wallet ka, har trade mein</small></div></dl>';
+  h+='<p class="hint">Ye sirf tumhare paper trades ka educational self-check hai. Salah ya prediction nahi. Win rate chhote sample par bharosemand nahi hota.</p>';
+  box.innerHTML=h;
+}
+
+/* ---------- Historical Replay: SIMULATED days, 5-min candles ---------- */
+const RPK='sr_replay_v1',RPN=75,RPSTEP=3,RPSL=.002,RPTG=.004;
+const RP_SC=[
+ {n:'Trend wala din (upar)',d:(i)=>i<25?.014:i<38?-.03:.016,l:'Trend din mein dips mein jaldi ghabrana nahi, par stop-loss hamesha rakho. Trend ko confirm karne ke liye EMA/VWAP ke upar tikna dekho.'},
+ {n:'Trend wala din (neeche)',d:(i)=>i<20?-.012:i<32?.03:-.017,l:'Girte market mein bounce aate hain. Beech mein ulta trade lena risky hota hai. Plan aur stop-loss se chalo.'},
+ {n:'Fake breakout',d:(i)=>i<45?(Math.sin(i/3.2)*.02):i<50?.06:-.022,l:'Range ke upar nikalte hi kood jaana mehenga pad sakta hai. Breakout ke baad tikne ka confirm (retest ya volume) dekho.'},
+ {n:'Gap-up aur fade',d:(i)=>i<10?.05:-.014,l:'Shuru ki tezi aksar thandi pad jaati hai. Pehle 15-30 minute mein jaldbaazi se bacho.'},
+ {n:'V-reversal',d:(i)=>i<35?-.02:.026,l:'Neeche se palat-te market mein pehla bounce pakadna mushkil hai. Palat confirm hone ka wait karna safe hota hai, par entry thodi mehengi milti hai.'}
+];
+function rpRng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function rpGen(seed){
+  const r=rpRng(seed),sc=RP_SC[Math.floor(r()*RP_SC.length)],gn=()=>Math.sqrt(-2*Math.log(r()+1e-9))*Math.cos(6.2832*r());
+  let p=Math.round(23000+r()*2500),cs=[];
+  for(let i=0;i<RPN;i++){
+    const o=p,c=o*(1+sc.d(i)*2.4/100+gn()*.0003),h=Math.max(o,c)*(1+Math.abs(gn())*.00025),l=Math.min(o,c)*(1-Math.abs(gn())*.00025);
+    cs.push({o:o,h:h,l:l,c:c});p=c;
+  }
+  return{sc:sc,cs:cs};
+}
+let R={ph:'idle',n:0,cs:[],sc:null,pos:null,tr:[],st:{games:0,bestPts:null}};
+try{const s=JSON.parse(localStorage.getItem(RPK)||'null');if(s&&Number.isFinite(s.games))R.st=s}catch(e){}
+function rpSave(){try{localStorage.setItem(RPK,JSON.stringify(R.st))}catch(e){}}
+const rpT=i=>{const m=555+5*i;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+const rpF=v=>Math.round(v).toLocaleString('en-IN');
+const rpApprox=pts=>pts*.5*INDICES.nifty.lot;
+function rpStart(){const g=rpGen(Date.now()%2147483647);R.cs=g.cs;R.sc=g.sc;R.n=15;R.pos=null;R.tr=[];R.ph='play';renderReplay()}
+function rpClose(px,why){
+  const p=R.pos,pts=p.dir*(px-p.entry);
+  R.tr.push({dir:p.dir,entry:p.entry,exit:px,pts:pts,why:why,i0:p.i0,i1:R.n});R.pos=null;
+}
+function rpEnter(dir){const px=R.cs[R.n-1].c;R.pos={dir:dir,entry:px,sl:px*(1-dir*RPSL),tg:px*(1+dir*RPTG),i0:R.n};rpAdvance()}
+function rpAdvance(){
+  for(let k=0;k<RPSTEP&&R.n<RPN;k++){
+    const c=R.cs[R.n];R.n++;
+    const p=R.pos;if(!p)continue;
+    const slHit=p.dir>0?c.l<=p.sl:c.h>=p.sl,tgHit=p.dir>0?c.h>=p.tg:c.l<=p.tg;
+    if(slHit)rpClose(p.sl,'Stop-loss');else if(tgHit)rpClose(p.tg,'Target');
+  }
+  if(R.n>=RPN){if(R.pos)rpClose(R.cs[RPN-1].c,'Din ka end');rpEnd();return}
+  renderReplay();
+}
+function rpEnd(){
+  R.ph='end';R.st.games++;const net=R.tr.reduce((a,t)=>a+t.pts,0);
+  if(R.st.bestPts==null||net>R.st.bestPts)R.st.bestPts=Math.round(net);rpSave();renderReplay();
+}
+function rpChart(){
+  const W=340,H=210,NS=42,cw=W/NS,vis=R.cs.slice(0,R.n),sh=vis.slice(-NS);
+  let hi=Math.max.apply(null,sh.map(c=>c.h)),lo=Math.min.apply(null,sh.map(c=>c.l));
+  if(R.pos){hi=Math.max(hi,R.pos.tg,R.pos.sl);lo=Math.min(lo,R.pos.tg,R.pos.sl)}
+  const pad=(hi-lo)*.08||1;hi+=pad;lo-=pad;
+  const y=v=>(H-8-(v-lo)/(hi-lo)*(H-16)).toFixed(1);
+  let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;background:#FAFCFF;border:1px solid var(--line);border-radius:12px" role="img" aria-label="Simulated 5 minute candles">';
+  sh.forEach((c,i)=>{
+    const x=(i+.5)*cw,up=c.c>=c.o,col=up?'#12A874':'#E5566A',t=Math.min(y(c.o),y(c.c)),b=Math.max(y(c.o),y(c.c));
+    s+='<line x1="'+x.toFixed(1)+'" x2="'+x.toFixed(1)+'" y1="'+y(c.h)+'" y2="'+y(c.l)+'" stroke="'+col+'" stroke-width="1"/><rect x="'+(x-cw*.35).toFixed(1)+'" y="'+t+'" width="'+(cw*.7).toFixed(1)+'" height="'+Math.max(1,b-t).toFixed(1)+'" fill="'+col+'"/>';
+  });
+  if(R.pos){
+    [['entry',R.pos.entry,'#1D4ED8','Entry'],['sl',R.pos.sl,'#D92D43','SL'],['tg',R.pos.tg,'#087A52','Target']].forEach(a=>{
+      s+='<line x1="0" x2="'+W+'" y1="'+y(a[1])+'" y2="'+y(a[1])+'" stroke="'+a[2]+'" stroke-dasharray="4 3" stroke-width="1"/><text x="3" y="'+(y(a[1])-3)+'" font-size="9" fill="'+a[2]+'" font-family="monospace">'+a[3]+' '+rpF(a[1])+'</text>';
+    });
+  }
+  return s+'</svg>';
+}
+function renderReplay(){
+  const box=$('rpBody');if(!box)return;
+  let h='';
+  if(R.ph==='idle'){
+    h='<div class="card g-hero"><div class="eyebrow">Historical Replay · SIMULATED din</div><h2>Ek din, ek ek candle, tumhara decision</h2><p style="font-size:13.5px;line-height:1.6;margin-top:6px">Ek banaya hua (simulated) trading din chalega, 5-minute candles. Har 15 minute par tum decide karoge: Bullish, Bearish ya Wait. Aage ke candle chhupe rahenge. Ant mein dekho kaisa decision raha aur kyun.</p><p class="hint">Ye asli market history nahi hai, sirf practice. Stop-loss '+(RPSL*100).toFixed(1)+'% aur target '+(RPTG*100).toFixed(1)+'% fixed hai.</p><button class="btn" type="button" data-rp="start" style="width:100%;margin-top:12px">Din shuru karo</button></div>';
+    if(R.st.games)h+='<div class="card"><p class="lead">Ab tak khele: <b>'+R.st.games+'</b> din'+(R.st.bestPts!=null?' · Best net: <b>'+(R.st.bestPts>=0?'+':'')+rpF(R.st.bestPts)+' points</b>':'')+'</p></div>';
+  }else if(R.ph==='play'){
+    const last=R.cs[R.n-1],p=R.pos,open=p?p.dir*(last.c-p.entry):0;
+    h='<div class="card"><div class="card-head"><h2>Nifty (simulated) · '+rpT(R.n-1)+'</h2><span class="lock">'+Math.round(R.n/RPN*100)+'% din</span></div>'+rpChart()
+     +'<div style="display:flex;justify-content:space-between;margin-top:8px"><span class="num" style="font-size:18px;font-weight:700">'+rpF(last.c)+'</span>'+(p?'<span class="num '+(open>=0?'up':'down')+'" style="font-weight:700">'+(p.dir>0?'Bullish':'Bearish')+' '+(open>=0?'+':'')+rpF(open)+' pts</span>':'<span class="lead">Koi trade nahi</span>')+'</div>'
+     +'<div class="g-bar" style="margin:10px 0"><i style="width:'+Math.round(R.n/RPN*100)+'%"></i></div>';
+    if(!p)h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn" type="button" data-rp="long" style="background:var(--up)">Bullish (CE)</button><button class="btn" type="button" data-rp="short" style="background:var(--down)">Bearish (PE)</button></div><button class="btn ghost" type="button" data-rp="wait" style="margin-top:8px;width:100%">Wait · 15 min aage</button><p class="hint">Wait bhi ek decision hai. Har setup lena zaroori nahi.</p>';
+    else h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn" type="button" data-rp="hold">Hold · 15 min aage</button><button class="btn ghost" type="button" data-rp="exit">Abhi exit karo</button></div><p class="hint">SL aur Target candle ke high/low se khud lagte hain. Dono ek hi candle mein chhoo jayein to SL pehle maana jaata hai.</p>';
+    if(R.tr.length)h+='<p class="hint">Aaj ke band trade: '+R.tr.length+(R.tr.length>3?' · overtrading ho raha hai?':'')+'</p>';
+    h+='</div>';
+  }else{
+    const net=Math.round(R.tr.reduce((a,t)=>a+t.pts,0)),w=R.tr.filter(t=>t.pts>0).length,hold=R.cs[RPN-1].c-R.cs[14].c;
+    let verdict;
+    if(!R.tr.length)verdict='Aaj tumne koi trade nahi li. Kabhi kabhi sabse achha decision Wait hota hai.';
+    else if(net>0)verdict='Net positive din. Par ek din ka result skill nahi batata; kai din khelo aur dekho plan follow hua ya nahi.';
+    else verdict='Net negative din. Ye practice ka hissa hai. Dekho SL follow hua ya nahi, aur trade kitni baar li.';
+    h+='<div class="card"><div class="eyebrow">Din khatam · '+R.sc.n+'</div><div class="num '+(net>=0?'up':'down')+'" style="font-size:30px;font-weight:700;margin:6px 0">'+(net>=0?'+':'')+rpF(net)+' points</div><p class="lead">Approx '+rss(rpApprox(net))+' (1 lot, delta ~0.5 maan kar, simple anuman)</p>'
+     +'<dl class="metrics" style="margin:12px 0 0"><div><dt>Trades</dt><dd>'+R.tr.length+'</dd><small>'+w+' jeete</small></div><div><dt>Seedha hold (10:30 se)</dt><dd class="'+(hold>=0?'up':'down')+'">'+(hold>=0?'+':'')+rpF(hold)+'</dd><small>points, sirf tulna ke liye</small></div></dl>'
+     +(R.tr.length?'<ul class="tl" style="margin-top:10px">'+R.tr.map(t=>'<li><div><b>'+(t.dir>0?'Bullish':'Bearish')+' · '+rpT(t.i0-1)+' se '+rpT(t.i1-1)+'</b><small>'+t.why+'</small></div><span class="num '+(t.pts>=0?'up':'down')+'">'+(t.pts>=0?'+':'')+rpF(t.pts)+'</span></li>').join('')+'</ul>':'')
+     +'<p style="margin-top:12px;font-size:13.5px;line-height:1.6"><b>'+verdict+'</b></p></div>'
+     +'<div class="card"><div class="eyebrow">Aaj ka din kaisa tha</div><h2 style="margin:4px 0 6px">'+R.sc.n+'</h2><p class="lead" style="line-height:1.6">'+R.sc.l+'</p></div>'
+     +'<button class="btn" type="button" data-rp="start" style="width:100%">Naya din khelo</button>';
+  }
+  h+='<p class="disc">Simulated practice din hai, asli market history ya prediction nahi. Result se aage ka kuch tay nahi hota. Ye investment advice nahi hai.</p>';
+  box.innerHTML=h;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-rp]');if(!b)return;
+  const a=b.dataset.rp;
+  if(a==='start')rpStart();
+  else if(R.ph!=='play')return;
+  else if(a==='long')rpEnter(1);
+  else if(a==='short')rpEnter(-1);
+  else if(a==='wait'||a==='hold')rpAdvance();
+  else if(a==='exit'){if(R.pos){rpClose(R.cs[R.n-1].c,'Manual exit');renderReplay()}}
+});
+</script>
+
 <script id="learn">
 const LDEV=[
 ["एफ एंड ओ का मतलब है फ्यूचर्स और ऑप्शन्स। ये डेरिवेटिव्स हैं, यानी इनकी कीमत किसी और चीज़, जैसे शेयर या इंडेक्स की चाल से बनती है।","शेयर खरीदने पर तुम कंपनी का हिस्सा लेते हो। एफ एंड ओ में तुम सिर्फ़ एक कॉन्ट्रैक्ट लेते हो कि भाव ऊपर जाएगा या नीचे।","फ्यूचर्स में दोनों तरफ़ की ज़िम्मेदारी होती है। ऑप्शन्स में खरीदने वाले को हक़ मिलता है, ज़िम्मेदारी नहीं। इसलिए ऑप्शन खरीदने वाले का नुकसान सीमित होता है।","एफ एंड ओ तय लॉट साइज़ में होता है, जैसे एक लॉट में 75 क्वांटिटी। इसलिए एक छोटी सी चाल भी पैसे को तेज़ी से बदल सकती है।","याद रखो: एफ एंड ओ में बहुत लोग पैसा गँवाते हैं। हम यहाँ सीखने आए हैं, जल्दी अमीर होने नहीं।"],
@@ -2327,11 +2494,11 @@ function vHome(){
 }
 function vLesson(){
   const n=L_.n,l=LESSONS[n-1],i=L_.si,last=i===l.s.length-1;
-  return '<div class="card"><div class="eyebrow">Lesson '+n+' / 30 · slide '+(i+1)+' / '+l.s.length+'</div><h2 style="font-size:19px;margin:4px 0 12px">'+esc2(l.t)+'</h2><div class="dots">'+l.s.map((_,k)=>'<i class="'+(k<=i?'on':'')+'"></i>').join('')+'</div><p class="ln-slide">'+esc2(l.s[i])+'</p><div class="g-row"><button class="btn ghost" type="button" data-ln="say">Suno</button>'+(i>0?'<button class="btn ghost" type="button" data-ln="prev">Peeche</button>':'')+'<button class="btn" type="button" data-ln="next">'+(last?'Quiz do (10 sawal)':'Agla')+'</button></div></div><button class="btn ghost ln-w" type="button" data-ln="home">Menu par jao</button>';
+  return '<div class="card"><div class="eyebrow">Lesson '+n+' / 30 · slide '+(i+1)+' / '+l.s.length+'</div><h2 style="font-size:19px;margin:4px 0 12px">'+esc2(l.t)+'</h2><div class="pdots">'+l.s.map((_,k)=>'<i class="'+(k<=i?'on':'')+'"></i>').join('')+'</div><p class="ln-slide">'+esc2(l.s[i])+'</p><div class="g-row"><button class="btn ghost" type="button" data-ln="say">Suno</button>'+(i>0?'<button class="btn ghost" type="button" data-ln="prev">Peeche</button>':'')+'<button class="btn" type="button" data-ln="next">'+(last?'Quiz do (10 sawal)':'Agla')+'</button></div></div><button class="btn ghost ln-w" type="button" data-ln="home">Menu par jao</button>';
 }
 function vQuiz(){
   const z=L_.qz,q=z.qs[z.i],tot=z.qs.length,ans=z.picked!==null;
-  return '<div class="card"><div class="eyebrow">'+(z.mode==='pro'?'Pro Test':'Lesson '+z.n+' quiz')+' · sawal '+(z.i+1)+' / '+tot+'</div><div class="dots" style="margin-top:8px">'+z.qs.map((_,k)=>'<i class="'+(k<=z.i?'on':'')+'"></i>').join('')+'</div><p class="ln-q">'+esc2(q.q)+'</p>'
+  return '<div class="card"><div class="eyebrow">'+(z.mode==='pro'?'Pro Test':'Lesson '+z.n+' quiz')+' · sawal '+(z.i+1)+' / '+tot+'</div><div class="pdots" style="margin-top:8px">'+z.qs.map((_,k)=>'<i class="'+(k<=z.i?'on':'')+'"></i>').join('')+'</div><p class="ln-q">'+esc2(q.q)+'</p>'
     +q.o.map((t,k)=>'<button class="opt'+(ans?(k===q.a?' ok':k===z.picked?' bad':''):'')+'" type="button" data-ln="pick" data-k="'+k+'"'+(ans?' disabled':'')+'>'+esc2(t)+'</button>').join('')
     +(ans?'<p class="hint" style="margin-top:10px">'+(z.picked===q.a?'Sahi jawab.':'Galat. Sahi jawab upar hara dikh raha hai.')+'</p><button class="btn ln-w" type="button" data-ln="qnext">'+(z.i===tot-1?'Result dekho':'Agla sawal')+'</button>':'')+'</div>';
 }
