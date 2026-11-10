@@ -1,7 +1,7 @@
 {
- "name": "Setup Radar",
+ "name": "Setup Radar: F&O Seekho",
  "short_name": "Setup Radar",
- "description": "F&O setup alerts, paper trading aur AI guru",
+ "description": "F&O seekhne wala beginner course: Hindi AI Guru, paper trading aur risk management. Sirf shiksha, salah nahi.",
  "start_url": "./index.html",
  "scope": "./",
  "display": "standalone",
@@ -21,5 +21,11 @@
    "type": "image/png",
    "purpose": "any maskable"
   }
- ]
+ ],
+ "id": "/",
+ "categories": [
+  "education",
+  "finance"
+ ],
+ "lang": "hi-IN"
 }

@@ -2792,6 +2792,15 @@ const TAB_NAME={live:'Live',mood:'Mood',scorecard:'Scorecard',risk:'Risk',paper:
 const passedN=()=>Object.keys(L_.passed).length;
 function tabOpen(){return true}
 function dayReset(){const d=dayKey(Date.now());if(L_.day!==d){L_.day=d;L_.today=0;L_.bonus=0;lnSave()}}
+const PK='sr_paid_v1',FREE_N=10;
+let PAID=false;try{PAID=localStorage.getItem(PK)==='1'}catch(e){}
+const PCODES=["b183384e45675ecee2151208baf44785927423503cff8ba9f03c2b6fe1e0f4a8", "e09dd610ba2161cb65ed5232958a6a8c03bdf8f5433bdc0cf8253a4b2e78b550", "d97f64461c36b7ddd5e769910e25a98adc2c3b175ee422c9141ef86596cddf72", "99e1ad5fc64f41850d9b431fc4758688542260b80aa672719d491299854d6f05", "75959bc00389d52591c5b021ff8fecbbed18a4df284645fe50693338e60fb40f", "4d569f0bf8be94fc8cc190f9a13910a6b303752557eb11a54d566f2fa9326e2f", "10ac5de3e22911d750ca0eb57d734050d32f38231f66f695bbac0803c157ac64", "3689ef630f4872841033e30e158e6f8705cb0e37a421683f3d8ffc90f7488fa3", "bbb8fc4cece81a63d0ec2d233004aba812024ff2a220d6880249041ec37b3020", "9821c4eef1a1751c2f12dbb96201cc22ddd9df62a0b76e6713bf425f0de7353d"];
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+const walled=n=>!PAID&&n>FREE_N;
+const PAY_URL='';
+function vWall(p){return '<div class="card g-hero"><div class="eyebrow">Free lessons poore · '+p+' / 30</div><h2>Aage ke lesson paid hain</h2><p style="font-size:13.5px;line-height:1.6">Tumne pehle 10 lesson poore kar liye. Aage 20 lesson mein option chain, hedging, option selling, risk management aur apne broker mein sirf 1 lot se shuruaat sikhoge. ₹499/month ya ₹999 poora course.</p>'+(PAY_URL?'<a class="btn ln-w" href="'+PAY_URL+'" target="_blank" rel="noopener" style="background:#fff;color:var(--a);margin-top:12px;display:block;text-align:center;text-decoration:none">Paid plan lo</a>':'')+'<div style="margin-top:12px"><input id="payCode" placeholder="Unlock code" autocomplete="off" style="width:100%;padding:12px;border-radius:12px;border:0;font-size:15px;box-sizing:border-box"><button class="btn ln-w" type="button" data-ln="unlock" style="margin-top:8px;background:rgba(255,255,255,.2);color:#fff">Code lagao</button><p id="payMsg" style="font-size:12.5px;margin:6px 0 0"></p></div></div>'}
+function vTeaser(){return '<div class="card"><div class="eyebrow">Agla padaav</div><h2 style="font-size:17px;margin:4px 0 8px">Lesson 20 ke baad live shuruaat</h2><p class="g-less" style="font-size:14px">Lesson 20 ke baad tum apne broker mein sirf 1 lot se live shuru karna seekh sakte ho. Lesson 11 se 30 paid hain. Pehle 10 lesson free poore karo.</p></div>'}
+function vLive(){return '<div class="card"><div class="eyebrow">Lesson 20 poora</div><h2 style="font-size:17px;margin:4px 0 8px">Live se pehle: risk aur 1 lot ka plan</h2><p class="g-less" style="font-size:14px;line-height:1.7">1. Sirf 1 lot se shuru karo, wo bhi apne broker mein khud.<br>2. Ek trade mein poonji ka 2% se zyada jokhim nahi.<br>3. Stop-loss entry se pehle tay karo.<br>4. Roz ki loss limit tay karo, chhoo jaye to din band.<br>5. Pehle 20 trade sirf size aur aadat seekhne ke liye, kamai ke liye nahi.<br>6. Paper mein 30 trade aur Discipline Score 70 se upar ho, tabhi live socho.<br>Ye shiksha hai, salah nahi. Sirf wahi paisa lagao jo ganwana manzoor ho.</p></div>'}
 const capToday=()=>2+L_.bonus;
 function navRefresh(){}
 function syncGuru(){G_.cur=Math.min(30,passedN()+1);G_.view=G_.cur;if(typeof gSave==='function')gSave()}
@@ -2820,7 +2829,7 @@ function vHome(){
   const p=passedN(),nx=p+1,done=p>=30,limit=!done&&L_.today>=capToday();
   const avg=p?Math.round(Object.values(L_.passed).reduce((a,b)=>a+b,0)/p):0;
   let main;
-  if(done)main='<div class="card g-hero"><div class="eyebrow">Course poora</div><h2>Badhai ho! 30 lesson khatam</h2><p style="font-size:13.5px;line-height:1.6">Ab apna certificate aur report card dekho.</p><button class="btn ln-w" type="button" data-ln="cert">Certificate dekho</button></div>';
+  if(walled(nx))main=vWall(p);else if(done)main='<div class="card g-hero"><div class="eyebrow">Course poora</div><h2>Badhai ho! 30 lesson khatam</h2><p style="font-size:13.5px;line-height:1.6">Ab apna certificate aur report card dekho.</p><button class="btn ln-w" type="button" data-ln="cert">Certificate dekho</button></div>';
   else if(limit){
     const pf=L_.proFail===L_.day;
     main='<div class="card"><div class="eyebrow">Aaj ki limit poori</div><h2 style="font-size:18px;margin:4px 0 8px">Aaj '+L_.today+' lesson ho gaye</h2><p class="g-less" style="font-size:14px">Roz '+capToday()+' lesson tak ki limit hai taaki cheezein dimag mein baithein. Kal naya din khulega. Jaldi karna ho to Pro Test do: 30 mushkil sawal, 80% (24 sahi) chahiye. Pass hue to usi din agle 4 lesson khulenge.</p>'
@@ -2831,6 +2840,7 @@ function vHome(){
   return '<div><h2 style="font-size:20px">Tutorial</h2><p class="lead" style="margin-top:4px">15 din ka course: roz 2 lesson, har lesson ke baad 10 sawal ka quiz. Pass hone ke liye kam se kam 50% chahiye. Sab tabs khule hain, tum seekhte hue unhe use kar sakte ho.</p></div>'
     +'<div class="card lab-card"><div class="eyebrow">Naya</div><h2 style="font-size:17px;margin:4px 0 6px">Payoff Lab</h2><p class="lead" style="margin:0 0 10px">Slider khiskao aur dekho: expiry par option kharidne, bechne aur hedge karne par kitna faida ya nuksaan hota hai.</p><button class="btn ln-w" type="button" data-ln="lab">Payoff Lab kholo</button></div>'
     +main
+    +(p===9?vTeaser():'')+(p>=20?vLive():'')
     +'<div class="card"><div class="ln-stats"><div><small>Poore</small><b class="num">'+p+' / 30</b></div><div><small>Aaj</small><b class="num">'+L_.today+' / '+capToday()+'</b></div><div><small>Quiz average</small><b class="num">'+(p?avg+'%':'-')+'</b></div></div></div>'
     +'<div class="card"><h2 style="margin-bottom:6px">Saare lesson</h2><div class="lrows">'+rows+'</div></div>'
     +'<p class="disc" data-disc>'+DISC+'</p>';
@@ -2992,15 +3002,17 @@ $('v-learn').addEventListener('click',e=>{
   dayReset();
   if(a==='start'||a==='reread'){
     if(a==='start'&&n>passedN()+1)return;
+    if(a==='start'&&walled(n)){lnRender();return}
     if(a==='start'&&n===passedN()+1&&L_.today>=capToday()){lnRender();return}
     L_.n=n;L_.si=0;L_.seen[n]=true;L_.view='lesson';lnRender();window.scrollTo(0,0);slideSpeak(false);return;
   }
   if(a==='next'){const l=LESSONS[L_.n-1];if(L_.si<l.s.length-1){L_.si++;lnRender();slideSpeak(false)}else startQuiz('lesson',L_.n);return}
   if(a==='prev'){if(L_.si>0){L_.si--;lnRender();slideSpeak(false)}return}
+  if(a==='unlock'){const v=($('payCode')||{}).value||'';sha(v.trim().toUpperCase()).then(x=>{if(PCODES.indexOf(x)>=0){PAID=true;try{localStorage.setItem(PK,'1')}catch(e){}lnRender()}else{const m=$('payMsg');if(m)m.textContent='Code galat hai. Dobara check karo.'}});return}
   if(a==='stop'){try{stopSpeech()}catch(e){}return}
   if(a==='say'){slideSpeak(true);return}
   if(a==='home'){L_.view='home';lnRender();window.scrollTo(0,0);return}
-  if(a==='pro'){if(L_.today>=capToday()&&L_.proFail!==L_.day&&passedN()<30)startQuiz('pro',0);return}
+  if(a==='pro'){if(walled(passedN()+1))return;if(L_.today>=capToday()&&L_.proFail!==L_.day&&passedN()<30)startQuiz('pro',0);return}
   if(a==='retry'){startQuiz('lesson',L_.qz.n);return}
   if(a==='pick'){const z=L_.qz;if(z.picked!==null)return;const k=+b.dataset.k;z.picked=k;z.ans[z.i]=k;if(k===z.qs[z.i].a)z.score++;lnRender();return}
   if(a==='qnext'){const z=L_.qz;if(z.i<z.qs.length-1){z.i++;z.picked=null;lnRender();window.scrollTo(0,0)}else finishQuiz();return}
