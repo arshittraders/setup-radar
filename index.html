@@ -1883,30 +1883,37 @@ function stopSpeech(){
   try{if(AI.au){AI.au.pause();AI.au=null}}catch(e){}
   try{window.speechSynthesis&&window.speechSynthesis.cancel()}catch(e){}
 }
-function speak(text,force){
-  if(!text)return;
+function speak(text,force,cb){
+  if(!text){if(cb)setTimeout(cb,300);return}
   if(AI.on&&!AI.fail){
-    if(!force&&!G_.voice)return;
-    if(!(navigator.userActivation&&navigator.userActivation.hasBeenActive))return;
+    if(!force&&!G_.voice){if(cb)setTimeout(cb,3000);return}
+    if(!(navigator.userActivation&&navigator.userActivation.hasBeenActive)){if(cb)setTimeout(cb,3000);return}
     stopSpeech();
     const my=AI.seq,t=String(text).slice(0,950);
-    const play=u=>{if(my!==AI.seq)return;try{const a=new Audio(u);a.playbackRate=VP.sp;AI.au=a;a.play().catch(()=>{if(my===AI.seq)speakLocal(text,force)})}catch(e){speakLocal(text,force)}};
+    const play=u=>{if(my!==AI.seq)return;try{const a=new Audio(u);a.playbackRate=VP.sp;AI.au=a;a.onended=()=>{if(my===AI.seq&&cb)setTimeout(()=>{if(my===AI.seq)cb()},900)};a.play().catch(()=>{if(my===AI.seq)speakLocal(text,force,cb)})}catch(e){speakLocal(text,force,cb)}};
     if(AI.cache.has(t))return play(AI.cache.get(t));
     AI.ctl=(typeof AbortController!=='undefined')?new AbortController():null;
     fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t}),signal:AI.ctl?AI.ctl.signal:undefined})
       .then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()})
       .then(b=>{const u=URL.createObjectURL(b);AI.cache.set(t,u);play(u)})
-      .catch(e=>{if(my!==AI.seq)return;AI.fail=(AI.fail||0)+1;if(AI.fail>=3)AI.on=false;speakLocal(text,force)});
+      .catch(e=>{if(my!==AI.seq)return;AI.fail=(AI.fail||0)+1;if(AI.fail>=3)AI.on=false;speakLocal(text,force,cb)});
     return;
   }
-  speakLocal(text,force);
+  speakLocal(text,force,cb);
 }
-function speakLocal(text,force){
+function ttsPrefetch(text){
+  if(!(AI.on&&!AI.fail)||!text)return;
+  const t=String(text).slice(0,950);AI.pf=AI.pf||{};
+  if(AI.cache.has(t)||AI.pf[t])return;AI.pf[t]=1;
+  fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})}).then(r=>{if(!r.ok)throw 0;return r.blob()}).then(b=>{AI.cache.set(t,URL.createObjectURL(b))}).catch(()=>{}).then(()=>{delete AI.pf[t]});
+}
+function speakLocal(text,force,cb){
   const ss=window.speechSynthesis;
-  if(!ss){if(force)miniToast('Awaaz nahi chal sakti','Is browser mein voice support nahi hai. Chrome mein kholo.');return}
-  if(!text)return;
-  if(!force&&!G_.voice)return;
-  if(!(navigator.userActivation&&navigator.userActivation.hasBeenActive))return;
+  if(!ss){if(force)miniToast('Awaaz nahi chal sakti','Is browser mein voice support nahi hai. Chrome mein kholo.');if(cb)setTimeout(cb,3000);return}
+  if(!text){if(cb)setTimeout(cb,300);return}
+  if(!force&&!G_.voice){if(cb)setTimeout(cb,3000);return}
+  if(!(navigator.userActivation&&navigator.userActivation.hasBeenActive)){if(cb)setTimeout(cb,3000);return}
+  const ms=++AI.seq;
   try{
     ss.cancel();loadVoices();
     const dev=/[ऀ-ॿ]/.test(text),hv=pickVoice();
@@ -1915,7 +1922,7 @@ function speakLocal(text,force){
       if(hv){v=hv;lang=hv.lang||'hi-IN'}
       else{st=hing(text);v=enVoice();if(force)miniToast('Hindi voice nahi mili','Phone Settings mein Text-to-speech kholo aur Hindi voice download karo, tab awaaz saaf aayegi.')}
     }else{v=enVoice()}
-    st.split(/(?<=[।.!?])\s+/).filter(Boolean).forEach(p=>{const u=new SpeechSynthesisUtterance(p);u.lang=lang;if(v)u.voice=v;u.rate=Math.min(1.6,VP.sp*.95);u.pitch=VP.deep?.7:1;ss.speak(u)});
+    const parts=st.split(/(?<=[।.!?])\s+/).filter(Boolean);parts.forEach((p,ix)=>{const u=new SpeechSynthesisUtterance(p);u.lang=lang;if(v)u.voice=v;u.rate=Math.min(1.6,VP.sp*.95);u.pitch=VP.deep?.7:1;if(cb&&ix===parts.length-1)u.onend=()=>{if(ms===AI.seq)setTimeout(()=>{if(ms===AI.seq)cb()},900)};ss.speak(u)});
     try{ss.resume()}catch(e){}
   }catch(e){}
 }
@@ -2847,7 +2854,7 @@ function vHome(){
 }
 function vLesson(){
   const n=L_.n,l=LESSONS[n-1],i=L_.si,last=i===l.s.length-1;
-  return '<div class="card"><div class="eyebrow">Lesson '+n+' / 30 · slide '+(i+1)+' / '+l.s.length+'</div><h2 style="font-size:19px;margin:4px 0 12px">'+esc2(l.t)+'</h2><div class="pdots">'+l.s.map((_,k)=>'<i class="'+(k<=i?'on':'')+'"></i>').join('')+'</div>'+(typeof lnViz==='function'?lnViz(n,i):'')+'<p class="ln-slide">'+esc2(l.s[i])+'</p><div class="g-row"><button class="btn ghost" type="button" data-ln="say">Phir suno</button><button class="btn ghost" type="button" data-ln="stop">Roko</button>'+(i>0?'<button class="btn ghost" type="button" data-ln="prev">Peeche</button>':'')+'<button class="btn" type="button" data-ln="next">'+(last?'Quiz do (10 sawal)':'Agla')+'</button></div></div><button class="btn ghost ln-w" type="button" data-ln="home">Menu par jao</button>';
+  return '<div class="card"><div class="eyebrow">Lesson '+n+' / 30 · slide '+(i+1)+' / '+l.s.length+'</div><h2 style="font-size:19px;margin:4px 0 12px">'+esc2(l.t)+'</h2><div class="pdots">'+l.s.map((_,k)=>'<i class="'+(k<=i?'on':'')+'"></i>').join('')+'</div>'+(typeof lnViz==='function'?lnViz(n,i):'')+'<p class="ln-slide">'+esc2(l.s[i])+'</p>'+lnApp(n)+'<div class="g-row"><button class="btn ghost" type="button" data-ln="say">Phir suno</button><button class="btn ghost" type="button" data-ln="stop">Roko</button><button class="btn ghost" type="button" data-ln="auto">Auto: '+(LAUTO?'Chalu':'Band')+'</button>'+(i>0?'<button class="btn ghost" type="button" data-ln="prev">Peeche</button>':'')+'<button class="btn" type="button" data-ln="next">'+(last?'Quiz do (10 sawal)':'Agla')+'</button></div></div><button class="btn ghost ln-w" type="button" data-ln="home">Menu par jao</button>';
 }
 const QOK=['Bilkul sahi!','Shabaash!','Ekdum theek!','Wah, sahi pakda!'],QBAD=['Koi baat nahi.','Galti se hi seekhte hain.','Thoda aur dhyan se.'];
 function qFeed(z,q){
@@ -2855,11 +2862,30 @@ function qFeed(z,q){
   const r=a=>a[Math.floor(Math.random()*a.length)];
   return z.picked===q.a?(r(QOK)+(st>=3?' 🔥 '+st+' lagatar sahi':'')):(r(QBAD)+' Sahi jawab upar hara dikh raha hai, use yaad rakho.');
 }
+const QLET=['A','B','C','D','E'];
+function qSpeakText(z,i){const q=z.qs[i];return 'Sawal '+(i+1)+'. '+q.q+' '+q.o.map((t,k)=>'Option '+QLET[k]+'. '+t+'.').join(' ')}
+function quizSpeak(){
+  const z=L_.qz;if(!z||z.picked!==null||z.spk===z.i)return;
+  z.spk=z.i;if(!LAUTO)return;
+  speak(qSpeakText(z,z.i),true);
+  if(z.i+1<z.qs.length)setTimeout(()=>ttsPrefetch(qSpeakText(z,z.i+1)),1500);
+}
+function quizVerdict(z){
+  if(!LAUTO)return;
+  const q=z.qs[z.i],i=z.i;
+  let t=(z.fb||'').replace(/🔥/g,'').replace(/Sahi jawab upar hara dikh raha hai, use yaad rakho\./,'').trim();
+  if(z.picked!==q.a)t+=' Sahi jawab hai: '+q.o[q.a]+'.';
+  speak(t,true,()=>{
+    if(L_.qz!==z||L_.view!=='quiz'||z.i!==i||z.picked===null||!LAUTO)return;
+    if(z.i<z.qs.length-1){z.i++;z.picked=null;lnRender();window.scrollTo(0,0)}else finishQuiz();
+  });
+}
+
 function vQuiz(){
   const z=L_.qz,q=z.qs[z.i],tot=z.qs.length,ans=z.picked!==null;
   return '<div class="card"><div class="eyebrow">'+(z.mode==='pro'?'Pro Test':'Lesson '+z.n+' quiz')+' · sawal '+(z.i+1)+' / '+tot+'</div><div class="pdots" style="margin-top:8px">'+z.qs.map((_,k)=>'<i class="'+(k<=z.i?'on':'')+'"></i>').join('')+'</div><p class="ln-q">'+esc2(q.q)+'</p>'
     +q.o.map((t,k)=>'<button class="opt'+(ans?(k===q.a?' ok':k===z.picked?' bad':''):'')+'" type="button" data-ln="pick" data-k="'+k+'"'+(ans?' disabled':'')+'>'+esc2(t)+'</button>').join('')
-    +(ans?'<p class="hint qf '+(z.picked===q.a?'qok':'qbad')+'" style="margin-top:10px">'+qFeed(z,q)+'</p><button class="btn ln-w" type="button" data-ln="qnext">'+(z.i===tot-1?'Result dekho':'Agla sawal')+'</button>':'')+'</div>';
+    +'<button class="btn ghost" type="button" data-ln="auto" style="margin-top:8px;padding:8px 12px">Auto awaaz: '+(LAUTO?'Chalu':'Band')+'</button>'+(ans?'<p class="hint qf '+(z.picked===q.a?'qok':'qbad')+'" style="margin-top:10px">'+esc2(z.fb||qFeed(z,q))+'</p><button class="btn ln-w" type="button" data-ln="qnext">'+(z.i===tot-1?'Result dekho':'Agla sawal')+'</button>':'')+'</div>';
 }
 function vResult(){
   const z=L_.qz,tot=z.qs.length,sc=z.score,pct=Math.round(sc/tot*100),need=z.mode==='pro'?80:50,ok=pct>=need;
@@ -2975,9 +3001,20 @@ function lnRender(){
   const v=L_.view;
   body().innerHTML=v==='lab'?vLab():v==='lesson'?vLesson():v==='quiz'?vQuiz():v==='result'?vResult():v==='cert'?vCert():vHome();
   if(v==='lesson'&&L_.speakOnRender){L_.speakOnRender=false}
+  if(v==='quiz')quizSpeak();else if(v==='result'){try{stopSpeech()}catch(e){}}
   navRefresh();
 }
-function slideSpeak(force){const m=window.MIS&&window.MIS[L_.n-1]&&window.MIS[L_.n-1][L_.si];speak(LDEV[L_.n-1][L_.si]+(m?' आसान मिसाल। '+m:''),force)}
+const LAK='sr_lauto';
+let LAUTO=true;try{LAUTO=localStorage.getItem(LAK)!=='0'}catch(e){}
+function slideText(n,i){const m=window.MIS&&window.MIS[n-1]&&window.MIS[n-1][i];const a=window.LAPP&&LAPP[n];const l=LDEV[n-1];return l[i]+(m?' आसान मिसाल। '+m:'')+(a&&i===l.length-1?' '+a[2]:'')}
+function slideSpeak(force){
+  if(!force&&!LAUTO)return;
+  speak(slideText(L_.n,L_.si),true);
+  const nx=L_.si+1;if(nx<LDEV[L_.n-1].length)setTimeout(()=>ttsPrefetch(slideText(L_.n,nx)),1200);
+}
+const LAPP={1:['live','Live tab kholo','अब अपनी ऐप का लाइव टैब खोलकर देखो, डेमो बाज़ार चल रहा है।'],2:['chain','Option chain kholo','अब अपनी ऐप में चेन टैब खोलो। हर स्ट्राइक पर कॉल और पुट का दाम एक साथ दिखेगा।'],3:['chain','Chain mein lot size dekho','अब चेन टैब में निफ्टी का लॉट साइज़ देखो।'],4:['chain','Chain mein premium aur strike dekho','अब चेन टैब में ATM और दूर की स्ट्राइक का प्रीमियम देखो।'],5:['lab','Payoff Lab kholo','अब पेऑफ लैब खोलो। कॉल खरीदने और बेचने का फर्क स्लाइडर से देखो।'],6:['live','Live chart par VWAP lagao','अब लाइव टैब पर VWAP चालू करके देखो।'],7:['chain','Option chain mein OI dekho','अब चेन टैब में OI और OI का बदलाव देखो।'],8:['mood','Mood tab: PCR, support, resistance','अब मूड टैब में PCR, सपोर्ट और रेज़िस्टेंस देखो।'],9:['mood','Mood tab: VIX aur range','अब मूड टैब में VIX और एक्सपेक्टेड रेंज देखो।'],10:['mood','Mood tab: max pain','अब मूड टैब में मैक्स पेन देखो।'],11:['live','Live tab: setup alerts','अब लाइव टैब पर सेटअप अलर्ट देखो।'],12:['live','Live tab: VWAP aur OI','अब लाइव टैब पर VWAP और OI वाले सेटअप देखो।'],13:['scorecard','Scorecard kholo','अब स्कोरकार्ड टैब खोलकर पुराने सेटअप के आंकड़े देखो।'],14:['risk','Risk tab kholo','अब रिस्क टैब में अपनी पूंजी भरकर स्टॉप लॉस और लॉट निकालो।'],15:['paper','Paper trading kholo','अब पेपर टैब खोलकर पहला डेमो ट्रेड लो।'],16:['lab','Payoff Lab: theta','अब पेऑफ लैब में देखो कि समय के साथ प्रीमियम कैसे घटता है।'],17:['lab','Payoff Lab kholo','अब पेऑफ लैब खोलकर भाव और समय का असर देखो।'],18:['paper','Paper tab: Discipline Score','अब पेपर टैब में अपना डिसिप्लिन स्कोर देखो।'],19:['live','Live tab kholo','अब लाइव टैब में खबरें और गैप देखो।'],20:['ideas','Ideas tab kholo','अब आइडियाज़ टैब में BTST देखो। और टैब मेन्यू पर लाइव शुरू करने का प्लान पढ़ो।'],21:['lab','Payoff Lab: option selling','अब पेऑफ लैब में कॉल बेचने का नक्शा देखो।'],22:['chain','Chain: Hedge Lab aur margin','अब चेन टैब में हेज लैब और मार्जिन देखो।'],23:['lab','Payoff Lab: bull put spread','अब पेऑफ लैब में बुल पुट स्प्रेड चुनो।'],24:['lab','Payoff Lab: iron condor','अब पेऑफ लैब में आयरन कॉन्डोर चुनो।'],25:['paper','Paper tab kholo','अब पेपर टैब में स्टॉप लॉस के साथ ट्रेड का अभ्यास करो।'],26:['chain','Chain tab kholo','अब चेन टैब में एक्सपायरी के दिन प्रीमियम की चाल देखो।'],27:['risk','Risk tab kholo','अब रिस्क टैब में अपनी जोखिम सीमा जांचो।'],28:['mood','Mood tab kholo','अब मूड टैब देखकर कल की योजना बनाओ।'],29:['paper','Paper tab: report card','अब पेपर टैब में अपना रिपोर्ट कार्ड देखो।'],30:['guru','Guru se poochho','अब गुरु टैब में कोई भी सवाल पूछ सकते हो।']};
+function lnApp(n){const a=LAPP[n];if(!a)return '';return '<button class="btn ghost ln-w" type="button" data-ln="goapp" data-t="'+a[0]+'" style="margin:0 0 10px;border-style:dashed">App mein dekho: '+esc2(a[1])+'</button>'}
+
 function finishQuiz(){
   const z=L_.qz,tot=z.qs.length,pct=Math.round(z.score/tot*100),before=openMap();
   dayReset();
@@ -3010,12 +3047,14 @@ $('v-learn').addEventListener('click',e=>{
   if(a==='prev'){if(L_.si>0){L_.si--;lnRender();slideSpeak(false)}return}
   if(a==='unlock'){const v=($('payCode')||{}).value||'';sha(v.trim().toUpperCase()).then(x=>{if(PCODES.indexOf(x)>=0){PAID=true;try{localStorage.setItem(PK,'1')}catch(e){}lnRender()}else{const m=$('payMsg');if(m)m.textContent='Code galat hai. Dobara check karo.'}});return}
   if(a==='stop'){try{stopSpeech()}catch(e){}return}
+  if(a==='auto'){LAUTO=!LAUTO;try{localStorage.setItem(LAK,LAUTO?'1':'0')}catch(e){}if(!LAUTO)try{stopSpeech()}catch(e){}if(L_.qz)L_.qz.spk=-1;lnRender();if(LAUTO&&L_.view==='lesson')slideSpeak(true);return}
+  if(a==='goapp'){const t=b.dataset.t;try{stopSpeech()}catch(e){}if(t==='lab'){L_.view='lab';lnRender();window.scrollTo(0,0)}else location.hash='#'+t;return}
   if(a==='say'){slideSpeak(true);return}
   if(a==='home'){L_.view='home';lnRender();window.scrollTo(0,0);return}
   if(a==='pro'){if(walled(passedN()+1))return;if(L_.today>=capToday()&&L_.proFail!==L_.day&&passedN()<30)startQuiz('pro',0);return}
   if(a==='retry'){startQuiz('lesson',L_.qz.n);return}
-  if(a==='pick'){const z=L_.qz;if(z.picked!==null)return;const k=+b.dataset.k;z.picked=k;z.ans[z.i]=k;if(k===z.qs[z.i].a)z.score++;lnRender();return}
-  if(a==='qnext'){const z=L_.qz;if(z.i<z.qs.length-1){z.i++;z.picked=null;lnRender();window.scrollTo(0,0)}else finishQuiz();return}
+  if(a==='pick'){const z=L_.qz;if(z.picked!==null)return;const k=+b.dataset.k;z.picked=k;z.ans[z.i]=k;if(k===z.qs[z.i].a)z.score++;z.fb=qFeed(z,z.qs[z.i]);lnRender();quizVerdict(z);return}
+  if(a==='qnext'){const z=L_.qz;try{stopSpeech()}catch(e){}if(z.i<z.qs.length-1){z.i++;z.picked=null;lnRender();window.scrollTo(0,0)}else finishQuiz();return}
   if(a==='cert'){L_.view='cert';lnRender();window.scrollTo(0,0);return}
   if(a==='lab'){L_.view='lab';lnRender();window.scrollTo(0,0);return}
   if(a==='labS'){LAB.s=b.dataset.s;lnRender();return}
