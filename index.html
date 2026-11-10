@@ -1,3 +1,10 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Setup Radar</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff">
@@ -79,7 +86,12 @@ svg{display:block;width:100%;height:auto;max-width:100%}
 #indInfo .ir b{font:700 12px var(--f-display);color:var(--ink)}
 #indInfo .ir em{font:700 10.5px var(--f-mono);font-style:normal;color:var(--ink-3)}
 .seg.s3{grid-template-columns:repeat(3,1fr)}
-.navin{overflow-x:auto;scrollbar-width:none;grid-auto-columns:minmax(46px,1fr)!important}.navin::-webkit-scrollbar{display:none}
+.navin{overflow-x:auto;scrollbar-width:none;grid-auto-columns:minmax(36px,1fr)!important}
+.navin a{font-size:9px;letter-spacing:-.01em}
+.brand .name{white-space:nowrap;font-size:17px}
+.brand-row{gap:8px}.head-actions{gap:6px}
+@media (max-width:380px){.cb{padding:5px 9px;font-size:11.5px;min-height:30px}.ctl{gap:5px}.demo-chip{font-size:9px;padding:5px 6px;letter-spacing:.04em}.brand .mark{width:26px;height:26px}.brand .name{font-size:15px}.icon-btn{width:40px;height:40px}}
+.navin::-webkit-scrollbar{display:none}
 .oc{padding:10px 8px}.oc-h,.oc-r{display:grid;grid-template-columns:1.25fr .8fr .95fr .8fr 1.25fr;gap:4px;align-items:center}
 .oc-h{font:600 9.5px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);text-align:center;padding:0 2px 6px}
 .oc-r{padding:6px 2px;border-top:1px solid var(--line);font:600 12px var(--f-mono);text-align:center;cursor:pointer}
@@ -529,6 +541,8 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
         <button type="button" id="gVoice" aria-pressed="true"></button>
         <button type="button" id="gVoicePick"></button>
         <button type="button" id="gDeep" aria-pressed="true"></button>
+        <button type="button" id="gNews" aria-pressed="true"></button>
+        <button type="button" id="gSpeed"></button>
       </div>
     </div>
     <div class="card" id="gStage"></div>
@@ -1042,7 +1056,7 @@ function beep(){
   if(!soundOn||!audioCtx)return;
   try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=880;g.gain.value=.06;o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+.14)}catch(e){}
 }
-function say(text){speak(text,true)}
+function say(text){if(typeof aiBusy==="function"&&aiBusy())return;speak(text,true)}
 function evText(e){return HI_IX[e.k]+' में '+HI_SU[e.sid]+', '+(e.bias==='bull'?'बुलिश':'बेयरिश')+' सेटअप बना। स्ट्रेंथ '+e.score+'।'}
 function toast(e){
   const su=SETUPS.find(x=>x.id===e.sid),a=stats(e.k,e.sid,'buy'),b=stats(e.k,e.sid,'sell');
@@ -1781,8 +1795,8 @@ function taskDone(n){
 
 /* ---------- voice (Hindi Devanagari audio, Hinglish on screen) ---------- */
 const VK='sr_voice_v1';
-const VP={vi:0,deep:true};
-(function(){try{const r=JSON.parse(localStorage.getItem(VK)||'null');if(r){if(Number.isInteger(r.vi)&&r.vi>=0&&r.vi<50)VP.vi=r.vi;VP.deep=r.deep!==false}}catch(e){}})();
+const VP={vi:0,deep:true,sp:1.2,news:true};
+(function(){try{const r=JSON.parse(localStorage.getItem(VK)||'null');if(r){if(Number.isInteger(r.vi)&&r.vi>=0&&r.vi<50)VP.vi=r.vi;VP.deep=r.deep!==false;if(r.sp>=.8&&r.sp<=1.6)VP.sp=r.sp;VP.news=r.news!==false}}catch(e){}})();
 function vSave(){try{localStorage.setItem(VK,JSON.stringify(VP))}catch(e){}}
 let VOICES=[];
 function loadVoices(){try{VOICES=window.speechSynthesis.getVoices()||[]}catch(e){}}
@@ -1800,7 +1814,7 @@ function speak(text,force){
     if(!(navigator.userActivation&&navigator.userActivation.hasBeenActive))return;
     try{window.speechSynthesis&&window.speechSynthesis.cancel()}catch(e){}
     try{if(AI.au){AI.au.pause();AI.au=null}}catch(e){}
-    const t=String(text).slice(0,600),play=u=>{try{AI.au=new Audio(u);AI.au.play().catch(()=>speakLocal(text,force))}catch(e){speakLocal(text,force)}};
+    const t=String(text).slice(0,600),play=u=>{try{AI.au=new Audio(u);AI.au.playbackRate=VP.sp;AI.au.play().catch(()=>speakLocal(text,force))}catch(e){speakLocal(text,force)}};
     if(AI.cache.has(t))return play(AI.cache.get(t));
     fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})})
       .then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()})
@@ -1824,7 +1838,7 @@ function speakLocal(text,force){
       if(hv){v=hv;lang=hv.lang||'hi-IN'}
       else{st=hing(text);v=enVoice();if(force)miniToast('Hindi voice nahi mili','Phone Settings mein Text-to-speech kholo aur Hindi voice download karo, tab awaaz saaf aayegi.')}
     }else{v=enVoice()}
-    st.split(/(?<=[।.!?])\s+/).filter(Boolean).forEach(p=>{const u=new SpeechSynthesisUtterance(p);u.lang=lang;if(v)u.voice=v;u.rate=.92;u.pitch=VP.deep?.7:1;ss.speak(u)});
+    st.split(/(?<=[।.!?])\s+/).filter(Boolean).forEach(p=>{const u=new SpeechSynthesisUtterance(p);u.lang=lang;if(v)u.voice=v;u.rate=Math.min(1.6,VP.sp*.95);u.pitch=VP.deep?.7:1;ss.speak(u)});
     try{ss.resume()}catch(e){}
   }catch(e){}
 }
@@ -1835,8 +1849,9 @@ function say2(m,o){
   G_.feed.push({w:'c',m:m,t:Date.now(),id:++G_.news+1000*0});
   if(G_.feed.length>40)G_.feed.shift();
   gUpdate();
-  if(o.speak!==false)speak(rtx(m));
+  if(o.speak!==false&&!(G_.autoNews&&aiBusy()))speak(rtx(m));
 }
+function aiBusy(){return !!((AI.au&&!AI.au.paused&&!AI.au.ended)||Date.now()-(G_.lastAsk||0)<45000)}
 function userSays(txt){G_.feed.push({w:'u',m:txt,t:Date.now()});if(G_.feed.length>40)G_.feed.shift();gUpdate()}
 function lastCoach(){for(let i=G_.feed.length-1;i>=0;i--)if(G_.feed[i].w==='c')return G_.feed[i];return null}
 
@@ -1995,6 +2010,7 @@ function localAnswer(q){
 }
 function ask(q){
   q=String(q||'').trim().slice(0,300);if(!q)return;
+  G_.lastAsk=Date.now();
   userSays(q);
   const s0=S[state.ix],ch0=chainFor(state.ix),c0=cxCtx(state.ix);
   const ctx={index:INDICES[state.ix].name,price:Math.round(s0.price),day_change_pct:+((s0.price-s0.open)/s0.open*100).toFixed(2),pcr:+ch0.pcr.toFixed(2),support:ch0.sup,resistance:ch0.res,max_pain:ch0.pain,atm_iv_pct:+(c0.vol*100).toFixed(1),days_to_expiry:+c0.dte.toFixed(1),data:LIVE.on?'live':'demo',lesson_stage:G_.cur,paper_trades:P.trades.length,paper_cash:Math.round(P.cash)};
@@ -2093,7 +2109,7 @@ $('v-guru').addEventListener('click',e=>{
   if(q){
     const a=q.dataset.q;
     if(a==='brief')doBrief();
-    else if(a==='news')newsTick();
+    else if(a==='news')newsTick(true);
     else if(a==='report'){G_.cnt.report++;G_.rep=true;gSave();gRender(false);say2({hi:'यह तुम्हारा रिपोर्ट कार्ड है। सबसे कमज़ोर हिस्से पर अगला ध्यान दो।',en:'Here is your report card. Focus next on the weakest area.'})}
     else if(a==='what'){const t=state.tab==='ideas'?'ideas':state.tab;say2(CT[state.tab]?CT[state.tab]():CT.live())}
     gRender(false);
@@ -2454,7 +2470,7 @@ gRender=function(feedOnly){
   $('gTitle').textContent=tx({hi:'Guru: tumhara coach',en:'Guru: your coach'});
   $('gProg').style.width=(passedN()/30*100)+'%';
   document.querySelectorAll('[data-gl]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.gl===G_.lang)));
-  {const hv=hiVoices();$('gVoicePick').textContent=tx({hi:'Awaaz badlo'+(hv.length?' ('+(VP.vi%hv.length+1)+'/'+hv.length+')':''),en:'Change voice'});const gd=$('gDeep');gd.textContent=tx({hi:VP.deep?'Bhaari awaaz: on':'Bhaari awaaz: off',en:VP.deep?'Deep voice: on':'Deep voice: off'});gd.setAttribute('aria-pressed',String(VP.deep))}
+  {const hv=hiVoices();$('gVoicePick').textContent=tx({hi:'Awaaz badlo'+(hv.length?' ('+(VP.vi%hv.length+1)+'/'+hv.length+')':''),en:'Change voice'});const gd=$('gDeep');gd.textContent=tx({hi:VP.deep?'Bhaari awaaz: on':'Bhaari awaaz: off',en:VP.deep?'Deep voice: on':'Deep voice: off'});gd.setAttribute('aria-pressed',String(VP.deep));const gn=$('gNews');gn.textContent=tx({hi:VP.news?'News: on':'News: off',en:VP.news?'News: on':'News: off'});gn.setAttribute('aria-pressed',String(VP.news));$('gSpeed').textContent=tx({hi:'Speed '+VP.sp+'x',en:'Speed '+VP.sp+'x'})}
   const gv=$('gVoice');gv.textContent=tx({hi:G_.voice?'Awaaz chalu':'Awaaz band',en:G_.voice?'Voice on':'Voice off'});gv.setAttribute('aria-pressed',String(G_.voice));
   $('gChatT').textContent=tx({hi:'Guru se baat karo',en:'Talk to the guru'});
   $('gIn').placeholder=tx({hi:'Jaise: option chain kya hai?',en:'e.g. What is an option chain?'});
@@ -2468,12 +2484,18 @@ gRender=function(feedOnly){
   $('gNote').textContent=tx({hi:'Guru sirf shiksha deta hai, khareedne-bechne ki salah nahi. Awaaz abhi phone ki apni voice hai. Lesson ka text abhi sirf Hinglish mein hai.',en:'The guru only teaches and gives no buy or sell advice. The voice is currently your phone\'s own voice. Lesson text is Hinglish only for now.'});
   const rp=$('gReport');rp.hidden=!G_.rep;if(G_.rep)rp.innerHTML=reportHtml();
 };
-const _newsTick=newsTick;newsTick=function(){if(!tabOpen('live'))return;_newsTick()};
+const _newsTick=newsTick;newsTick=function(m){if(!tabOpen('live'))return;if(!VP.news&&m!==true)return;G_.autoNews=m!==true;try{_newsTick()}finally{G_.autoNews=false}};
 $('v-guru').addEventListener('click',e=>{
   const smp='नमस्ते, मैं तुम्हारा गुरु हूँ। चलो सीखना शुरू करते हैं।';
   if(e.target.closest('#gVoicePick')){loadVoices();const hv=hiVoices();if(!hv.length){miniToast('Hindi voice nahi mili','Phone Settings mein Text-to-speech kholo aur Hindi voice download karo.');return}VP.vi=(VP.vi+1)%hv.length;vSave();gRender(false);speak(smp,true);return}
+  if(e.target.closest('#gNews')){VP.news=!VP.news;vSave();gRender(false);return}
+  if(e.target.closest('#gSpeed')){const o=[1,1.2,1.4];VP.sp=o[(o.indexOf(VP.sp)+1)%o.length];vSave();gRender(false);speak(smp,true);return}
   if(e.target.closest('#gDeep')){VP.deep=!VP.deep;vSave();gRender(false);speak(smp,true)}
 });
 syncGuru();navRefresh();
 route();
 </script>
+
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
+
+</html>
