@@ -37,3 +37,7 @@ Key sirf server par rehti hai. `/api/guru` (sawaal-jawab) aur `/api/tts` (awaaz)
 ## Live news + market status (same Upstox token, nothing extra to set up)
 - `/api/news`: real news (last 7 days) for indices and big stocks. In live mode the Guru reads it and the AI explains it in simple Hindi. News toggle in the Guru tab turns auto-news off.
 - `/api/market`: market open/closed + holiday check. When the market is closed the badge shows "BAZAAR BAND".
+
+
+## Live access is owner-only
+Add env var `LIVE_PASS` (6+ chars). All Upstox endpoints return 403 without it. Open `https://setup-radar.vercel.app/#lp=YOURPASS` once on your device to switch that device to live. Everyone else sees the demo market.

@@ -1,5 +1,5 @@
 // Real option chain for the nearest expiry, trimmed to what the app needs.
-const { up, IDX, send, fail, ISTDATE } = require('./_u');
+const { guard, up, IDX, send, fail, ISTDATE } = require('./_u');
 const expCache = {};
 async function nearestExpiry(ix) {
   const c = expCache[ix], today = ISTDATE();
@@ -11,7 +11,7 @@ async function nearestExpiry(ix) {
   } catch (e) {}
   return 'current_week';
 }
-module.exports = async (req, res) => {
+module.exports = guard(async (req, res) => {
   try {
     const ix = (req.query && req.query.ix) || 'nifty';
     if (!IDX[ix]) return send(res, 400, { ok: false, error: 'ix galat' });
@@ -29,4 +29,4 @@ module.exports = async (req, res) => {
     })).sort((a, b) => a.K - b.K);
     send(res, 200, { ok: true, ix, expiry: (d[0] && d[0].expiry) || expiry, spot: d[0] && d[0].underlying_spot_price, pcr: d[0] && d[0].pcr, rows: rowsOut }, 's-maxage=3, stale-while-revalidate=10');
   } catch (e) { fail(res, e); }
-};
+});

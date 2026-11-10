@@ -1,7 +1,7 @@
 // Today's 1-minute candles: index price + futures volume/OI/VWAP (basis-adjusted to index).
-const { up, IDX, futKey, send, fail } = require('./_u');
+const { guard, up, IDX, futKey, send, fail } = require('./_u');
 const rows = j => ((j && j.data && j.data.candles) || []).slice().reverse(); // API gives newest first
-module.exports = async (req, res) => {
+module.exports = guard(async (req, res) => {
   try {
     const ix = (req.query && req.query.ix) || 'nifty';
     if (!IDX[ix]) return send(res, 400, { ok: false, error: 'ix galat' });
@@ -23,4 +23,4 @@ module.exports = async (req, res) => {
     });
     send(res, 200, { ok: true, ix, candles: out }, 's-maxage=20, stale-while-revalidate=40');
   } catch (e) { fail(res, e); }
-};
+});

@@ -1,6 +1,6 @@
 // One call returns spot + futures quote (volume, OI, order-book pressure) for all three indices.
-const { up, IDX, futKey, byToken, send, fail } = require('./_u');
-module.exports = async (req, res) => {
+const { guard, up, IDX, futKey, byToken, send, fail } = require('./_u');
+module.exports = guard(async (req, res) => {
   try {
     const ks = Object.keys(IDX), fk = {};
     await Promise.all(ks.map(async k => { try { fk[k] = await futKey(k); } catch (e) { fk[k] = null; } }));
@@ -18,4 +18,4 @@ module.exports = async (req, res) => {
     });
     send(res, 200, out, 's-maxage=1, stale-while-revalidate=3');
   } catch (e) { fail(res, e); }
-};
+});

@@ -53,4 +53,17 @@ function send(res, code, obj, cache) {
   res.end(JSON.stringify(obj));
 }
 function fail(res, e) { send(res, e.code === 'NO_TOKEN' ? 503 : 502, { ok: false, error: String(e.message || e) }); }
-module.exports = { up, IDX, futKey, byToken, send, fail, ISTDATE, futCache };
+
+const crypto = require('crypto');
+// Live Upstox data is for the owner only. Without LIVE_PASS set, or without the right x-live-pass header, the API stays closed.
+function guard(handler) {
+  return async (req, res) => {
+    const want = process.env.LIVE_PASS || '';
+    const got = String((req.headers && req.headers['x-live-pass']) || '');
+    const a = Buffer.from(want), b = Buffer.from(got);
+    const ok = want.length >= 6 && a.length === b.length && crypto.timingSafeEqual(a, b);
+    if (!ok) { res.statusCode = 403; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ ok: false, error: 'live off' })); return; }
+    return handler(req, res);
+  };
+}
+module.exports = { guard, up, IDX, futKey, byToken, send, fail, ISTDATE, futCache };

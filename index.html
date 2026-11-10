@@ -1523,7 +1523,8 @@ document.addEventListener('input',e=>{
 });
 
 /* ========== LIVE MODE: real Upstox data through our own /api (token stays on server) ========== */
-async function api(p){const r=await fetch('/api/'+p,{cache:'no-store'});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
+let LPASS='';try{const m=/^#lp=(.{6,64})$/.exec(location.hash);if(m){localStorage.setItem('sr_lp',decodeURIComponent(m[1]));try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}LPASS=localStorage.getItem('sr_lp')||''}catch(e){}
+async function api(p){const r=await fetch('/api/'+p,{cache:'no-store',headers:{'x-live-pass':LPASS}});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 function liveBadge(err){
   const el=document.querySelector('.demo-chip');if(!el)return;
   if(!LIVE.on)return;
@@ -1589,6 +1590,7 @@ async function liveSlow(){
   setTimeout(liveSlow,6000);
 }
 (async function liveInit(){
+  if(!LPASS)return;
   try{await api('health')}catch(e){return}
   try{
     const q=await api('live');

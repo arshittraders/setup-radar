@@ -1,5 +1,5 @@
-const { up, send, IDX, futKey, byToken, futCache } = require('./_u');
-module.exports = async (req, res) => {
+const { guard, up, send, IDX, futKey, byToken, futCache } = require('./_u');
+module.exports = guard(async (req, res) => {
   const out = { ok: false, token: !!process.env.UPSTOX_TOKEN, steps: {} };
   try {
     const key = IDX.nifty.key;
@@ -11,4 +11,4 @@ module.exports = async (req, res) => {
     out.ok = !!v;
   } catch (e) { out.error = String(e.message || e); }
   send(res, out.ok ? 200 : 503, out);
-};
+});
