@@ -25,3 +25,11 @@ Optional env vars: `FUT_NIFTY`, `FUT_BANKNIFTY`, `FUT_SENSEX` (futures instrumen
 - `/api/live`: spot + futures (volume, OI, buy/sell qty) teeno index ke liye
 - `/api/candles?ix=nifty`: aaj ke 1-minute candles (index price, futures volume/OI/VWAP)
 - `/api/chain?ix=nifty`: real option chain (nearest expiry)
+
+## AI Guru + male voice (OpenAI)
+1. platform.openai.com par login karo, Billing mein thoda credit daalo ($5 se shuru), aur **Usage limits** mein monthly limit lagao (jaise $10) taaki bill na badhe.
+2. API keys mein "Create new secret key" dabao aur key copy karo.
+3. Vercel, Settings, Environment Variables: Name `OPENAI_API_KEY`, Value wo key. Save, phir Redeploy.
+4. Optional: `OPENAI_MODEL` (default gpt-4o-mini), `OPENAI_VOICE` (default onyx, male), `OPENAI_TTS_MODEL` (default gpt-4o-mini-tts).
+
+Key sirf server par rehti hai. `/api/guru` (sawaal-jawab) aur `/api/tts` (awaaz) per-IP rate limit ke saath chalte hain. Key na ho to app purane offline coach aur phone ki awaaz par chalta rahega.
