@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Setup Radar Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&family=Hind:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F6F8FC;--card:#fff;--ink:#0F1B2D;--mut:#64748B;--line:#E2E8F0;--a:#2563EB;--b:#0891B2;--ok:#16A34A}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Hind,system-ui,sans-serif}.w{max-width:760px;margin:0 auto;padding:14px 14px 60px}
+h1{font:700 22px Poppins;margin:6px 0 2px}h2{font:700 16px Poppins;margin:0 0 10px}.sub{color:var(--mut);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}.k b{display:block;font:700 26px Poppins}.k span{color:var(--mut);font-size:12.5px}
+.k.g b{background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.bar{display:grid;grid-template-columns:120px 1fr 52px;gap:8px;align-items:center;margin:6px 0;font-size:13px}.bar i{display:block;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--a),var(--b));min-width:2px}.bar em{font-style:normal;text-align:right;font-weight:700}
+.bar.l{grid-template-columns:44px 1fr 90px}.bar.l i.d{background:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--mut);font-weight:600;font-size:12px}
+input,button{font:600 16px Hind;border-radius:12px;border:1px solid var(--line);padding:11px 12px}button{background:var(--a);color:#fff;border:0}a{color:var(--a)}
+.tabs{display:flex;gap:6px;overflow:auto;margin:10px 0}.tabs button{background:#fff;color:var(--ink);border:1px solid var(--line);padding:7px 13px;white-space:nowrap}.tabs button.on{background:var(--ink);color:#fff}
+</style></head><body><div class="w">
+<div id="login" class="card"><h1>Setup Radar Admin</h1><p class="sub">Password daalo (Vercel env var ADMIN_PASS)</p><input id="pw" type="password" placeholder="Password" style="width:100%;margin:8px 0"><button id="go" style="width:100%">Kholo</button><p id="err" class="sub" style="color:#DC2626"></p></div>
+<div id="app" hidden><div style="display:flex;justify-content:space-between;align-items:center"><div><h1>Setup Radar</h1><div class="sub" id="upd"></div></div><button id="rf">Refresh</button></div>
+<div class="grid" id="kpi"></div>
+<div class="card"><h2>Funnel (unique log)</h2><div id="fun"></div></div>
+<div class="card"><h2>Lesson-wise: kitne log kahan tak pahunche</h2><div class="sub" style="margin-bottom:6px">Neela = lesson shuru kiya · Hara = poora kiya</div><div id="les"></div></div>
+<div class="card"><h2>Pichhle 14 din</h2><div style="overflow:auto"><table id="tr"></table></div></div>
+<div class="card"><h2>Source (ad / WhatsApp / direct)</h2><table id="src"></table></div>
+<div class="card"><h2>Payments</h2><table id="sal"></table></div>
+<div class="card"><h2>Leads (landing page numbers)</h2><table id="led"></table></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);let PW=sessionStorage.getItem('adm')||'';
+const n=x=>(x||0).toLocaleString('en-IN');
+async function load(){try{const r=await fetch('/api/admin',{headers:{'x-admin-pass':PW}});const j=await r.json();if(!j.ok){$('login').hidden=false;$('app').hidden=true;$('err').textContent=j.error||'Error';return}
+sessionStorage.setItem('adm',PW);$('login').hidden=true;$('app').hidden=false;render(j)}catch(e){$('err').textContent='Network error'}}
+function render(j){const t=j.tot,u=k=>t[k].uniq;
+$('upd').textContent='Updated '+new Date().toLocaleTimeString('en-IN');
+$('kpi').innerHTML=[['Landing visitors',u('land_view')],['APK downloads (click)',u('dl_click')],['App opened (unique)',u('app_open')],['Paid users',u('paid')],['Revenue ₹',j.rev.total,'g'],['Leads',t.lead.hits],['Course ₹',j.rev.course],['Guru ₹',j.rev.guru]].map(a=>'<div class="k '+(a[2]||'')+'"><b>'+n(a[1])+'</b><span>'+a[0]+'</span></div>').join('');
+const L=j.les,d=i=>L[i-1].done;
+const F=[['Landing visit',u('land_view')],['Download click',u('dl_click')],['App opened',u('app_open')],['Lesson 1 done',d(1)],['Lesson 5 done',d(5)],['Lesson 9 done',d(9)],['Lesson 10 done',d(10)],['Paywall dekha',u('paywall_view')],['Pay click',u('pay_click')],['Paid',u('paid')]];
+const mx=Math.max(1,...F.map(x=>x[1]));$('fun').innerHTML=F.map(x=>'<div class="bar"><span>'+x[0]+'</span><i style="width:'+Math.max(1,x[1]/mx*100)+'%"></i><em>'+n(x[1])+'</em></div>').join('');
+const m2=Math.max(1,...L.map(x=>x.start));$('les').innerHTML=L.map(x=>'<div class="bar l"><span>L'+x.n+(x.n>10?' 🔒':'')+'</span><div><i style="width:'+Math.max(1,x.start/m2*100)+'%"></i><i class="d" style="margin-top:3px;width:'+Math.max(1,x.done/m2*100)+'%"></i></div><em style="font-size:12px">'+x.start+' / '+x.done+' / Q'+x.quiz+'</em></div>').join('');
+$('tr').innerHTML='<tr><th>Din</th><th>Visit</th><th>DL</th><th>App</th><th>Paid</th></tr>'+j.trend.slice().reverse().map(x=>'<tr><td>'+x.d.slice(5)+'</td><td>'+x.land_view+'</td><td>'+x.dl_click+'</td><td>'+x.app_open+'</td><td>'+x.paid+'</td></tr>').join('');
+const ks=[...new Set([...Object.keys(j.srcV),...Object.keys(j.srcD)])];$('src').innerHTML='<tr><th>Source</th><th>Visits</th><th>Downloads</th></tr>'+(ks.map(k=>'<tr><td>'+k+'</td><td>'+(j.srcV[k]||0)+'</td><td>'+(j.srcD[k]||0)+'</td></tr>').join('')||'<tr><td colspan=3 class=sub>Abhi koi data nahi</td></tr>');
+$('sal').innerHTML='<tr><th>Time</th><th>Plan</th><th>₹</th><th>Ref</th></tr>'+(j.sales.map(s=>'<tr><td>'+new Date(s.t).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+'</td><td>'+s.plan+'</td><td>'+s.amt+'</td><td>'+s.pid+'</td></tr>').join('')||'<tr><td colspan=4 class=sub>Abhi koi payment nahi</td></tr>');
+$('led').innerHTML='<tr><th>Naam</th><th>Number</th><th>Src</th></tr>'+(j.leads.map(s=>'<tr><td>'+(s.name||'-').replace(/</g,'&lt;')+'</td><td><a href="https://wa.me/91'+s.phone+'">'+s.phone+'</a></td><td>'+s.src+'</td></tr>').join('')||'<tr><td colspan=3 class=sub>Abhi koi lead nahi</td></tr>')}
+$('go').onclick=()=>{PW=$('pw').value;load()};$('rf').onclick=load;$('pw').onkeydown=e=>{if(e.key==='Enter')$('go').click()};if(PW)load();
+</script></div></body></html>

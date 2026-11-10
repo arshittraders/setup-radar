@@ -607,6 +607,7 @@ body.demoOn{padding-bottom:calc(var(--dmh,150px) + 20px)}
     <div class="card">
       <h2 id="gChatT" style="margin-bottom:10px"></h2>
       <div class="feed" id="gFeed" aria-live="polite"></div>
+      <div id="gBuy" hidden style="margin:8px 0;padding:12px;border:1px solid var(--line);border-radius:14px;text-align:center"><button class="btn" type="button" onclick="payPlan('guru','gBuyMsg')">AI Guru unlimited · ₹299 / 30 din</button><div id="gBuyMsg" style="font-size:12px;margin-top:6px"></div><div style="font-size:11.5px;color:var(--ink-3);margin-top:4px">Secure payment: Kiwtech (Arshit Traders) · Razorpay</div></div>
       <form class="ask" id="gForm"><input id="gIn" type="text" autocomplete="off" aria-label="Guru se pucho"><button type="button" id="gMic" aria-label="Bolkar pucho">Mic</button><button class="go" type="submit" id="gSend"></button></form>
       <div class="quick" id="gQuick"></div>
     </div>
@@ -2356,8 +2357,8 @@ function ask(q,viaVoice){
   const ctx={index:INDICES[state.ix].name,price:Math.round(s0.price),day_change_pct:+((s0.price-s0.open)/s0.open*100).toFixed(2),pcr:+ch0.pcr.toFixed(2),support:ch0.sup,resistance:ch0.res,max_pain:ch0.pain,atm_iv_pct:+(c0.vol*100).toFixed(1),days_to_expiry:+c0.dte.toFixed(1),data:LIVE.on?'live':'demo',lesson_stage:G_.cur,paper_trades:P.trades.length,paper_cash:Math.round(P.cash)};
   const hist=G_.feed.slice(-8,-1).map(f=>({role:f.w==='u'?'user':'assistant',content:f.w==='u'?f.m:rtx(f.m)}));
   if(AI.on&&COACH_URL){
-    fetch(COACH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:q,ctx:ctx,lang:G_.lang,hist:hist})})
-      .then(r=>r.json()).then(d=>{if(d&&d.ok&&typeof d.a==='string'&&d.a)say2({hi:d.a,en:d.a},O);else say2(localAnswer(q),O)}).catch(()=>say2(localAnswer(q),O));
+    fetch(COACH_URL,{method:'POST',headers:{'Content-Type':'application/json','x-uid':UID,'x-lic':licHdr()},body:JSON.stringify({q:q,ctx:ctx,lang:G_.lang,hist:hist,m:'chat'})})
+      .then(r=>r.json()).then(d=>{if(d&&d.ok&&typeof d.a==='string'&&d.a)say2({hi:d.a,en:d.a},O);else if(d&&d.limit){const b=$('gBuy');if(b)b.hidden=false;say2({hi:'आज के फ्री सवाल पूरे हो गए। AI गुरु अनलिमिटेड चाहिए तो नीचे ₹299 महीने वाला बटन दबाओ। कल फिर फ्री सवाल मिलेंगे।',en:'Today free questions are over. For unlimited AI Guru tap the ₹299/month button below. Free questions renew tomorrow.'},{speak:false})}else say2(localAnswer(q),O)}).catch(()=>say2(localAnswer(q),O));
   }else say2(localAnswer(q),O);
 }
 function micAsk(){
@@ -3056,11 +3057,40 @@ function tabOpen(){return true}
 function dayReset(){const d=dayKey(Date.now());if(L_.day!==d){L_.day=d;L_.today=0;L_.bonus=0;lnSave()}}
 const PK='sr_paid_v1',FREE_N=10;
 let PAID=false;try{PAID=localStorage.getItem(PK)==='1'}catch(e){}
+/* ---------- usage events + Kiwtech payments ---------- */
+function lsg(k){try{return localStorage.getItem(k)}catch(e){return null}}function lss(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+let UID=lsg('sr_uid');if(!UID){UID='u'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);lss('sr_uid',UID)}
+try{const q0=new URLSearchParams(location.search).get('s');if(q0)lss('sr_src',q0.replace(/[^a-zA-Z0-9_.-]/g,'').slice(0,24))}catch(e){}
+const SRC=lsg('sr_src')||'app';
+function ev(e,n){try{navigator.sendBeacon('/api/ev',new Blob([JSON.stringify({id:UID,e:e,n:n||0,src:SRC})],{type:'application/json'}))}catch(x){}}
+let LIC=(lsg('sr_lic')||'').split(',').filter(Boolean),GURU_EXP=+lsg('sr_gexp')||0,WALLSEEN=false;
+const licHdr=()=>LIC.join(',');
+function loadRz(){return new Promise((ok,no)=>{if(window.Razorpay)return ok();const s=document.createElement('script');s.src='https://checkout.razorpay.com/v1/checkout.js';s.onload=ok;s.onerror=()=>no(new Error('rz'));document.head.appendChild(s)})}
+function keyNote(v){const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(15,27,45,.6);display:flex;align-items:center;justify-content:center;padding:20px';d.innerHTML='<div style="background:#fff;border-radius:20px;padding:22px;max-width:340px;text-align:center"><div style="font-size:34px">✅</div><h3 style="margin:6px 0">Payment mil gaya</h3><p style="font-size:14px;line-height:1.55;margin:6px 0">'+(v.plan==='course'?'Poora course unlock ho gaya.':'AI Guru 30 din ke liye chalu.')+' Ye key save kar lo, naye phone par "Restore" mein kaam aayegi:</p><div style="font:700 20px monospace;background:#F1F5F9;border-radius:10px;padding:10px;margin:8px 0">'+v.lic+'</div><button type="button" style="width:100%;padding:12px;border:0;border-radius:12px;background:#2563EB;color:#fff;font:700 16px sans-serif">Theek hai</button></div>';d.querySelector('button').onclick=()=>d.remove();document.body.appendChild(d)}
+function grantLic(v,quiet){LIC=LIC.filter(x=>x!==v.lic);LIC.push(v.lic);lss('sr_lic',LIC.join(','));if(v.plan==='course'){PAID=true;lss(PK,'1')}else if(v.plan==='guru'){GURU_EXP=v.exp||0;lss('sr_gexp',String(GURU_EXP));const b=$('gBuy');if(b)b.hidden=true}if(!quiet)keyNote(v);try{lnRender()}catch(e){}}
+async function payPlan(plan,mid){
+  const m=$(mid||'payMsg'),say=t=>{if(m)m.textContent=t};
+  try{say('Payment khul raha hai...');
+    const o=await (await fetch('/api/pay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({a:'order',plan:plan,id:UID})})).json();
+    if(!o.ok){say(o.error||'Payment abhi available nahi');return}
+    await loadRz();
+    const rz=new Razorpay({key:o.key,order_id:o.order_id,amount:o.amount,currency:'INR',name:o.name,description:o.description,image:location.origin+'/icon-192.png',theme:{color:'#2563EB'},notes:{plan:plan},
+      handler:async function(p){say('Verify ho raha hai...');
+        try{const v=await (await fetch('/api/pay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({a:'verify',order_id:p.razorpay_order_id,payment_id:p.razorpay_payment_id,signature:p.razorpay_signature,plan:plan,id:UID})})).json();
+          if(v.ok){say('');grantLic(v)}else say('Payment ho gaya par verify nahi hua. Payment ID '+p.razorpay_payment_id+' WhatsApp par bhejo, turant unlock karenge.')}
+        catch(e){say('Net issue. Payment ID '+p.razorpay_payment_id+' save rakho; "Restore" mein daal kar unlock karo.')}},
+      modal:{ondismiss:()=>say('Payment cancel hua.')}});
+    rz.open();
+  }catch(e){say('Payment nahi khula. Net check karke dobara try karo.')}
+}
+async function restoreLic(q,mid){const m=$(mid||'payMsg');try{const v=await (await fetch('/api/pay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({a:'restore',q:q})})).json();if(v.ok){if(m)m.textContent='Mil gaya! Unlock ho gaya.';grantLic(v,true)}else if(m)m.textContent=v.error||'Nahi mila'}catch(e){if(m)m.textContent='Net check karo'}}
+if(LIC.length)fetch('/api/pay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({a:'check',lic:licHdr()})}).then(r=>r.json()).then(j=>{if(j&&j.ok){if(j.course){PAID=true;lss(PK,'1')}GURU_EXP=j.guru?j.guruExp:0;lss('sr_gexp',String(GURU_EXP))}}).catch(()=>{});
+ev('app_open');
 const PCODES=["b183384e45675ecee2151208baf44785927423503cff8ba9f03c2b6fe1e0f4a8", "e09dd610ba2161cb65ed5232958a6a8c03bdf8f5433bdc0cf8253a4b2e78b550", "d97f64461c36b7ddd5e769910e25a98adc2c3b175ee422c9141ef86596cddf72", "99e1ad5fc64f41850d9b431fc4758688542260b80aa672719d491299854d6f05", "75959bc00389d52591c5b021ff8fecbbed18a4df284645fe50693338e60fb40f", "4d569f0bf8be94fc8cc190f9a13910a6b303752557eb11a54d566f2fa9326e2f", "10ac5de3e22911d750ca0eb57d734050d32f38231f66f695bbac0803c157ac64", "3689ef630f4872841033e30e158e6f8705cb0e37a421683f3d8ffc90f7488fa3", "bbb8fc4cece81a63d0ec2d233004aba812024ff2a220d6880249041ec37b3020", "9821c4eef1a1751c2f12dbb96201cc22ddd9df62a0b76e6713bf425f0de7353d"];
 async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
 const walled=n=>!PAID&&n>FREE_N;
 const PAY_URL='';
-function vWall(p){return '<div class="card g-hero"><div class="eyebrow">Free lessons poore · '+p+' / 30</div><h2>Aage ke lesson paid hain</h2><p style="font-size:13.5px;line-height:1.6">Tumne pehle 10 lesson poore kar liye. Aage 20 lesson mein option chain, hedging, option selling, risk management aur apne broker mein sirf 1 lot se shuruaat sikhoge. ₹499/month ya ₹999 poora course.</p>'+(PAY_URL?'<a class="btn ln-w" href="'+PAY_URL+'" target="_blank" rel="noopener" style="background:#fff;color:var(--a);margin-top:12px;display:block;text-align:center;text-decoration:none">Paid plan lo</a>':'')+'<div style="margin-top:12px"><input id="payCode" placeholder="Unlock code" autocomplete="off" style="width:100%;padding:12px;border-radius:12px;border:0;font-size:15px;box-sizing:border-box"><button class="btn ln-w" type="button" data-ln="unlock" style="margin-top:8px;background:rgba(255,255,255,.2);color:#fff">Code lagao</button><p id="payMsg" style="font-size:12.5px;margin:6px 0 0"></p></div></div>'}
+function vWall(p){if(!WALLSEEN){WALLSEEN=true;ev('paywall_view')}return '<div class="card g-hero"><div class="eyebrow">Free lessons poore · '+p+' / 30</div><h2>Aage ke 20 lesson unlock karo</h2><p style="font-size:13.5px;line-height:1.6">Tumne pehle 10 lesson poore kar liye. Aage 20 lesson mein option chain, hedging, option selling, risk management aur apne broker mein sirf 1 lot se shuruaat sikhoge.</p><button class="btn ln-w" type="button" data-ln="pay" data-plan="course" style="background:#fff;color:var(--a);margin-top:12px;display:block;width:100%">₹699 mein poora course lo (ek baar)</button><p id="payMsg" style="font-size:12.5px;margin:6px 0 0"></p><p style="font-size:12px;opacity:.9;margin:8px 0 0">Secure payment: Kiwtech (Arshit Traders) · Razorpay · UPI, card, netbanking. AI Guru optional: ₹299/mahina.</p><details style="margin-top:12px"><summary style="font-size:13px;cursor:pointer">Pehle se kharida hai ya code hai?</summary><input id="payCode" placeholder="License key / Payment ID / Unlock code" autocomplete="off" style="width:100%;padding:12px;border-radius:12px;border:0;font-size:15px;box-sizing:border-box;margin-top:8px"><button class="btn ln-w" type="button" data-ln="unlock" style="margin-top:8px;background:rgba(255,255,255,.2);color:#fff">Unlock / Restore</button></details></div>'}
 function vTeaser(){return '<div class="card"><div class="eyebrow">Agla padaav</div><h2 style="font-size:17px;margin:4px 0 8px">Lesson 20 ke baad live shuruaat</h2><p class="g-less" style="font-size:14px">Lesson 20 ke baad tum apne broker mein sirf 1 lot se live shuru karna seekh sakte ho. Lesson 11 se 30 paid hain. Pehle 10 lesson free poore karo.</p></div>'}
 function vLive(){return '<div class="card"><div class="eyebrow">Lesson 20 poora</div><h2 style="font-size:17px;margin:4px 0 8px">Live se pehle: risk aur 1 lot ka plan</h2><p class="g-less" style="font-size:14px;line-height:1.7">1. Sirf 1 lot se shuru karo, wo bhi apne broker mein khud.<br>2. Ek trade mein poonji ka 2% se zyada jokhim nahi.<br>3. Stop-loss entry se pehle tay karo.<br>4. Roz ki loss limit tay karo, chhoo jaye to din band.<br>5. Pehle 20 trade sirf size aur aadat seekhne ke liye, kamai ke liye nahi.<br>6. Paper mein 30 trade aur Discipline Score 70 se upar ho, tabhi live socho.<br>Ye shiksha hai, salah nahi. Sirf wahi paisa lagao jo ganwana manzoor ho.</p></div>'}
 const capToday=()=>2+L_.bonus;
@@ -3278,6 +3308,7 @@ function finishQuiz(){
     else{L_.proFail=L_.day;z.msg='Aaj dobara Pro Test nahi de sakte. Kal try karo.'}
   }else if(pct>=50){
     const first=!(z.n in L_.passed);
+    ev('quiz_pass',z.n);if(first)ev('lesson_done',z.n);
     if(first&&z.n===passedN()+1){L_.passed[z.n]=pct;L_.today++}
     else if(z.n in L_.passed&&pct>L_.passed[z.n])L_.passed[z.n]=pct;
     syncGuru();
@@ -3296,11 +3327,13 @@ $('v-learn').addEventListener('click',e=>{
     if(a==='start'&&n>passedN()+1)return;
     if(a==='start'&&walled(n)){lnRender();return}
     if(a==='start'&&n===passedN()+1&&L_.today>=capToday()){lnRender();return}
+    if(a==='start')ev('lesson_start',n);
     L_.n=n;L_.si=0;L_.seen[n]=true;L_.view='lesson';lnRender();window.scrollTo(0,0);slideSpeak(false);return;
   }
   if(a==='next'){const l=LESSONS[L_.n-1];if(L_.si<l.s.length-1){L_.si++;lnRender();slideSpeak(false)}else startQuiz('lesson',L_.n);return}
   if(a==='prev'){if(L_.si>0){L_.si--;lnRender();slideSpeak(false)}return}
-  if(a==='unlock'){const v=($('payCode')||{}).value||'';sha(v.trim().toUpperCase()).then(x=>{if(PCODES.indexOf(x)>=0){PAID=true;try{localStorage.setItem(PK,'1')}catch(e){}lnRender()}else{const m=$('payMsg');if(m)m.textContent='Code galat hai. Dobara check karo.'}});return}
+  if(a==='pay'){payPlan(b.dataset.plan,'payMsg');return}
+  if(a==='unlock'){const v=($('payCode')||{}).value||'';const vv=v.trim();sha(vv.toUpperCase()).then(x=>{if(PCODES.indexOf(x)>=0){PAID=true;try{localStorage.setItem(PK,'1')}catch(e){}lnRender()}else if(/^(SR-|pay_)/i.test(vv)){restoreLic(vv,'payMsg')}else{const m=$('payMsg');if(m)m.textContent='Code galat hai. Dobara check karo.'}});return}
   if(a==='stop'){try{stopSpeech()}catch(e){}return}
   if(a==='auto'){LAUTO=!LAUTO;try{localStorage.setItem(LAK,LAUTO?'1':'0')}catch(e){}if(!LAUTO)try{stopSpeech()}catch(e){}if(L_.qz)L_.qz.spk=-1;lnRender();if(LAUTO&&L_.view==='lesson')slideSpeak(true);return}
   if(a==='demo'){try{stopSpeech()}catch(e){}dmStart(+b.dataset.n);return}

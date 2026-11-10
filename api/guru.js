@@ -1,6 +1,9 @@
 // AI Guru: OpenAI chat. GET = status ping. POST {q, ctx, lang, hist}
 const { send } = require('./_u');
 const limited = require('./_rl');
+const kv = require('./_kv');
+const { plansFor } = require('./_lic');
+const QUOTA = { free: 5, course: 12, guru: 150 }; // user-typed questions per day
 const OAI = process.env.OPENAI_BASE || 'https://api.openai.com';
 const SYS = `Tum "Setup Radar" ke AI Guru ho: ek shaant, saral male teacher jo Indian beginners ko F&O (Nifty, Bank Nifty, Sensex options) sikhata hai.
 Rules:
@@ -23,6 +26,15 @@ module.exports = async (req, res) => {
     if (!body || typeof body !== 'object') body = {};
     const q = String(body.q || '').slice(0, 300);
     if (!q) return send(res, 400, { ok: false, error: 'sawaal khali hai' });
+    // daily quota only for user-typed chat (m:'chat'); owner (LIVE_PASS) and unconfigured store are unlimited
+    if (body.m === 'chat' && kv.on() && !(process.env.LIVE_PASS && req.headers['x-live-pass'] === process.env.LIVE_PASS)) {
+      const uid = String(req.headers['x-uid'] || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 24) || 'ip' + String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+      const pl = await plansFor(req.headers['x-lic']);
+      const tier = pl.guru ? 'guru' : pl.course ? 'course' : 'free', k = 'gq:' + uid + ':' + kv.istDay();
+      const [n] = await kv.pipe([['INCR', k], ['EXPIRE', k, 172800]]);
+      kv.pipe([['INCR', 'ev:guru_q'], ['SADD', 's:guru_q', uid]]).catch(() => {});
+      if (n > QUOTA[tier]) { kv.pipe([['INCR', 'ev:guru_limit'], ['SADD', 's:guru_limit', uid]]).catch(() => {}); return send(res, 200, { ok: false, limit: true, tier, quota: QUOTA[tier] }); }
+    }
     const lang = body.lang === 'en' ? 'en' : 'hi';
     const ctx = JSON.stringify(body.ctx || {}).slice(0, 1200);
     const hist = (Array.isArray(body.hist) ? body.hist : []).slice(-6)

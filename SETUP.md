@@ -41,3 +41,14 @@ Key sirf server par rehti hai. `/api/guru` (sawaal-jawab) aur `/api/tts` (awaaz)
 
 ## Live access is owner-only
 Add env var `LIVE_PASS` (6+ chars). All Upstox endpoints return 403 without it. Open `https://setup-radar.vercel.app/#lp=YOURPASS` once on your device to switch that device to live. Everyone else sees the demo market.
+
+## Payments, stats, download page (Kiwtech)
+Pages: `/download` (landing + AI chat + APK), `/admin` (stats), `/terms`. APK file: `apk/SetupRadar.apk` (tracked link `/api/dl?s=<source>`).
+
+1. **Store (stats + licences):** Vercel project, Storage tab, create **Upstash Redis** (free), connect to this project. It adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` by itself.
+2. **Razorpay (Kiwtech account):** Settings, API Keys, generate Live key. Env vars: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`. Optional webhook (backup unlock if app closes mid-payment): URL `https://<site>/api/pay?hook=1`, event `payment.captured`, secret in `RAZORPAY_WEBHOOK_SECRET`.
+3. **Admin:** env var `ADMIN_PASS` (any strong password). Open `/admin`.
+4. Redeploy after adding env vars.
+
+Prices: course ₹699 once, AI Guru ₹299 for 30 days (set in `api/_lic.js`). Guru questions/day: free 5, course 12, Guru plan 150 (`QUOTA` in `api/guru.js`). Owner (`LIVE_PASS`) is unlimited.
+Ad / WhatsApp links: `https://<site>/download?s=meta` or `?s=wa` (the `s` value shows in admin Source table).
