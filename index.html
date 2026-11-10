@@ -411,6 +411,17 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .bk-n{flex:1;font:600 13px var(--f-mono)}.bk-n small{display:block;font:500 11px var(--f-mono);color:var(--ink-3)}
 .bk-q{display:flex;align-items:center;gap:6px;font:600 12px var(--f-mono)}
 .bk-q button{border:1px solid var(--line);background:#fff;border-radius:8px;width:30px;height:30px;font-size:16px}
+
+.dm-coach{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(11,27,46,.22);padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto;border-top:3px solid #1D4ED8}
+.dm-top{display:flex;justify-content:space-between;align-items:center;font:600 11px var(--f-mono);letter-spacing:.04em;color:var(--a);text-transform:uppercase}
+.dm-top button{border:0;background:var(--surface-2);border-radius:999px;width:28px;height:28px;font-size:13px}
+.dm-t{font-size:14.5px;line-height:1.55;margin:8px 0 10px;color:var(--ink)}
+.dm-hl{outline:3px solid #1D4ED8;outline-offset:3px;border-radius:10px;animation:dmP 1.3s ease-in-out infinite;position:relative;z-index:1}
+@keyframes dmP{0%,100%{outline-color:#1D4ED8}50%{outline-color:#0891B2;outline-offset:6px}}
+body.demoOn .bkbar{display:none}
+body.demoOn .bksheet{bottom:var(--dmh,150px);max-height:calc(100vh - var(--dmh,150px) - 24px);z-index:50}
+body.demoOn{padding-bottom:calc(var(--dmh,150px) + 20px)}
+@media (prefers-reduced-motion:reduce){.dm-hl{animation:none}}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -1624,6 +1635,110 @@ document.addEventListener('input',e=>{
   const X=c.sp*(1+BSK.mv/100),v=pnlAt(r.legs,X,c.lot);$('bkChart').innerHTML=bkChart(r,X);$('bkMv').textContent=(BSK.mv>=0?'+':'')+BSK.mv.toFixed(1)+'%';$('bkAt').innerHTML='Expiry par '+nfi(X)+' hone par: <b class="num '+(v>=0?'up':'down')+'">'+rss(v)+'</b>';
 });
 window.addEventListener('hashchange',()=>{BSK.open=false;setTimeout(bkSheetRender,30)});
+
+/* ========== GUIDED DEMO: har lesson mein apna tool example ki tarah chalta hai ========== */
+const DM={n:0,i:0,on:false,t:0};
+const DEMO={
+1:[['live',['ix:nifty'],'#hPrice','Ye Nifty ka bhaav hai, jo tumhari app mein chal raha hai. F&O isi bhaav ki chaal par lagne wala contract hai.'],['chain',['sub:chain','bk:clear'],'atm','Ye option chain hai. Har strike par Call aur Put ka daam ek saath dikhta hai. F&O ka bazaar yahin dikhta hai.'],['chain',[],'C+0','Is daam par tap karoge to basket mein Buy lagega. Hum isi se samjhenge ki kharidna aur bechna kaise kaam karta hai.']],
+2:[['chain',['sub:chain','bk:clear'],'C+0','Ye ATM Call ka daam hai. Bhaav upar jayega to Call kharidne wala kamata hai.'],['chain',[],'P+0','Ye usi strike ka Put ka daam hai. Bhaav neeche jayega to Put kharidne wala kamata hai.'],['chain',['bk:B:C:0','bk:open'],'#bkChart','Maine ek Call kharida. Chart dekho: bhaav upar gaya to faida badhta hai. Neeche gaya to nuksaan sirf premium tak rehta hai.'],['chain',['bk:clear','bk:B:P:0','bk:open'],'#bkChart','Ab ek Put kharida. Ab ulta hai: bhaav neeche gaya to faida hota hai.']],
+3:[['live',['ix:nifty'],'#idxRow','Ye teen index hain: Nifty, Bank Nifty aur Sensex. F&O inhi par hota hai.'],['chain',['sub:chain','bk:clear','bk:B:C:0','bk:open'],'#bkSum','Dekho, 1 lot mein fixed quantity hoti hai. Premium ko lot se guna karke asli rupaye banta hai. Isi liye chhota daam bhi badi rakam ban jata hai.']],
+4:[['chain',['sub:chain','bk:clear'],'atm','Ye ATM strike hai, yaani bhaav ke sabse paas. Yahan premium beech ka hota hai.'],['chain',[],'C+4','Ye door ki Call strike hai. Premium sasta hai, par bhaav wahan tak pahunchna mushkil hai.'],['chain',[],'C-4','Ye andar ki strike hai. Premium mehnga hai kyunki ismein asli value bhi judi hai.']],
+5:[['chain',['sub:chain','bk:clear','bk:B:C:0','bk:open'],'#bkSum','Kharidne wale ka sabse bada nuksaan yahi premium hai. Isse zyada kabhi nahi.'],['chain',['bk:clear','bk:S:C:0','bk:open'],'#bkSum','Ab wahi Call becha. Max loss Asimit dikh raha hai. Isi liye bina hedge ke bechna khatarnak hai.']],
+6:[['live',['ix:nifty','noind'],'#spark','Ye live chart hai. Har candle ek chhote samay ki kahani batati hai.'],['live',['ind:vwap'],'[data-ck="i:vwap"]','Maine VWAP chalu kiya. Ye din ki average keemat ki line hai.'],['live',[],'#indInfo','Yahan app saaf bhasha mein batata hai ki indicators kya keh rahe hain.']],
+7:[['chain',['sub:chain','bk:clear'],'.oc','Bayi taraf Call OI hai aur dayi taraf Put OI. Jahan patti lambi, wahan zyada sauda khule hain.'],['chain',[],'atm','Ye ATM row hai. Yahin se dekhte hain ki bazaar ka mood kis taraf hai. R aur S ke nishaan resistance aur support batate hain.']],
+8:[['mood',[],'#moodChain','Mood tab mein PCR, support aur resistance ek jagah dikhte hain. Ye sirf sanket hain, guarantee nahi.']],
+9:[['mood',[],'#moodRange','Ye aaj ki expected range hai. VIX ya IV se nikali gayi hai. Bhaav aksar isi range mein ghoomta hai, par bahar bhi ja sakta hai.']],
+10:[['mood',[],'#moodChain','Yahan max pain ka level dikhta hai. Expiry ke din bhaav kai baar iske aas paas ghoomta hai, par har baar nahi.']],
+11:[['live',[],'#setupCard','Jab kisi range ke bahar tez chaal hoti hai to app setup alert deta hai. Ye alert sirf sanket hai. Stop-loss tumhe pehle tay karna hai.']],
+12:[['live',[],'#setupCard','VWAP wapas paar karna aur OI badhna jaise setups yahin dikhte hain.'],['live',['ind:vwap'],'[data-ck="i:vwap"]','VWAP chalu karke chart par uski line dekho.']],
+13:[['scorecard',[],'#rank','Yahan har setup ka purana record dikhta hai. Abhi ye demo aankde hain. Asli record ke bina inhe sach mat maano.']],
+14:[['risk',[],'#riskForm','Yahan apni poonji, risk percent aur stop-loss bharo.'],['risk',[],'#riskOut','App batata hai ki kitne lot le sakte ho taaki ek trade mein tay seema se zyada nuksaan na ho.']],
+15:[['paper',[],'#pWallet','Ye paper wallet hai. Isme virtual paisa hai, asli nahi. Yahin pehle practice karo.'],['paper',[],'#pPos','Yahan tumhare khule paper trade dikhte hain.']],
+16:[['chain',['sub:chain','bk:clear','bk:B:C:0','mv:0','bk:open'],'#bkAt','Slider 0 par hai, yaani bhaav wahin raha. Phir bhi nuksaan premium ke barabar hai. Ye samay ka asar hai: kharidne wale ko samay khata hai.']],
+17:[['chain',['sub:chain','bk:clear','bk:B:C:0','mv:1','bk:open'],'#bkAt','Bhaav ek percent badha to faida itna hua. Ye bhaav ke asar yaani delta ka naap hai.'],['chain',['mv:3'],'#bkAt','Ab teen percent. Dekho faida kitna tezi se badha.']],
+18:[['paper',[],'#pDisc','Ye tumhara Discipline Score hai. Haar ke turant baad naya trade lena ya zyada trade karna yahan pakda jata hai.']],
+19:[['live',[],'#gStrip','Khabar aane par Guru yahin chetawani deta hai. Khabar ke baad pehla jhatka aksar bheed ko fasa deta hai.']],
+20:[['ideas',[],'#btstList','Ye BTST ka scanner hai. Raat ka gap tumhare khilaaf bhi ja sakta hai, isliye size chhota rakho.']],
+21:[['chain',['sub:chain','bk:clear','bk:S:P:-2','bk:open'],'#bkSum','Maine ek Put becha. Premium milta hai, par nuksaan bahut bada ho sakta hai. Ye bechne wale ka sabse bada khatra hai.']],
+22:[['chain',['hm:naked'],'#chBody .lab-g','Ye Hedge Lab hai. Bina hedge ke bechne par margin kitna lagta hai ye yahan dikhta hai.']],
+23:[['chain',['sub:chain','bk:clear','bk:S:P:-1','bk:open'],'#bkSum','Pehle sirf ek Put becha. Max loss dekho, bahut bada hai.'],['chain',['bk:B:P:-3'],'#bkSum','Ab usse neeche ka sasta Put kharida. Ye hedge hai. Max loss ab tay seema tak hai, aur faida bhi seemit.'],['chain',[],'#bkChart','Chart dekho: neeche ka hissa seedha ho gaya. Isi ko credit spread kehte hain.']],
+24:[['chain',['sub:chain','bk:clear','bk:S:C:2','bk:B:C:4','bk:S:P:-2','bk:B:P:-4','bk:open'],'#bkChart','Ye iron condor hai: upar aur neeche dono taraf bechkar sasta hedge liya. Range mein rahe to faida, bahar gaye to nuksaan seemit.']],
+25:[['chain',['sub:chain','bk:clear','bk:S:P:-1','mv:-3','bk:open'],'#bkAt','Agar bhaav teen percent gir jaye to ye nuksaan hota hai. Isiliye bechne se pehle stop-loss tay karo.']],
+26:[['chain',['sub:chain','bk:clear','bk:S:C:2','bk:S:P:-2','mv:2','bk:open'],'#bkAt','Do taraf bechne par expiry ke din bhaav do percent bhi hila to nuksaan dikhta hai. Isi ko gamma ka khatra kehte hain.']],
+27:[['risk',[],'#riskOut','Seller ke liye poonji suraksha: ek trade mein tay risk se zyada kabhi nahi. Yahan app wahi limit nikalta hai.']],
+28:[['mood',[],'#moodRange','Kal ki yojana yahin se banao: range, support, resistance aur max pain likh lo.']],
+29:[['paper',[],'#pDisc','Ye tumhara report card hai. Jis cheez mein number kam ho, usi par agla hafta kaam karo.']],
+30:[['guru',[],'#gForm','Ab koi bhi sawal yahan Guru se pooch sakte ho. Guru tumhari galti turant batayega.']]
+};
+function dmOps(ops){
+  const c=cxCtx(state.ix);
+  ops.forEach(o=>{
+    const p=o.split(':');
+    if(p[0]==='ix'){const q=document.querySelector('#idxRow [data-ix="'+p[1]+'"]');if(q&&state.ix!==p[1])q.click()}
+    else if(p[0]==='ind'){if(!CH.ind[p[1]]){const q=document.querySelector('[data-ck="i:'+p[1]+'"]');if(q)q.click()}}
+    else if(o==='noind'){const q=document.querySelector('[data-ck^="x"]');if(q&&Object.keys(CH.ind).some(k=>CH.ind[k]))q.click()}
+    else if(p[0]==='sub'){CHX.sub=p[1];}
+    else if(p[0]==='hm'){CHX.sub='hedge';CHX.mode=p[1];CHX.snap[state.ix]=S[state.ix].price}
+    else if(o==='bk:clear'){bkLegs().length=0;BSK.open=false;BSK.mv=0}
+    else if(p[0]==='bk'&&(p[1]==='B'||p[1]==='S')){const K=c.atm+(+p[3])*c.st;bkLegs().push({k:K,t:p[2],s:p[1]==='B'?1:-1,n:1,p:c.prem(K,p[2])})}
+    else if(o==='bk:open'){BSK.open=true}
+    else if(p[0]==='mv'){BSK.mv=+p[1]}
+  });
+  if(typeof renderChainTab==='function'&&document.getElementById('chBody'))renderChainTab();
+  bkSheetRender();
+}
+function dmEl(h){
+  if(h==='atm')return document.querySelector('.oc-r.atm');
+  const m=/^([CP])([+-]\d+)$/.exec(h);
+  if(m){const rows=Array.prototype.slice.call(document.querySelectorAll('#chBody .oc-r')),ai=rows.findIndex(r=>r.classList.contains('atm')),r=rows[ai+(+m[2])];return r?r.querySelector('[data-cx="bk"][data-t="'+m[1]+'"]'):null}
+  return document.querySelector(h);
+}
+function dmHl(h,tries){
+  document.querySelectorAll('.dm-hl').forEach(e=>e.classList.remove('dm-hl'));
+  const el=dmEl(h);
+  if(el){el.classList.add('dm-hl');try{el.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}}
+  else if((tries||0)<5)setTimeout(()=>dmHl(h,(tries||0)+1),250);
+}
+function dmCoachHtml(){
+  const st=DEMO[DM.n][DM.i],tot=DEMO[DM.n].length,last=DM.i===tot-1;
+  return '<div class="dm-top"><b>Lesson '+DM.n+' demo · '+(DM.i+1)+' / '+tot+'</b><button type="button" data-dm="stop" aria-label="Band karo">✕</button></div><p class="dm-t">'+esc2(st[3])+'</p><div class="g-row">'+(DM.i>0?'<button class="btn ghost" type="button" data-dm="prev">Peeche</button>':'')+'<button class="btn ghost" type="button" data-dm="say">Phir suno</button><button class="btn" type="button" data-dm="'+(last?'stop':'next')+'">'+(last?'Lesson par wapas':'Agla')+'</button></div>';
+}
+function dmStep(){
+  const st=DEMO[DM.n][DM.i];
+  const go=()=>{
+    dmOps(st[1]);
+    let el=document.getElementById('dmCoach');
+    if(!el){el=document.createElement('div');el.id='dmCoach';el.className='dm-coach';document.body.appendChild(el)}
+    el.innerHTML=dmCoachHtml();
+    document.documentElement.style.setProperty('--dmh',el.offsetHeight+'px');
+    DM.h=st[2];setTimeout(()=>dmHl(st[2]),350);
+    if(LAUTO)speak(st[3],true);
+  };
+  const want='#'+st[0];
+  if(location.hash!==want){location.hash=want;setTimeout(go,450)}else go();
+}
+function dmStart(n){
+  if(!DEMO[n])return;
+  DM.n=n;DM.i=0;DM.on=true;document.body.classList.add('demoOn');BSK.open=false;
+  clearInterval(DM.t);DM.t=setInterval(()=>{if(!DM.on||!DM.h)return;const el=dmEl(DM.h);if(el&&!el.classList.contains('dm-hl')){document.querySelectorAll('.dm-hl').forEach(e=>e.classList.remove('dm-hl'));el.classList.add('dm-hl')}},500);
+  dmStep();
+}
+function dmStop(back){
+  DM.on=false;clearInterval(DM.t);document.body.classList.remove('demoOn');
+  document.querySelectorAll('.dm-hl').forEach(e=>e.classList.remove('dm-hl'));
+  const el=document.getElementById('dmCoach');if(el)el.remove();
+  try{stopSpeech()}catch(e){}
+  BSK.open=false;bkSheetRender();
+  if(back){L_.view='lesson';location.hash='#learn';if(typeof lnRender==='function')setTimeout(lnRender,60)}
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-dm]');if(!b)return;
+  const a=b.dataset.dm;
+  if(a==='next'&&DM.i<DEMO[DM.n].length-1){DM.i++;dmStep()}
+  else if(a==='prev'&&DM.i>0){DM.i--;dmStep()}
+  else if(a==='say'){const st=DEMO[DM.n][DM.i];speak(st[3],true)}
+  else if(a==='stop'){dmStop(true)}
+});
 
 function renderChainTab(){
   const el=$('chBody');
@@ -3143,7 +3258,7 @@ function slideSpeak(force){
   const nx=L_.si+1;if(nx<LDEV[L_.n-1].length)setTimeout(()=>ttsPrefetch(slideText(L_.n,nx)),1200);
 }
 const LAPP={1:['live','Live tab kholo','अब अपनी ऐप का लाइव टैब खोलकर देखो, डेमो बाज़ार चल रहा है।'],2:['chain','Option chain kholo','अब अपनी ऐप में चेन टैब खोलो। हर स्ट्राइक पर कॉल और पुट का दाम एक साथ दिखेगा।'],3:['chain','Chain mein lot size dekho','अब चेन टैब में निफ्टी का लॉट साइज़ देखो।'],4:['chain','Chain mein premium aur strike dekho','अब चेन टैब में ATM और दूर की स्ट्राइक का प्रीमियम देखो।'],5:['lab','Payoff Lab kholo','अब पेऑफ लैब खोलो। कॉल खरीदने और बेचने का फर्क स्लाइडर से देखो।'],6:['live','Live chart par VWAP lagao','अब लाइव टैब पर VWAP चालू करके देखो।'],7:['chain','Option chain mein OI dekho','अब चेन टैब में OI और OI का बदलाव देखो।'],8:['mood','Mood tab: PCR, support, resistance','अब मूड टैब में PCR, सपोर्ट और रेज़िस्टेंस देखो।'],9:['mood','Mood tab: VIX aur range','अब मूड टैब में VIX और एक्सपेक्टेड रेंज देखो।'],10:['mood','Mood tab: max pain','अब मूड टैब में मैक्स पेन देखो।'],11:['live','Live tab: setup alerts','अब लाइव टैब पर सेटअप अलर्ट देखो।'],12:['live','Live tab: VWAP aur OI','अब लाइव टैब पर VWAP और OI वाले सेटअप देखो।'],13:['scorecard','Scorecard kholo','अब स्कोरकार्ड टैब खोलकर पुराने सेटअप के आंकड़े देखो।'],14:['risk','Risk tab kholo','अब रिस्क टैब में अपनी पूंजी भरकर स्टॉप लॉस और लॉट निकालो।'],15:['paper','Paper trading kholo','अब पेपर टैब खोलकर पहला डेमो ट्रेड लो।'],16:['lab','Payoff Lab: theta','अब पेऑफ लैब में देखो कि समय के साथ प्रीमियम कैसे घटता है।'],17:['lab','Payoff Lab kholo','अब पेऑफ लैब खोलकर भाव और समय का असर देखो।'],18:['paper','Paper tab: Discipline Score','अब पेपर टैब में अपना डिसिप्लिन स्कोर देखो।'],19:['live','Live tab kholo','अब लाइव टैब में खबरें और गैप देखो।'],20:['ideas','Ideas tab kholo','अब आइडियाज़ टैब में BTST देखो। और टैब मेन्यू पर लाइव शुरू करने का प्लान पढ़ो।'],21:['lab','Payoff Lab: option selling','अब पेऑफ लैब में कॉल बेचने का नक्शा देखो।'],22:['chain','Chain: Hedge Lab aur margin','अब चेन टैब में हेज लैब और मार्जिन देखो।'],23:['lab','Payoff Lab: bull put spread','अब पेऑफ लैब में बुल पुट स्प्रेड चुनो।'],24:['lab','Payoff Lab: iron condor','अब पेऑफ लैब में आयरन कॉन्डोर चुनो।'],25:['paper','Paper tab kholo','अब पेपर टैब में स्टॉप लॉस के साथ ट्रेड का अभ्यास करो।'],26:['chain','Chain tab kholo','अब चेन टैब में एक्सपायरी के दिन प्रीमियम की चाल देखो।'],27:['risk','Risk tab kholo','अब रिस्क टैब में अपनी जोखिम सीमा जांचो।'],28:['mood','Mood tab kholo','अब मूड टैब देखकर कल की योजना बनाओ।'],29:['paper','Paper tab: report card','अब पेपर टैब में अपना रिपोर्ट कार्ड देखो।'],30:['guru','Guru se poochho','अब गुरु टैब में कोई भी सवाल पूछ सकते हो।']};
-function lnApp(n){const a=LAPP[n];if(!a)return '';return '<button class="btn ghost ln-w" type="button" data-ln="goapp" data-t="'+a[0]+'" style="margin:0 0 10px;border-style:dashed">App mein dekho: '+esc2(a[1])+'</button>'}
+function lnApp(n){const a=LAPP[n];if(!a)return '';return (typeof DEMO!=='undefined'&&DEMO[n]?'<button class="btn ln-w" type="button" data-ln="demo" data-n="'+n+'" style="margin:0 0 10px">▶ Apni app mein dikhao (live demo)</button>':'')+'<button class="btn ghost ln-w" type="button" data-ln="goapp" data-t="'+a[0]+'" style="margin:0 0 10px;border-style:dashed">App mein dekho: '+esc2(a[1])+'</button>'}
 
 function finishQuiz(){
   const z=L_.qz,tot=z.qs.length,pct=Math.round(z.score/tot*100),before=openMap();
@@ -3178,6 +3293,7 @@ $('v-learn').addEventListener('click',e=>{
   if(a==='unlock'){const v=($('payCode')||{}).value||'';sha(v.trim().toUpperCase()).then(x=>{if(PCODES.indexOf(x)>=0){PAID=true;try{localStorage.setItem(PK,'1')}catch(e){}lnRender()}else{const m=$('payMsg');if(m)m.textContent='Code galat hai. Dobara check karo.'}});return}
   if(a==='stop'){try{stopSpeech()}catch(e){}return}
   if(a==='auto'){LAUTO=!LAUTO;try{localStorage.setItem(LAK,LAUTO?'1':'0')}catch(e){}if(!LAUTO)try{stopSpeech()}catch(e){}if(L_.qz)L_.qz.spk=-1;lnRender();if(LAUTO&&L_.view==='lesson')slideSpeak(true);return}
+  if(a==='demo'){try{stopSpeech()}catch(e){}dmStart(+b.dataset.n);return}
   if(a==='goapp'){const t=b.dataset.t;try{stopSpeech()}catch(e){}if(t==='lab'){L_.view='lab';lnRender();window.scrollTo(0,0)}else location.hash='#'+t;return}
   if(a==='say'){slideSpeak(true);return}
   if(a==='home'){L_.view='home';lnRender();window.scrollTo(0,0);return}
