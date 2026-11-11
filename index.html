@@ -2137,7 +2137,7 @@ function speak(text,force,cb,strict){
     if(!(navigator.userActivation&&navigator.userActivation.hasBeenActive)){if(cb)setTimeout(cb,3000);return}
     stopSpeech();
     const my=AI.seq,t=String(text).slice(0,950);
-    const play=u=>{if(my!==AI.seq)return;try{const a=new Audio(u);a.playbackRate=VP.sp;AI.au=a;a.onended=()=>{if(my===AI.seq&&cb)setTimeout(()=>{if(my===AI.seq)cb()},900)};a.play().catch(()=>{if(my!==AI.seq)return;if(strict){if(cb)setTimeout(cb,3000)}else speakLocal(text,force,cb)})}catch(e){if(strict){if(cb)setTimeout(cb,3000)}else speakLocal(text,force,cb)}};
+    const play=u=>{if(my!==AI.seq)return;try{const a=AI.el||(AI.el=new Audio());try{a.pause()}catch(e){}a.onended=null;a.src=u;a.playbackRate=VP.sp;AI.au=a;a.onended=()=>{if(my===AI.seq&&cb)setTimeout(()=>{if(my===AI.seq)cb()},900)};a.play().catch(()=>{if(my!==AI.seq)return;if(strict){if(cb)setTimeout(cb,3000)}else speakLocal(text,force,cb)})}catch(e){if(strict){if(cb)setTimeout(cb,3000)}else speakLocal(text,force,cb)}};
     if(AI.cache.has(t))return play(AI.cache.get(t));
     AI.ctl=(typeof AbortController!=='undefined')?new AbortController():null;
     const go=n=>fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t}),signal:AI.ctl?AI.ctl.signal:undefined})
@@ -2157,6 +2157,8 @@ function speak(text,force,cb,strict){
   }
   speakLocal(text,force,cb);
 }
+
+(function(){const SIL='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAABErAAABAAgAZGF0YQAAAAA=';function un(){try{if(!AI.el)AI.el=new Audio();AI.el.src=SIL;const p=AI.el.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}['pointerdown','touchend','click'].forEach(e=>document.addEventListener(e,function f(){un();document.removeEventListener(e,f,true)},true))})();
 function ttsPrefetch(text){
   if(!(AI.on&&!AI.fail)||!text)return;
   const t=String(text).slice(0,950);AI.pf=AI.pf||{};
@@ -3290,7 +3292,7 @@ function lnRender(){
   if(v==='quiz')quizSpeak();else if(v==='result'){try{stopSpeech()}catch(e){}}
   navRefresh();
 }
-const LAK='sr_lauto';
+const LAK='sr_lauto2';
 let LAUTO=true;try{LAUTO=localStorage.getItem(LAK)!=='0'}catch(e){}
 function slideText(n,i){const m=window.MIS&&window.MIS[n-1]&&window.MIS[n-1][i];const a=window.LAPP&&LAPP[n];const l=LDEV[n-1];return l[i]+(m?' आसान मिसाल। '+m:'')+(a&&i===l.length-1?' '+a[2]:'')}
 function slideSpeak(force){
@@ -3696,7 +3698,7 @@ function clHome(){const D=clD(),dn=clDoneN(),nx=Math.min(30,dn+1);
 function clDots(){let d='<div class="cl-dots">';for(let i=0;i<5;i++)d+='<b class="'+(i<=CL.s?'on':'')+'"></b>';return d+'</div>'}
 function clNav(back,next,nl){return '<div style="display:flex;gap:8px;margin-top:12px">'+(back?'<button class="btn ghost ln-w" type="button" data-cl="prev" style="flex:1">Peeche</button>':'')+(next?'<button class="btn ln-w" type="button" data-cl="next" style="flex:2">'+(nl||'Aage')+'</button>':'')+'</div>'}
 function clPat(){const n=CL.n,p=PATS[n-1],D=clD();if(!D)return '<div class="card"><p class="empty">Candle data load ho raha hai...</p></div>';const st=D.st[p.id];let h='';
-  h+='<div style="display:flex;justify-content:space-between;align-items:center"><button class="btn ghost ln-w" type="button" data-cl="home" style="width:auto;padding:0 14px;min-height:36px">← Saari patterns</button><span class="cl-note" style="margin:0">'+n+' / 30</span></div>'+clDots();
+  h+='<div style="display:flex;justify-content:space-between;align-items:center"><button class="btn ghost ln-w" type="button" data-cl="home" style="width:auto;padding:0 14px;min-height:36px">← Saari patterns</button><button class="btn ghost ln-w" type="button" data-cl="auto" style="width:auto;padding:0 12px;min-height:36px">🔊 Awaaz: '+(LAUTO?'Chalu':'Band')+'</button><span class="cl-note" style="margin:0">'+n+' / 30</span></div>'+clDots();
   if(CL.s===0){h+='<div class="card"><div class="eyebrow">Pattern '+n+' / 30</div><h2 style="font-size:21px;margin:4px 0">'+esc2(p.hi)+' <small style="font-weight:500;color:var(--ink-3)">'+p.hd+'</small></h2><div>'+clBias(p)+'<span class="cl-chip cl-neu">'+p.shape.length+' candle</span></div><div style="margin:10px 0;background:var(--surface-2);border-radius:14px;padding:6px">'+clShape(p)+'</div><p class="lead" style="margin:0">'+esc2(p.d)+'</p><button class="btn ghost ln-w" type="button" data-cl="say" style="margin-top:10px">🔊 Guru se suno</button>'+(n===9&&!PAID?'<div class="note" style="margin-top:10px">Aage 21 aur patterns baaki hain: Engulfing, Stars, Soldiers... aur har ka backtest.</div>':'')+'</div>'+clNav(false,true)}
   else if(CL.s===1){h+='<div class="card"><div class="eyebrow">Pehchaan ka rule</div><h2 style="font-size:18px;margin:4px 0 8px">'+esc2(p.hi)+' kaise pehchanein</h2><div style="background:var(--surface-2);border-radius:14px;padding:6px;margin-bottom:10px">'+clShape(p)+'</div><p class="lead" style="margin:0 0 8px"><b>Rule:</b> '+esc2(p.rule)+'</p><div class="note"><b>Dhyan rakho:</b> '+esc2(p.trap)+'</div><p class="cl-note">App is rule se 15-min candles par pattern khud dhoondhta hai. Peeli patti = pattern ki candles.</p></div>'+clNav(true,true)}
   else if(CL.s===2){const occ=st.occ.slice().reverse(),sel=Math.min(CL.sel,Math.max(0,occ.length-1));
@@ -3711,11 +3713,13 @@ function clPat(){const n=CL.n,p=PATS[n-1],D=clD();if(!D)return '<div class="card
     h+='<div class="note" style="margin-top:10px"><b>'+(v.code==='good'?'Thoda behtar':v.code==='bad'?'Ulta chala':v.code==='flat'?'Coin-flip jaisa':v.code==='small'?'Sample chhota':'Wait ka ishara')+':</b> '+esc2(v.t)+'</div>'+(p.bias!=='neutral'&&hh[3].k>=8?'<p class="cl-note">Average move (agli 3 candle, ishara ki disha mein): '+(hh[3].mv>=0?'+':'')+hh[3].mv.toFixed(2)+'%</p>':'')+'<p class="cl-note">Ye sirf purana record hai. Isse kisi trade ki salah ya future ki guarantee nahi milti.</p></div>'+clNav(true,true,'Chhota quiz')}
   else{h+=clQuiz(p,D)}
   return h}
-function clQs(p){const rot=(a,k)=>{const r=a.map((t,i)=>({t:t,i:i})),m=k%a.length,o=r.slice(m).concat(r.slice(0,m));return o},n=CL.n,ans=p.bias==='bull'?0:p.bias==='bear'?1:2;
-  const base=[{q:p.hi+' ka basic matlab kya hai?',o:['Tezi (upar jaane) ki sambhavna badhti hai','Mandi (neeche jaane) ki sambhavna badhti hai','Direction ka signal nahi, sirf ruk jaane ya hilchal ka ishara'],a:ans},
-  {q:'Is pattern par trade se pehle sabse zaroori kya hai?',o:['Stop-loss aur chhota lot pehle se tay karna','Bina stop-loss ke bada lot lena','Sirf pattern ka naam yaad rakhna'],a:0},
-  [{q:'Backtest mein sample (kitni baar bana) chhota ho to kya karein?',o:['Result pakka maan lo','Result ko sirf ek sanket maano, saboot nahi','Isi par poori capital lagao'],a:1},{q:'Pattern ka win% normal candle ke lagbhag barabar ho to matlab?',o:['Pattern akela kaafi nahi, risk management zaroori','Pattern guaranteed kaam karta hai','Lot double kar do'],a:0},{q:'Backtest ka purana record kya batata hai?',o:['Bhavishya ki guarantee','Is data mein kya hua, bas itna','Kal kya hoga pakka'],a:1}][n%3]];
-  return base.map((b,qi)=>{const r=rot(b.o,n+qi);return{q:b.q,o:r.map(x=>x.t),a:r.findIndex(x=>x.i===b.a)}})}
+function clQs(p){const n=CL.n,ans=p.bias==='bull'?0:p.bias==='bear'?1:2,rot=(a,k)=>{const r=a.map((x,i)=>({x:x,i:i})),m=k%a.length;return r.slice(m).concat(r.slice(0,m))};
+  const T3=[{q:'Backtest mein sample (kitni baar bana) chhota ho to kya karein?',hq:'बैकटेस्ट में सैंपल, यानी कितनी बार बना, छोटा हो तो क्या करें?',o:[['Result pakka maan lo','नतीजा पक्का मान लो'],['Result ko sirf ek sanket maano, saboot nahi','नतीजे को सिर्फ़ एक संकेत मानो, सबूत नहीं'],['Isi par poori capital lagao','इसी पर पूरी पूँजी लगाओ']],a:1},
+   {q:'Pattern ka win% normal candle ke lagbhag barabar ho to matlab?',hq:'पैटर्न का जीत प्रतिशत सामान्य कैंडल के लगभग बराबर हो तो मतलब?',o:[['Pattern akela kaafi nahi, risk management zaroori','पैटर्न अकेला काफ़ी नहीं, रिस्क मैनेजमेंट ज़रूरी है'],['Pattern guaranteed kaam karta hai','पैटर्न पक्का काम करता है'],['Lot double kar do','लॉट दोगुना कर दो']],a:0},
+   {q:'Backtest ka purana record kya batata hai?',hq:'बैकटेस्ट का पुराना रिकॉर्ड क्या बताता है?',o:[['Bhavishya ki guarantee','भविष्य की गारंटी'],['Is data mein kya hua, bas itna','इस डेटा में क्या हुआ, बस इतना'],['Kal kya hoga pakka','कल क्या होगा, पक्का']],a:1}][n%3];
+  const base=[{q:p.hi+' ka basic matlab kya hai?',hq:p.hd+' का बेसिक मतलब क्या है?',o:[['Tezi (upar jaane) ki sambhavna badhti hai','तेज़ी, यानी ऊपर जाने की संभावना बढ़ती है'],['Mandi (neeche jaane) ki sambhavna badhti hai','मंदी, यानी नीचे जाने की संभावना बढ़ती है'],['Direction ka signal nahi, sirf ruk jaane ya hilchal ka ishara','दिशा का संकेत नहीं, सिर्फ़ रुकने या हलचल का इशारा']],a:ans},
+   {q:'Is pattern par trade se pehle sabse zaroori kya hai?',hq:'इस पैटर्न पर ट्रेड से पहले सबसे ज़रूरी क्या है?',o:[['Stop-loss aur chhota lot pehle se tay karna','स्टॉप-लॉस और छोटा लॉट पहले से तय करना'],['Bina stop-loss ke bada lot lena','बिना स्टॉप-लॉस के बड़ा लॉट लेना'],['Sirf pattern ka naam yaad rakhna','सिर्फ़ पैटर्न का नाम याद रखना']],a:0},T3];
+  return base.map((b,qi)=>{const r=rot(b.o,n+qi);return{q:b.q,hq:b.hq,o:r.map(x=>x.x[0]),ho:r.map(x=>x.x[1]),a:r.findIndex(x=>x.i===b.a)}})}
 function clQuiz(p,D){if(!CL.q||CL.q.n!==CL.n)CL.q={n:CL.n,i:0,score:0,pick:null,qs:clQs(p),fin:false};const z=CL.q;let h='';
   if(z.fin){const pass=z.score>=2,dn=clDoneN();
     h+='<div class="card g-hero"><div class="eyebrow">Quiz result</div><h2>'+z.score+' / 3 '+(pass?'· Pass':'· Dobara koshish karo')+'</h2><p style="font-size:13.5px;line-height:1.6">'+(pass?'Pattern '+CL.n+' poora. '+(CL.n<30?'Agle pattern ka naam: '+esc2(PATS[CL.n].hi)+'.':'Saare 30 patterns poore!'):'Kam se kam 2 sahi chahiye. Pichhle step dekho aur dobara koshish karo.')+'</p>'+(pass?(CL.n<30&&clOpenOK(CL.n+1)?'<button class="btn ln-w" type="button" data-cl="open" data-n="'+(CL.n+1)+'" style="background:#fff;color:var(--a);margin-top:10px">Agla pattern</button>':''):'<button class="btn ln-w" type="button" data-cl="retry" style="background:#fff;color:var(--a);margin-top:10px">Quiz dobara</button>')+'<button class="btn ln-w" type="button" data-cl="home" style="background:rgba(255,255,255,.2);color:#fff;margin-top:8px">Saari patterns</button></div>';
@@ -3724,7 +3728,30 @@ function clQuiz(p,D){if(!CL.q||CL.q.n!==CL.n)CL.q={n:CL.n,i:0,score:0,pick:null,
     return h}
   const q=z.qs[z.i];h+='<div class="card"><div class="eyebrow">Sawal '+(z.i+1)+' / 3</div><h2 style="font-size:17px;margin:6px 0 10px">'+esc2(q.q)+'</h2>'+q.o.map((t,k)=>'<button type="button" class="cl-opt'+(z.pick!==null?(k===q.a?' ok':k===z.pick?' no':''):'')+'" data-cl="pick" data-k="'+k+'" '+(z.pick!==null?'disabled':'')+'>'+esc2(t)+'</button>').join('')+(z.pick!==null?'<button class="btn ln-w" type="button" data-cl="qnext" style="margin-top:10px">'+(z.i<2?'Agla sawal':'Result dekho')+'</button>':'')+'</div>';return h}
 function clView(){return CL.view==='p'?clPat():clHome()}
-function clSpeak(){if(!LAUTO||CL.view!=='p')return;const p=PATS[CL.n-1];if(CL.s===0)speak(p.v,true,null,true);else if(CL.s===3){const D=clD();if(D)speak(clVerdict(p,D.st[p.id]).v,true,null,true)}else{try{stopSpeech()}catch(e){}}}
+const CLAB=['अ','ब','स'];
+function clVoice(p,D){const st=D.st[p.id];
+  if(CL.s===0)return p.v;
+  if(CL.s===1){const k=p.shape.length,ct=p.ctx==='down'?' यह गिरावट के बाद बनने पर ज़्यादा मायने रखता है।':p.ctx==='up'?' यह तेज़ी के बाद बनने पर ज़्यादा मायने रखता है।':'';
+    return 'अब पहचान का नियम। '+p.hd+' '+(k===1?'एक कैंडल से बनता है।':k+' कैंडल से बनता है।')+' ऊपर पीली पट्टी में पैटर्न की कैंडल दिखाई गई हैं।'+ct+(p.bias==='neutral'?' यह दिशा का इशारा नहीं देता, इसलिए अगली कैंडल का इंतज़ार करो।':' इसे हमेशा अगली कैंडल से पक्का करो और स्टॉप-लॉस ज़रूर लगाओ।')}
+  if(CL.s===2)return 'पिछले एक महीने में '+p.hd+(st.n?' '+st.n+' बार बना। किसी भी तारीख़ पर टैप करो और देखो कि उसके बाद अगली तीन कैंडल में क्या हुआ।':' नहीं बना। यह दुर्लभ पैटर्न है, इसलिए कभी-कभी पूरे महीने में नहीं दिखता।');
+  return clVerdict(p,st).v}
+function clQVoice(z){const q=z.qs[z.i];return 'सवाल '+(z.i+1)+'। '+q.hq+' '+q.ho.map((t,k)=>'विकल्प '+CLAB[k]+', '+t+'।').join(' ')}
+function clFinVoice(z){const pass=z.score>=2,n=CL.n;
+  if(!pass)return 'अभी कम से कम दो सही जवाब चाहिए। पिछले स्टेप दोबारा देखो और फिर कोशिश करो।';
+  let t='बहुत बढ़िया! तीन में से '+z.score+' सही। पैटर्न '+n+' पूरा हुआ।';
+  if(n===9&&!PAID)t+=' आगे बीस और पैटर्न बाकी हैं। एंगल्फ़िंग, मॉर्निंग स्टार जैसे बड़े पैटर्न और उनका बैकटेस्ट अभी खुलना बाकी है।';
+  else if(n===10&&!PAID)t+=' बेसिक दस पैटर्न पूरे हुए। आगे के बीस प्रो पैटर्न और उनका बैकटेस्ट पूरे कोर्स में खुलते हैं।';
+  else if(n<30)t+=' अगला पैटर्न है '+PATS[n].hd+'।';
+  else t+=' सारे तीस पैटर्न पूरे हुए। बधाई हो!';
+  return t}
+function clSpeak(){if(!LAUTO||CL.view!=='p')return;const p=PATS[CL.n-1],D=clD();if(!D)return;
+  if(CL.s<4){speak(clVoice(p,D),true,null,true);return}
+  const z=CL.q;if(!z)return;
+  if(z.fin){speak(clFinVoice(z),true,null,true);return}
+  if(z.pick===null)speak(clQVoice(z),true,null,true)}
+function clAfterPick(){const z=CL.q;if(!z||!LAUTO)return;const q=z.qs[z.i],i=z.i,ok=z.pick===q.a;
+  speak(ok?'सही जवाब!':'गलत। सही जवाब है विकल्प '+CLAB[q.a]+', '+q.ho[q.a]+'।',true,()=>{if(CL.q===z&&z.i===i&&z.pick!==null&&!z.fin&&L_.view==='cl'&&CL.view==='p'&&CL.s===4)clQNext()},true)}
+function clQNext(){const q=CL.q;if(!q)return;if(q.i<2){q.i++;q.pick=null}else{q.fin=true;if(q.score>=2&&CL.n===clDoneN()+1){CL.done[CL.n]=true;clSave();ev('cl_done',CL.n)}}lnRender();window.scrollTo(0,0);clSpeak()}
 $('v-learn').addEventListener('click',e=>{const b=e.target.closest('[data-cl]');if(!b)return;const a=b.dataset.cl,n=+b.dataset.n;
   const R=()=>{lnRender();window.scrollTo(0,0)};
   if(a==='enter'){L_.view='cl';CL.view='home';R();clLoadIx(state.ix).then(()=>{if(L_.view==='cl')lnRender()});return}
@@ -3733,11 +3760,12 @@ $('v-learn').addEventListener('click',e=>{const b=e.target.closest('[data-cl]');
   if(a==='open'){if(!clOpenOK(n))return;CL.n=n;CL.s=0;CL.sel=0;CL.q=null;CL.view='p';ev('cl_start',n);R();clSpeak();return}
   if(a==='next'){CL.s=Math.min(4,CL.s+1);R();clSpeak();return}
   if(a==='prev'){CL.s=Math.max(0,CL.s-1);R();clSpeak();return}
-  if(a==='say'){const p=PATS[CL.n-1];speak(p.v,true,null,true);return}
-  if(a==='sel'){CL.sel=+b.dataset.k;lnRender();return}
+  if(a==='say'){const D=clD();if(D){speak(clVoice(PATS[CL.n-1],D),true,null,true)}return}
+  if(a==='auto'){LAUTO=!LAUTO;try{localStorage.setItem(LAK,LAUTO?'1':'0')}catch(x){}if(!LAUTO){try{stopSpeech()}catch(x){}lnRender()}else{lnRender();clSpeak()}return}
+  if(a==='sel'){CL.sel=+b.dataset.k;lnRender();const D=clD(),p=PATS[CL.n-1];if(D&&LAUTO){const oc=D.st[p.id].occ.slice().reverse()[CL.sel];const r=oc!=null?clOccRes(D,p,oc):null;if(r)speak('इसके बाद अगली तीन कैंडल में भाव '+Math.abs(r.m).toFixed(2)+' प्रतिशत '+(r.m>=0?'ऊपर':'नीचे')+' गया।'+(r.ok===true?' इशारा सही निकला।':r.ok===false?' इशारा गलत निकला।':''),true,null,true)}return}
   if(a==='retry'){CL.q=null;lnRender();return}
-  if(a==='pick'&&CL.q&&CL.q.pick===null){const q=CL.q;q.pick=+b.dataset.k;if(q.pick===q.qs[q.i].a)q.score++;lnRender();return}
-  if(a==='qnext'&&CL.q){const q=CL.q;if(q.i<2){q.i++;q.pick=null}else{q.fin=true;if(q.score>=2&&CL.n===clDoneN()+1){CL.done[CL.n]=true;clSave();ev('cl_done',CL.n)}else if(q.score>=2&&!CL.done[CL.n]){}}R();return}
+  if(a==='pick'&&CL.q&&CL.q.pick===null){const q=CL.q;q.pick=+b.dataset.k;if(q.pick===q.qs[q.i].a)q.score++;lnRender();clAfterPick();return}
+  if(a==='qnext'&&CL.q){clQNext();return}
 });
 
 syncGuru();navRefresh();
