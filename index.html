@@ -2112,7 +2112,7 @@ function taskDone(n){
 
 /* ---------- voice (Hindi Devanagari audio, Hinglish on screen) ---------- */
 const VK='sr_voice_v1';
-const VP={vi:0,deep:true,sp:1.2,news:true,pop:true,coach:true};
+const VP={vi:0,deep:true,sp:1.08,news:true,pop:true,coach:true};
 (function(){try{const r=JSON.parse(localStorage.getItem(VK)||'null');if(r){if(Number.isInteger(r.vi)&&r.vi>=0&&r.vi<50)VP.vi=r.vi;VP.deep=r.deep!==false;if(r.sp>=.8&&r.sp<=1.6)VP.sp=r.sp;VP.news=r.news!==false;VP.pop=r.pop!==false;VP.coach=r.coach!==false}}catch(e){}})();
 function vSave(){try{localStorage.setItem(VK,JSON.stringify(VP))}catch(e){}}
 let VOICES=[];
@@ -3294,10 +3294,14 @@ function lnRender(){
 }
 const LAK='sr_lauto2';
 let LAUTO=true;try{LAUTO=localStorage.getItem(LAK)!=='0'}catch(e){}
-function slideText(n,i){const m=window.MIS&&window.MIS[n-1]&&window.MIS[n-1][i];const a=window.LAPP&&LAPP[n];const l=LDEV[n-1];return l[i]+(m?' आसान मिसाल। '+m:'')+(a&&i===l.length-1?' '+a[2]:'')}
+function slideText(n,i){const m=window.MIS&&window.MIS[n-1]&&window.MIS[n-1][i];const a=window.LAPP&&LAPP[n];const l=LDEV[n-1];const OP=['','अब आगे सुनो। ','अच्छा, अब देखो। ','चलो, अगली बात। ','अब ज़रा ध्यान दो। '];return (i>0?OP[1+(i+n)%4]:'')+l[i]+(m?' अब एक आसान मिसाल सुनो। '+m:'')+(a&&i===l.length-1?' '+a[2]:'')}
 function slideSpeak(force){
   if(!force&&!LAUTO)return;
-  speak(slideText(L_.n,L_.si),true,null,true);
+  const n0=L_.n,i0=L_.si,tot=LDEV[n0-1].length;
+  speak(slideText(n0,i0),true,()=>{
+    if(!LAUTO||L_.view!=='lesson'||L_.n!==n0||L_.si!==i0)return;
+    if(i0<tot-1){L_.si++;lnRender();window.scrollTo(0,0);slideSpeak(false)}else startQuiz('lesson',n0)
+  },true);
   const nx=L_.si+1;if(nx<LDEV[L_.n-1].length)setTimeout(()=>ttsPrefetch(slideText(L_.n,nx)),1200);
 }
 const LAPP={1:['live','Live tab kholo','अब अपनी ऐप का लाइव टैब खोलकर देखो, डेमो बाज़ार चल रहा है।'],2:['chain','Option chain kholo','अब अपनी ऐप में चेन टैब खोलो। हर स्ट्राइक पर कॉल और पुट का दाम एक साथ दिखेगा।'],3:['chain','Chain mein lot size dekho','अब चेन टैब में निफ्टी का लॉट साइज़ देखो।'],4:['chain','Chain mein premium aur strike dekho','अब चेन टैब में ATM और दूर की स्ट्राइक का प्रीमियम देखो।'],5:['lab','Payoff Lab kholo','अब पेऑफ लैब खोलो। कॉल खरीदने और बेचने का फर्क स्लाइडर से देखो।'],6:['live','Live chart par VWAP lagao','अब लाइव टैब पर VWAP चालू करके देखो।'],7:['chain','Option chain mein OI dekho','अब चेन टैब में OI और OI का बदलाव देखो।'],8:['mood','Mood tab: PCR, support, resistance','अब मूड टैब में PCR, सपोर्ट और रेज़िस्टेंस देखो।'],9:['mood','Mood tab: VIX aur range','अब मूड टैब में VIX और एक्सपेक्टेड रेंज देखो।'],10:['mood','Mood tab: max pain','अब मूड टैब में मैक्स पेन देखो।'],11:['live','Live tab: setup alerts','अब लाइव टैब पर सेटअप अलर्ट देखो।'],12:['live','Live tab: VWAP aur OI','अब लाइव टैब पर VWAP और OI वाले सेटअप देखो।'],13:['scorecard','Scorecard kholo','अब स्कोरकार्ड टैब खोलकर पुराने सेटअप के आंकड़े देखो।'],14:['risk','Risk tab kholo','अब रिस्क टैब में अपनी पूंजी भरकर स्टॉप लॉस और लॉट निकालो।'],15:['paper','Paper trading kholo','अब पेपर टैब खोलकर पहला डेमो ट्रेड लो।'],16:['lab','Payoff Lab: theta','अब पेऑफ लैब में देखो कि समय के साथ प्रीमियम कैसे घटता है।'],17:['lab','Payoff Lab kholo','अब पेऑफ लैब खोलकर भाव और समय का असर देखो।'],18:['paper','Paper tab: Discipline Score','अब पेपर टैब में अपना डिसिप्लिन स्कोर देखो।'],19:['live','Live tab kholo','अब लाइव टैब में खबरें और गैप देखो।'],20:['ideas','Ideas tab kholo','अब आइडियाज़ टैब में BTST देखो। और टैब मेन्यू पर लाइव शुरू करने का प्लान पढ़ो।'],21:['lab','Payoff Lab: option selling','अब पेऑफ लैब में कॉल बेचने का नक्शा देखो।'],22:['chain','Chain: Hedge Lab aur margin','अब चेन टैब में हेज लैब और मार्जिन देखो।'],23:['lab','Payoff Lab: bull put spread','अब पेऑफ लैब में बुल पुट स्प्रेड चुनो।'],24:['lab','Payoff Lab: iron condor','अब पेऑफ लैब में आयरन कॉन्डोर चुनो।'],25:['paper','Paper tab kholo','अब पेपर टैब में स्टॉप लॉस के साथ ट्रेड का अभ्यास करो।'],26:['chain','Chain tab kholo','अब चेन टैब में एक्सपायरी के दिन प्रीमियम की चाल देखो।'],27:['risk','Risk tab kholo','अब रिस्क टैब में अपनी जोखिम सीमा जांचो।'],28:['mood','Mood tab kholo','अब मूड टैब देखकर कल की योजना बनाओ।'],29:['paper','Paper tab: report card','अब पेपर टैब में अपना रिपोर्ट कार्ड देखो।'],30:['guru','Guru se poochho','अब गुरु टैब में कोई भी सवाल पूछ सकते हो।']};
