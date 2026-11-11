@@ -8,8 +8,12 @@ const { PLANS, issue, plansFor } = require('./_lic');
 const RZ = process.env.RAZORPAY_BASE || 'https://api.razorpay.com';
 const hm = (secret, s) => crypto.createHmac('sha256', secret).update(s).digest('hex');
 const same = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
-async function raw(req) { if (req.rawBody) return String(req.rawBody); if (typeof req.body === 'string') return req.body; return JSON.stringify(req.body || {}); }
-module.exports = async (req, res) => {
+async function raw(req) {
+  if (req.rawBody) return String(req.rawBody);
+  if (req.body !== undefined) return typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
+  const ch = []; for await (const c of req) ch.push(Buffer.from(c)); return Buffer.concat(ch).toString('utf8');
+}
+const handler = async (req, res) => {
   const KID = process.env.RAZORPAY_KEY_ID, KS = process.env.RAZORPAY_KEY_SECRET;
   if (req.method === 'GET') return send(res, 200, { ok: !!(KID && KS && kv.on()), razorpay: !!(KID && KS), kv: kv.on() });
   if (!KID || !KS) return send(res, 503, { ok: false, error: 'Payment abhi shuru nahi hua (RAZORPAY keys set nahi)' });
@@ -24,7 +28,7 @@ module.exports = async (req, res) => {
       return send(res, 200, { ok: true });
     }
     if (limited(req, 'pay', 40, 10 * 60e3)) return send(res, 429, { ok: false, error: 'Thodi der baad try karo' });
-    let b = req.body; if (typeof b === 'string') b = JSON.parse(b || '{}'); if (!b || typeof b !== 'object') b = {};
+    let b = {}; try { b = JSON.parse((await raw(req)) || '{}'); } catch (e) {} if (!b || typeof b !== 'object') b = {};
     const plan = PLANS[b.plan] ? b.plan : '';
     if (b.a === 'order') {
       if (!plan) return send(res, 400, { ok: false, error: 'plan galat' });
@@ -51,3 +55,4 @@ module.exports = async (req, res) => {
     send(res, 400, { ok: false });
   } catch (e) { send(res, 502, { ok: false, error: String(e.message || e).slice(0, 160) }); }
 };
+module.exports = Object.assign(handler, { config: { api: { bodyParser: false } } });

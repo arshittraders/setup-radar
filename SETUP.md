@@ -43,6 +43,7 @@ Key sirf server par rehti hai. `/api/guru` (sawaal-jawab) aur `/api/tts` (awaaz)
 Add env var `LIVE_PASS` (6+ chars). All Upstox endpoints return 403 without it. Open `https://setup-radar.vercel.app/#lp=YOURPASS` once on your device to switch that device to live. Everyone else sees the demo market.
 
 ## Payments, stats, download page (Kiwtech)
+Note: Vercel Hobby allows 12 serverless functions, so small endpoints (ev, dl, lead, sales, admin, hist) live in `lib/` and are served by one function `api/hub.js` via rewrites in `vercel.json`. Do not add new files directly under `api/` without checking the count.
 Pages: `/download` (landing + AI chat + APK), `/admin` (stats), `/terms`. APK file: `apk/SetupRadar.apk` (tracked link `/api/dl?s=<source>`).
 
 1. **Store (stats + licences):** Vercel project, Storage tab, create **Upstash Redis** (free), connect to this project. It adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` by itself.
