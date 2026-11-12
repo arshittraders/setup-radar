@@ -25,6 +25,10 @@
       "destination": "/api/hub?r=hist"
     },
     {
+      "source": "/api/shorts",
+      "destination": "/api/hub?r=shorts"
+    },
+    {
       "source": "/download",
       "destination": "/landing.html"
     },

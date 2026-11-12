@@ -1,0 +1,56 @@
+name: Daily Shorts
+on:
+  workflow_dispatch:
+    inputs:
+      kind: { description: 'lesson | candle | news', required: true, default: 'lesson' }
+      day: { description: 'day 1-90 (blank = auto)', required: false, default: '' }
+# schedule is switched on after the sample videos are approved
+#  schedule:
+#    - cron: '40 2 * * *'    # news   -> ready ~8:30 IST
+#    - cron: '10 7 * * *'    # lesson -> ready ~13:00 IST
+#    - cron: '10 13 * * *'   # candle -> ready ~19:00 IST
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency: { group: shorts-${{ github.event.inputs.kind || github.event.schedule }}, cancel-in-progress: false }
+
+env:
+  START_DATE: '2026-11-13'
+
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Pick kind and day
+        id: p
+        run: |
+          K="${{ github.event.inputs.kind }}"
+          case "${{ github.event.schedule }}" in
+            '40 2 * * *') K=news;; '10 7 * * *') K=lesson;; '10 13 * * *') K=candle;;
+          esac
+          D="${{ github.event.inputs.day }}"
+          if [ -z "$D" ]; then D=$(( ( $(date -u -d "$(TZ=Asia/Kolkata date +%F)" +%s) - $(date -u -d "$START_DATE" +%s) ) / 86400 + 1 )); fi
+          [ "$D" -lt 1 ] && D=1
+          echo "kind=$K" >> $GITHUB_OUTPUT; echo "day=$D" >> $GITHUB_OUTPUT
+          echo "TAG=$K-$( [ $K = news ] && TZ=Asia/Kolkata date +%F || printf '%02d' $D )" >> $GITHUB_ENV
+      - name: Install renderer
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji >/dev/null
+          npm i --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+      - name: Build short
+        run: |
+          export OIDC=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=setup-radar-shorts" | jq -r .value)
+          node shorts/make.js ${{ steps.p.outputs.kind }} ${{ steps.p.outputs.day }} job
+      - name: Upload to release
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          gh release view shorts >/dev/null 2>&1 || gh release create shorts --title "Daily Shorts" --notes "Auto-generated shorts" --prerelease
+          cp job/out.mp4 "$TAG.mp4"; cp job/thumb.jpg "$TAG.jpg"; cp job/meta.json "$TAG.json"; cp job/script.json "$TAG-script.json"
+          gh release upload shorts "$TAG.mp4" "$TAG.jpg" "$TAG.json" "$TAG-script.json" --clobber
+          echo "VIDEO: https://github.com/${{ github.repository }}/releases/download/shorts/$TAG.mp4"
