@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Strategy Lab (private)</title>
+<style>
+:root{--a:#5b4bff;--b:#a43df0;--g:#12b76a;--r:#f0394d;--ink:#14162b;--mut:#6b7090;--bg:#f5f6fc;--card:#fff;--line:#e6e8f5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;padding:14px 16px 60px;max-width:760px;margin:0 auto}
+h1{font-size:21px;margin:6px 0 2px}h2{font-size:16px;margin:0 0 8px}.sub{color:var(--mut);font-size:13px;margin:0 0 12px}
+.card{background:var(--card);border-radius:18px;box-shadow:0 6px 24px rgba(60,50,160,.09);padding:14px;margin:12px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:block;font-size:12px;color:var(--mut);font-weight:600}
+input,select{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:12px;font:600 15px system-ui;background:#fff;margin-top:3px}
+button{font:700 16px system-ui;border:0;border-radius:14px;padding:13px 16px;cursor:pointer}
+.go{background:linear-gradient(90deg,var(--a),var(--b));color:#fff;width:100%;margin-top:10px}.ghost{background:#eef0fb;color:var(--a)}
+table{width:100%;border-collapse:collapse;font-size:12px}td{white-space:nowrap}td:first-child{white-space:normal}th,td{padding:8px 4px;text-align:right;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}th{color:var(--mut);font-weight:600;font-size:12px}
+tr.row{cursor:pointer}tr.row.on{background:#f1efff}.pos{color:var(--g);font-weight:700}.neg{color:var(--r);font-weight:700}
+.note{background:#fff8e6;border-radius:12px;padding:10px 12px;font-size:12.5px;color:#7a5a00;margin:8px 0}.warn{background:#fde8ea;color:#9b1c2c}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:#eef0fb;color:var(--a)}
+canvas{width:100%;height:170px;display:block}.mut{color:var(--mut);font-size:12.5px}.chk{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px;color:var(--ink)}.chk input{width:auto;margin:0}
+details summary{cursor:pointer;font-weight:700;color:var(--a)}
+</style></head><body>
+<h1>Strategy Lab <span class="pill">private</span></h1>
+<p class="sub">5 strategies · hedged option selling · ₹50,000 capital · backtest ek click mein. Sirf shiksha aur apni research ke liye, advice nahi.</p>
+
+<div class="card"><h2>Settings</h2>
+<div class="grid">
+<div><label>Capital (₹)</label><input id="cap" type="number" value="50000"></div>
+<div><label>Lot size (apna current daalo)</label><input id="lot" type="number" value="75"></div>
+<div><label>Spread width (points)</label><input id="wid" type="number" value="50"></div>
+<div><label>Credit (width ka %)</label><input id="crp" type="number" value="30"></div>
+<div><label>Target (credit ka %)</label><input id="tp" type="number" value="60"></div>
+<div><label>Stop-loss (credit ka guna)</label><input id="sl" type="number" step="0.1" value="1.2"></div>
+<div><label>Kam se kam kitne filter sahi (3 mein se)</label><select id="minc"><option>2</option><option>3</option></select></div>
+<div><label>Kitne mahine ka data</label><select id="mon"><option>1</option><option selected>3</option><option>6</option><option>12</option></select></div>
+</div>
+<div class="chk"><input id="trail" type="checkbox" checked><span>Trail (target ka 50% milte hi SL cost par, 80% par aage)</span></div>
+<details style="margin-top:10px"><summary>Model ke andaaze (badal sakte ho)</summary>
+<div class="grid" style="margin-top:8px">
+<div><label>Spread delta (per point)</label><input id="dl" type="number" step="0.01" value="0.25"></div>
+<div><label>Theta (intraday credit ka %)</label><input id="th" type="number" value="35"></div>
+<div><label>Kharcha per trade (₹)</label><input id="cost" type="number" value="120"></div>
+<div><label>Mahine ka loss limit (%)</label><input id="mdd" type="number" value="6"></div>
+</div></details>
+<div id="rr" class="mut" style="margin-top:8px"></div>
+<button class="go" id="run">Backtest chalao</button>
+<div id="msg" class="mut" style="margin-top:8px"></div></div>
+
+<div id="out"></div>
+
+<div class="note">Ye model approximate hai. Option ka asli purana bhav nahi hai, isliye spread ka P&amp;L delta/theta ke andaaze se nikala hai. Strategies ko aapas mein compare karne ke liye theek hai, par paise lagane se pehle paper trading zaroori hai. Purana record future ki guarantee nahi.</div>
+
+<script>
+/* ===== data ===== */
+var LP='';try{LP=localStorage.getItem('sr_lp')||''}catch(e){}
+function setMsg(t,bad){var m=document.getElementById('msg');m.textContent=t||'';m.style.color=bad?'#c0152a':''}
+async function loadData(months,cb){
+  var all=[],to=new Date(Date.now()+5.5*3600e3).toISOString().slice(0,10);
+  for(var i=0;i<months;i++){
+    cb('Data la raha hu... '+(i+1)+' / '+months);
+    var r=await fetch('/api/hist?ix=nifty&to='+to,{cache:'no-store',headers:{'x-live-pass':LP}});
+    var j={};try{j=await r.json()}catch(e){}
+    if(!r.ok||!j.ok){if(i===0)throw new Error(j.error==='live off'?'live off: pehle app ko #lp=AAPKA_PASS se kholo':(j.error||('HTTP '+r.status)));break}
+    if(!j.candles||!j.candles.length)break;
+    all=j.candles.concat(all);
+    var d=new Date(Date.parse(j.from)-864e5);to=d.toISOString().slice(0,10);
+  }
+  var seen={},out=[];all.forEach(function(c){if(!seen[c.t]){seen[c.t]=1;out.push(c)}});out.sort(function(a,b){return a.t<b.t?-1:1});return out}
+
+/* ===== indicators ===== */
+function ema(a,n){var k=2/(n+1),o=[],p=null;a.forEach(function(v,i){p=p==null?v:v*k+p*(1-k);o.push(p)});return o}
+function rsiArr(c,n){var o=[],g=0,l=0;for(var i=0;i<c.length;i++){if(i===0){o.push(50);continue}var d=c[i]-c[i-1],u=Math.max(d,0),w=Math.max(-d,0);if(i<=n){g+=u/n;l+=w/n}else{g=(g*(n-1)+u)/n;l=(l*(n-1)+w)/n}o.push(l===0?100:100-100/(1+g/l))}return o}
+function atrArr(h,l,c,n){var o=[],p=0;for(var i=0;i<c.length;i++){var tr=i?Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])):h[i]-l[i];p=i<n?(p*i+tr)/(i+1):(p*(n-1)+tr)/n;o.push(p)}return o}
+function adxArr(h,l,c,n){var o=[],tr=0,pd=0,md=0,adx=0;for(var i=0;i<c.length;i++){if(!i){o.push(0);continue}var up=h[i]-h[i-1],dn=l[i-1]-l[i],t=Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])),p=up>dn&&up>0?up:0,m=dn>up&&dn>0?dn:0;
+  if(i<=n){tr+=t;pd+=p;md+=m}else{tr=tr-tr/n+t;pd=pd-pd/n+p;md=md-md/n+m}
+  var pi=tr?100*pd/tr:0,mi=tr?100*md/tr:0,dx=(pi+mi)?100*Math.abs(pi-mi)/(pi+mi):0;adx=i<=n?dx:(adx*(n-1)+dx)/n;o.push(adx)}return o}
+function bbWidth(c,n){var o=[];for(var i=0;i<c.length;i++){if(i<n-1){o.push(null);continue}var s=0,q=0;for(var j=i-n+1;j<=i;j++){s+=c[j]}var m=s/n;for(j=i-n+1;j<=i;j++)q+=(c[j]-m)*(c[j]-m);var sd=Math.sqrt(q/n);o.push({m:m,u:m+2*sd,l:m-2*sd,w:4*sd/m})}return o}
+
+function prep(cs){
+  var days={};cs.forEach(function(c,i){var d=c.t.slice(0,10);(days[d]=days[d]||[]).push(i)});
+  var keep=Object.keys(days).filter(function(d){return days[d].length>=20}).sort();
+  var C=[];keep.forEach(function(d){days[d].forEach(function(i){var c=cs[i];C.push({t:c.t,day:d,hm:c.t.slice(11,16),o:c.o,h:c.h,l:c.l,c:c.c})})});
+  var cl=C.map(function(x){return x.c}),hi=C.map(function(x){return x.h}),lo=C.map(function(x){return x.l});
+  var e20=ema(cl,20),e50=ema(cl,50),rs=rsiArr(cl,14),at=atrArr(hi,lo,cl,14),ad=adxArr(hi,lo,cl,14),bb=bbWidth(cl,20);
+  var sum=0,cnt=0,cd='',pdH={},pdL={},pdC={},prev=null;
+  C.forEach(function(x,i){if(x.day!==cd){if(cd){pdH[x.day]=hiOf(cd);pdL[x.day]=loOf(cd);pdC[x.day]=clOf(cd)}cd=x.day;sum=0;cnt=0}
+    sum+=(x.h+x.l+x.c)/3;cnt++;x.vw=sum/cnt;x.e20=e20[i];x.e50=e50[i];x.rsi=rs[i];x.atr=at[i];x.adx=ad[i];x.bb=bb[i];x.i=i});
+  function idxs(d){return C.filter(function(x){return x.day===d})}
+  function hiOf(d){return Math.max.apply(null,idxs(d).map(function(x){return x.h}))}
+  function loOf(d){return Math.min.apply(null,idxs(d).map(function(x){return x.l}))}
+  function clOf(d){var a=idxs(d);return a[a.length-1].c}
+  C.forEach(function(x){x.pH=pdH[x.day];x.pL=pdL[x.day];x.pC=pdC[x.day]});
+  // BB width percentile (last 100)
+  C.forEach(function(x,i){if(!x.bb||i<120){x.sq=false;return}var ws=[];for(var j=i-100;j<i;j++)if(C[j].bb)ws.push(C[j].bb.w);ws.sort(function(a,b){return a-b});x.sqLow=ws[Math.floor(ws.length*0.2)]});
+  C.forEach(function(x,i){x.sq=!!(x.bb&&x.sqLow&&x.bb.w<=x.sqLow)});
+  return {C:C,days:keep}
+}
+
+/* ===== strategies: each returns {dir:+1/-1/0, f:[bool,bool,bool]} at candle i ===== */
+function sess(C,i){var d=C[i].day,j=i;while(j>0&&C[j-1].day===d)j--;return j}
+var STR=[
+ {id:'s1',name:'Trend pullback',desc:'EMA20/50 trend · RSI pullback · session-average ke sahi taraf',
+  sig:function(C,i){var x=C[i],p=C[i-1];var d=x.e20>x.e50?1:-1;
+   var f1=d>0?(x.rsi>=38&&x.rsi<=52&&x.rsi>p.rsi):(x.rsi>=48&&x.rsi<=62&&x.rsi<p.rsi);
+   var f2=d>0?x.c>x.vw:x.c<x.vw;var f3=d>0?x.c>x.o:x.c<x.o;return{dir:d,f:[f1,f2,f3]}}},
+ {id:'s2',name:'Opening range breakout',desc:'Pehle 30 min ki range tuti · ADX>20 · EMA saath · bada body',
+  sig:function(C,i){var x=C[i],s=sess(C,i);if(i-s<2)return null;var rh=Math.max(C[s].h,C[s+1].h),rl=Math.min(C[s].l,C[s+1].l);var d=x.c>rh?1:x.c<rl?-1:0;if(!d)return null;
+   var body=Math.abs(x.c-x.o),rg=x.h-x.l||1;return{dir:d,f:[x.adx>20,d>0?x.e20>x.e50:x.e20<x.e50,body>=0.6*rg]}}},
+ {id:'s3',name:'VWAP reversion (sideways)',desc:'ADX<18 · price session-average se 1 ATR door · RSI extreme',
+  sig:function(C,i){var x=C[i];var dist=x.c-x.vw;var d=dist>0?-1:1;return{dir:d,f:[x.adx<18,Math.abs(dist)>1.0*x.atr,d<0?x.rsi>62:x.rsi<38]}}},
+ {id:'s4',name:'Level + candle pattern',desc:'Pichhle din ka high/low par hammer/engulfing · RSI pushti',
+  sig:function(C,i){var x=C[i],p=C[i-1];if(!x.pL)return null;var near=function(a,b){return Math.abs(a-b)<=0.35*x.atr};
+   var rg=x.h-x.l||1,body=Math.abs(x.c-x.o),lw=Math.min(x.o,x.c)-x.l,uw=x.h-Math.max(x.o,x.c);
+   var bullP=(lw>=2*body&&uw<=0.3*rg&&body>0.05*rg)||(p.c<p.o&&x.c>x.o&&x.o<=p.c&&x.c>=p.o);
+   var bearP=(uw>=2*body&&lw<=0.3*rg&&body>0.05*rg)||(p.c>p.o&&x.c<x.o&&x.o>=p.c&&x.c<=p.o);
+   if(near(x.l,x.pL))return{dir:1,f:[true,bullP,x.rsi<48]};
+   if(near(x.h,x.pH))return{dir:-1,f:[true,bearP,x.rsi>52]};return null}},
+ {id:'s5',name:'Squeeze breakout',desc:'Bollinger sankari ke baad band ke bahar close · ADX badh raha',
+  sig:function(C,i){var x=C[i],p=C[i-1];if(!x.bb)return null;var sq=false;for(var k=1;k<=5;k++)if(C[i-k]&&C[i-k].sq)sq=true;
+   var d=x.c>x.bb.u?1:x.c<x.bb.l?-1:0;if(!d)return null;return{dir:d,f:[sq,true,x.adx>p.adx]}}}
+];
+
+/* ===== simulation (approximate spread model) ===== */
+function simulate(P,st,cfg){
+  var C=P.C,trades=[],eq=cfg.cap,peak=cfg.cap,maxdd=0,curve=[{x:0,y:cfg.cap}],mpl={},stopM={},lastDay='';
+  var Cpts=cfg.wid*cfg.crp/100,TPp=Cpts*cfg.tp/100,SLp=Cpts*cfg.sl;
+  for(var i=60;i<C.length-1;i++){
+    var x=C[i];if(x.day===lastDay)continue;
+    if(x.hm<'09:45'||x.hm>'13:30')continue;
+    var mo=x.day.slice(0,7);if(stopM[mo])continue;
+    var s=st.sig(C,i);if(!s||!s.dir)continue;var n=s.f.filter(Boolean).length;if(n<cfg.minc)continue;
+    lastDay=x.day;
+    var entry=x.c,j=i,end=i,remain=0;for(var k=i;k<C.length&&C[k].day===x.day;k++)end=k;remain=Math.max(1,end-i);
+    var sl=-SLp,res=null;
+    for(j=i+1;j<=end;j++){
+      var y=C[j],th=Cpts*cfg.th/100*Math.min(1,(j-i)/remain);
+      var adv=s.dir>0?y.l-entry:entry-y.h,fav=s.dir>0?y.h-entry:entry-y.l;
+      var pnlW=th+cfg.dl*adv,pnlB=th+cfg.dl*fav,pnlC=th+cfg.dl*(s.dir>0?y.c-entry:entry-y.c);
+      if(pnlW<=sl){res={p:sl,why:'SL',j:j};break}
+      if(pnlB>=TPp){res={p:TPp,why:'Target',j:j};break}
+      if(cfg.trail){if(pnlB>=0.8*TPp&&sl<0.4*TPp)sl=0.4*TPp;else if(pnlB>=0.5*TPp&&sl<0)sl=0}
+      if(j===end){res={p:Math.max(sl,Math.min(TPp,pnlC)),why:'Din ka ant',j:j}}
+    }
+    if(!res)continue;
+    var rs=res.p*cfg.lot-cfg.cost;eq+=rs;peak=Math.max(peak,eq);maxdd=Math.max(maxdd,peak-eq);
+    mpl[mo]=(mpl[mo]||0)+rs;if(mpl[mo]<=-cfg.cap*cfg.mdd/100)stopM[mo]=1;
+    trades.push({day:x.day,hm:x.hm,dir:s.dir,n:n,why:res.why,pnl:rs});curve.push({x:trades.length,y:eq});
+  }
+  var w=trades.filter(function(t){return t.pnl>0}),l=trades.filter(function(t){return t.pnl<=0});
+  var gw=w.reduce(function(a,t){return a+t.pnl},0),gl=-l.reduce(function(a,t){return a+t.pnl},0);
+  return {st:st,trades:trades,curve:curve,n:trades.length,win:trades.length?w.length/trades.length*100:0,
+    avgW:w.length?gw/w.length:0,avgL:l.length?-gl/l.length:0,exp:trades.length?(eq-cfg.cap)/trades.length:0,
+    pf:gl?gw/gl:(gw?99:0),tot:eq-cfg.cap,dd:maxdd,mpl:mpl,maxLossRs:(cfg.wid-Cpts)*cfg.lot,slRs:SLp*cfg.lot,tpRs:TPp*cfg.lot}
+}
+
+/* ===== UI ===== */
+function $(id){return document.getElementById(id)}
+function inr(v){var s=Math.round(Math.abs(v)).toLocaleString('en-IN');return (v<0?'-':'')+'₹'+s}
+function cfgRead(){return {cap:+$('cap').value||50000,lot:+$('lot').value||75,wid:+$('wid').value||50,crp:+$('crp').value||30,tp:+$('tp').value||60,sl:+$('sl').value||1.2,minc:+$('minc').value,trail:$('trail').checked,dl:+$('dl').value||0.25,th:+$('th').value||35,cost:+$('cost').value||0,mdd:+$('mdd').value||6}}
+function rrText(){var c=cfgRead(),Cp=c.wid*c.crp/100;var r=(Cp*c.sl)/(Cp*c.tp/100);
+  $('rr').innerHTML='Credit ≈ '+Cp.toFixed(1)+' pts ('+inr(Cp*c.lot)+'). Target '+inr(Cp*c.tp/100*c.lot)+' · SL '+inr(Cp*c.sl*c.lot)+' → risk:reward ≈ <b>'+r.toFixed(1)+' : 1</b>. Max loss (hedge ke saath, SL na lage to) '+inr((c.wid-Cp)*c.lot)+' = '+((c.wid-Cp)*c.lot/c.cap*100).toFixed(0)+'% capital. Ek trade ka SL '+(Cp*c.sl*c.lot/c.cap*100).toFixed(1)+'% capital'+(Cp*c.sl*c.lot/c.cap>0.02?' <b style="color:#c0152a">(2% se zyada)</b>':'')+'.'}
+['cap','lot','wid','crp','tp','sl'].forEach(function(k){$(k).addEventListener('input',rrText)});rrText();
+var RES=[],SEL=0,PREP=null;
+function drawCurve(cv,pts,base){var ctx=cv.getContext('2d'),W=cv.width=cv.clientWidth*2,H=cv.height=340;ctx.clearRect(0,0,W,H);if(pts.length<2)return;
+  var ys=pts.map(function(p){return p.y}),mn=Math.min.apply(null,ys.concat(base)),mx=Math.max.apply(null,ys.concat(base));if(mx===mn)mx=mn+1;
+  var X=function(i){return 10+(W-20)*i/(pts.length-1)},Y=function(v){return H-14-(H-28)*(v-mn)/(mx-mn)};
+  ctx.strokeStyle='#d9dcee';ctx.setLineDash([6,6]);ctx.beginPath();ctx.moveTo(10,Y(base));ctx.lineTo(W-10,Y(base));ctx.stroke();ctx.setLineDash([]);
+  ctx.lineWidth=3;ctx.strokeStyle=ys[ys.length-1]>=base?'#12b76a':'#f0394d';ctx.beginPath();pts.forEach(function(p,i){i?ctx.lineTo(X(i),Y(p.y)):ctx.moveTo(X(i),Y(p.y))});ctx.stroke()}
+function render(){
+  var cfg=cfgRead(),h='';
+  var rk=RES.map(function(r,i){return {r:r,i:i}}).sort(function(a,b){return b.r.tot-a.r.tot});
+  h+='<div class="card"><h2>5 strategies ka nateeja</h2><div class="mut" style="margin-bottom:6px">'+PREP.days.length+' trading din · '+PREP.days[0]+' se '+PREP.days[PREP.days.length-1]+' · kam se kam '+cfg.minc+' / 3 filter</div><table><tr><th>Strategy</th><th>Trade</th><th>Jeet%</th><th>Expectancy</th><th>Kul P&amp;L</th><th>Max DD</th></tr>';
+  rk.forEach(function(o){var r=o.r;h+='<tr class="row'+(o.i===SEL?' on':'')+'" data-i="'+o.i+'"><td>'+r.st.name+'</td><td>'+r.n+'</td><td>'+r.win.toFixed(0)+'%</td><td class="'+(r.exp>=0?'pos':'neg')+'">'+inr(r.exp)+'</td><td class="'+(r.tot>=0?'pos':'neg')+'">'+inr(r.tot)+'</td><td>'+inr(-r.dd)+'</td></tr>'});
+  h+='</table><div class="mut" style="margin-top:6px">Kisi row par tap karo, detail dekho.</div></div>';
+  var r=RES[SEL];
+  h+='<div class="card"><h2>'+r.st.name+'</h2><div class="mut">'+r.st.desc+'</div><canvas id="cv"></canvas>';
+  h+='<table style="margin-top:8px"><tr><td>Trades</td><td>'+r.n+'</td></tr><tr><td>Jeet %</td><td>'+r.win.toFixed(1)+'%</td></tr><tr><td>Average jeet / haar</td><td>'+inr(r.avgW)+' / '+inr(-r.avgL)+'</td></tr><tr><td>Profit factor</td><td>'+r.pf.toFixed(2)+'</td></tr><tr><td>Kul P&amp;L ('+(r.tot/cfg.cap*100).toFixed(1)+'% capital)</td><td class="'+(r.tot>=0?'pos':'neg')+'">'+inr(r.tot)+'</td></tr><tr><td>Max drawdown</td><td>'+inr(-r.dd)+' ('+(r.dd/cfg.cap*100).toFixed(1)+'%)</td></tr></table>';
+  if(r.n<30)h+='<div class="note warn">Sirf '+r.n+' trade hain. Itne kam trade se result pakka nahi maana ja sakta. Zyada mahine ka data lo.</div>';
+  var months=Object.keys(r.mpl).sort();if(months.length){h+='<h2 style="margin-top:12px">Mahine ke hisaab se</h2><table>'+months.map(function(m){return '<tr><td>'+m+'</td><td class="'+(r.mpl[m]>=0?'pos':'neg')+'">'+inr(r.mpl[m])+'</td></tr>'}).join('')+'</table>'}
+  h+='<details style="margin-top:10px"><summary>Saare trades ('+r.n+')</summary><table style="margin-top:6px"><tr><th>Din</th><th>Disha</th><th>Filter</th><th>Bahar</th><th>P&amp;L</th></tr>'+r.trades.slice().reverse().slice(0,80).map(function(t){return '<tr><td>'+t.day.slice(5)+' '+t.hm+'</td><td>'+(t.dir>0?'Bull put':'Bear call')+'</td><td>'+t.n+'/3</td><td>'+t.why+'</td><td class="'+(t.pnl>=0?'pos':'neg')+'">'+inr(t.pnl)+'</td></tr>'}).join('')+'</table></details></div>';
+  $('out').innerHTML=h;drawCurve($('cv'),r.curve,cfg.cap);
+  Array.prototype.forEach.call(document.querySelectorAll('tr.row'),function(el){el.addEventListener('click',function(){SEL=+el.getAttribute('data-i');render();window.scrollTo(0,$('out').offsetTop+260)})})
+}
+async function run(){
+  var cfg=cfgRead();$('run').disabled=true;setMsg('Shuru...');
+  try{
+    if(!PREP||PREP.months!==$('mon').value){var cs=await loadData(+$('mon').value,setMsg);if(cs.length<200)throw new Error('Data bahut kam mila ('+cs.length+' candles)');PREP=prep(cs);PREP.months=$('mon').value}
+    RES=STR.map(function(s){return simulate(PREP,s,cfg)});SEL=RES.map(function(r){return r.tot}).indexOf(Math.max.apply(null,RES.map(function(r){return r.tot})));
+    setMsg('Ho gaya. '+PREP.C.length+' candles.');render()
+  }catch(e){setMsg(String(e.message||e),true)}
+  $('run').disabled=false}
+$('run').addEventListener('click',run);
+window.__lab={STR:STR,prep:prep,simulate:simulate};
+</script></body></html>
