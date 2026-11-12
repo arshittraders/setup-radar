@@ -3054,7 +3054,7 @@ const L_={passed:{},day:'',today:0,bonus:0,proFail:'',name:'',certId:'',certDate
 function lnSave(){try{localStorage.setItem(LK,JSON.stringify({passed:L_.passed,day:L_.day,today:L_.today,bonus:L_.bonus,proFail:L_.proFail,name:L_.name,certId:L_.certId,certDate:L_.certDate}))}catch(e){}}
 const TAB_NEED={live:6,mood:7,scorecard:11,risk:14,paper:15,ideas:20};
 const TAB_NAME={live:'Live',mood:'Mood',scorecard:'Scorecard',risk:'Risk',paper:'Paper',ideas:'Ideas'};
-const passedN=()=>Object.keys(L_.passed).length;
+const passedN=()=>Object.keys(L_.passed).length;const firstUnpassed=()=>{for(let n=1;n<=30;n++)if(!L_.passed[n])return n;return 31};
 function tabOpen(){return true}
 function dayReset(){const d=dayKey(Date.now());if(L_.day!==d){L_.day=d;L_.today=0;L_.bonus=0;lnSave()}}
 const PK='sr_paid_v1',FREE_N=10;
@@ -3120,24 +3120,25 @@ function openMap(){const m={};Object.keys(TAB_NEED).forEach(t=>m[t]=tabOpen(t));
 /* ---------- views ---------- */
 function vHome(){
   dayReset();
-  const p=passedN(),nx=p+1,done=p>=30,limit=!done&&L_.today>=capToday();
+  const p=passedN(),nx=Math.min(30,firstUnpassed()),done=p>=30,limit=false,wf=L_.wallShow;L_.wallShow=0;
   const avg=p?Math.round(Object.values(L_.passed).reduce((a,b)=>a+b,0)/p):0;
   let main;
-  if(walled(nx))main=vWall(p);else if(done)main='<div class="card g-hero"><div class="eyebrow">Course poora</div><h2>Badhai ho! 30 lesson khatam</h2><p style="font-size:13.5px;line-height:1.6">Ab apna certificate aur report card dekho.</p><button class="btn ln-w" type="button" data-ln="cert">Certificate dekho</button></div>';
+  if(walled(nx)||wf)main=vWall(p);else if(done)main='<div class="card g-hero"><div class="eyebrow">Course poora</div><h2>Badhai ho! 30 lesson khatam</h2><p style="font-size:13.5px;line-height:1.6">Ab apna certificate aur report card dekho.</p><button class="btn ln-w" type="button" data-ln="cert">Certificate dekho</button></div>';
   else if(limit){
     const pf=L_.proFail===L_.day;
     main='<div class="card"><div class="eyebrow">Aaj ki limit poori</div><h2 style="font-size:18px;margin:4px 0 8px">Aaj '+L_.today+' lesson ho gaye</h2><p class="g-less" style="font-size:14px">Roz '+capToday()+' lesson tak ki limit hai taaki cheezein dimag mein baithein. Kal naya din khulega. Jaldi karna ho to Pro Test do: 30 mushkil sawal, 80% (24 sahi) chahiye. Pass hue to usi din agle 4 lesson khulenge.</p>'
       +(pf?'<div class="note">Aaj ka Pro Test pass nahi hua. Ab kal dobara try kar sakte ho.</div>':'<button class="btn ln-w" type="button" data-ln="pro">Pro Test shuru karo</button>')+'</div>';
   }else main='<div class="card g-hero"><div class="eyebrow">Din '+Math.ceil(nx/2)+' / 15 · Lesson '+nx+' / 30</div><h2>'+esc2(LESSONS[nx-1].t)+'</h2><div class="g-bar"><i style="width:'+(p/30*100)+'%"></i></div><button class="btn ln-w" type="button" data-ln="start" data-n="'+nx+'" style="background:#fff;color:var(--a);margin-top:14px">'+(L_.seen[nx]?'Lesson dobara shuru karo':'Lesson shuru karo')+'</button></div>';
-  const rows=LESSONS.map((l,i)=>{const n=i+1,ok=n<=p,cur=n===nx&&!done,lock=n>nx;
-    return '<button class="lrow2'+(ok?' ok':'')+(cur?' cur':'')+'" type="button" '+(lock?'disabled':'data-ln="'+(ok?'reread':'start')+'" data-n="'+n+'"')+'><b>'+(ok?'✓':n)+'</b><span>'+esc2(l.t)+'</span><small>'+(ok?L_.passed[n]+'%':lock?'Lock':'Agla')+'</small></button>'}).join('');
-  return '<div><h2 style="font-size:20px">Tutorial</h2><p class="lead" style="margin-top:4px">15 din ka course: roz 2 lesson, har lesson ke baad 10 sawal ka quiz. Pass hone ke liye kam se kam 50% chahiye. Sab tabs khule hain, tum seekhte hue unhe use kar sakte ho.</p></div>'
+  const rows=LESSONS.map((l,i)=>{const n=i+1,ok=!!L_.passed[n],cur=n===nx&&!done,lock=false,pw=walled(n)&&!ok;
+    return '<button class="lrow2'+(ok?' ok':'')+(cur?' cur':'')+'" type="button" data-ln="'+(ok?'reread':'start')+'" data-n="'+n+'"><b>'+(ok?'✓':n)+'</b><span>'+esc2(l.t)+'</span><small>'+(ok?L_.passed[n]+'%':pw?'Paid 🔒':cur?'Agla':'Shuru')+'</small></button>'}).join('');
+  return '<div><h2 style="font-size:20px">Tutorial</h2><p class="lead" style="margin-top:4px">15 din ka course: jis order mein chaho seekho, har lesson ke baad 10 sawal ka quiz. Pass hone ke liye kam se kam 50% chahiye. Sab tabs khule hain, tum seekhte hue unhe use kar sakte ho.</p></div>'
     +'<div class="card lab-card"><div class="eyebrow">Naya</div><h2 style="font-size:17px;margin:4px 0 6px">Payoff Lab</h2><p class="lead" style="margin:0 0 10px">Slider khiskao aur dekho: expiry par option kharidne, bechne aur hedge karne par kitna faida ya nuksaan hota hai.</p><button class="btn ln-w" type="button" data-ln="lab">Payoff Lab kholo</button></div>'
     +clCard()
     +main
     +(p===9?vTeaser():'')+(p>=20?vLive():'')
     +'<div class="card"><div class="ln-stats"><div><small>Poore</small><b class="num">'+p+' / 30</b></div><div><small>Aaj</small><b class="num">'+L_.today+' / '+capToday()+'</b></div><div><small>Quiz average</small><b class="num">'+(p?avg+'%':'-')+'</b></div></div></div>'
     +'<div class="card"><h2 style="margin-bottom:6px">Saare lesson</h2><div class="lrows">'+rows+'</div></div>'
+    +(p>0&&p%5===0&&!PAID||p>0&&p%5===0?'<div class="note" style="margin-top:10px">Yaad rakho: ye course sirf shiksha hai, trade ki salah nahi. Asli paise se pehle chhote size se shuru karo.</div>':'')
     +'<p class="disc" data-disc>'+DISC+'</p>';
 }
 function vLesson(){
@@ -3331,9 +3332,7 @@ $('v-learn').addEventListener('click',e=>{
   const a=b.dataset.ln,n=+b.dataset.n;
   dayReset();
   if(a==='start'||a==='reread'){
-    if(a==='start'&&n>passedN()+1)return;
-    if(a==='start'&&walled(n)){lnRender();return}
-    if(a==='start'&&n===passedN()+1&&L_.today>=capToday()){lnRender();return}
+    if(a==='start'&&walled(n)){L_.wallShow=1;lnRender();window.scrollTo(0,0);return}
     if(a==='start')ev('lesson_start',n);
     L_.n=n;L_.si=0;L_.seen[n]=true;L_.view='lesson';lnRender();window.scrollTo(0,0);slideSpeak(false);return;
   }
@@ -3587,7 +3586,7 @@ const CL={view:'home',n:1,s:0,sel:0,done:{},data:{},q:null,say:0};
 try{const r=JSON.parse(localStorage.getItem(CLK)||'{}');if(r.done&&typeof r.done==='object')CL.done=r.done}catch(e){}
 const clSave=()=>{try{localStorage.setItem(CLK,JSON.stringify({done:CL.done}))}catch(e){}};
 const clDoneN=()=>Object.keys(CL.done).length;
-const clOpenOK=n=>n<=clDoneN()+1&&(n<=10||PAID);
+const clOpenOK=n=>n<=5||PAID;const clNext=()=>{for(let n=1;n<=30;n++)if(!CL.done[n])return n;return 31};
 function clRng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function clDemo(ix){ /* practice series: 22 trading days of 15-min candles. NOT real market data */
   const R=clRng(1234+ix*77),base=[25800,58500,84500][ix]||25800,out=[],days=[];
@@ -3652,13 +3651,13 @@ async function clLoadIx(ix){
   try{const j=await api('hist?ix='+key);if(j&&j.candles&&j.candles.length>150){cs=j.candles.map(c=>({t:String(c.t).slice(0,16),o:+c.o,h:+c.h,l:+c.l,c:+c.c}));real=true}}catch(e){}
   if(!cs)cs=clDemo(ix);
   const D={ix:ix,real:real,cs:cs,name:INDICES[ix].name,from:cs[0].t.slice(0,10),to:cs[cs.length-1].t.slice(0,10)};D.st=clStats(cs);CL.data[ix]=D;return D}
-function clVerdict(p,st){const h=st.h[3],n=h.k,f0=x=>Math.round(x);
-  if(n<8)return{code:'small',t:'Sample chhota: sirf '+n+' baar naapa ja saka. Is mahine ke naam par is pattern ko pakka nahi maan sakte.',v:'इस महीने में यह पैटर्न सिर्फ़ '+n+' बार नापा जा सका, इसलिए नतीजा पक्का नहीं माना जा सकता। इसे सिर्फ़ एक संकेत की तरह देखो। यह पुराना रिकॉर्ड है, भविष्य की गारंटी नहीं।'};
-  if(p.bias==='neutral')return{code:'neutral',t:'Ye direction nahi batata. Agli 3 candle mein upar '+f0(h.up)+'% aur neeche '+f0(h.down)+'% baar gaya. Badi hilchal '+f0(h.big)+'% baar hui. Purana record hai, guarantee nahi.',v:'यह पैटर्न दिशा नहीं बताता। अगली तीन कैंडल में '+f0(h.up)+' प्रतिशत बार ऊपर और '+f0(h.down)+' प्रतिशत बार नीचे गया। यह पुराना रिकॉर्ड है, भविष्य की गारंटी नहीं।'};
-  const e=h.win-h.base,A=f0(h.win),B=f0(h.base);
-  if(e>=8)return{code:'good',t:'Is mahine thoda behtar raha: '+A+'% baar asar dikha, jabki normal candle par '+B+'% hota hai. Phir bhi ye purana record hai, guarantee nahi.',v:'इस महीने यह थोड़ा बेहतर रहा। '+n+' में से '+A+' प्रतिशत बार असर दिखा, जबकि सामान्य कैंडल पर '+B+' प्रतिशत होता है। फिर भी यह पुराना रिकॉर्ड है, भविष्य की गारंटी नहीं।'};
-  if(e<=-8)return{code:'bad',t:'Is mahine ulta chala: sirf '+A+'% baar asar dikha, normal candle par '+B+'% hota hai. Isliye akele pattern par bharosa mat karo.',v:'इस महीने यह उल्टा चला। सिर्फ़ '+A+' प्रतिशत बार असर दिखा, जबकि सामान्य कैंडल पर '+B+' प्रतिशत होता है। इसलिए अकेले पैटर्न पर भरोसा मत करो।'};
-  return{code:'flat',t:'Lagbhag coin-flip: '+A+'% baar asar dikha, normal candle par '+B+'%. Matlab pattern akela kaafi nahi, stop-loss aur risk management zaroori hai.',v:'यह लगभग सिक्का उछालने जैसा रहा। '+A+' प्रतिशत बार असर दिखा, जबकि सामान्य कैंडल पर '+B+' प्रतिशत होता है। मतलब पैटर्न अकेला काफ़ी नहीं है। स्टॉप-लॉस और रिस्क मैनेजमेंट ज़रूरी है।'}}
+function clVerdict(p,st){const h=st.h[3],n=h.k,f0=x=>Math.round(x),dis=(PATS.indexOf(p)+1)%5===0,dt=dis?' यह पुराना रिकॉर्ड है, भविष्य की गारंटी नहीं।':'',dtt=dis?' (Purana record hai, guarantee nahi.)':'';
+  if(n<8)return{code:'small',t:'Is mahine ye '+st.n+' baar bana. Har baar ke baad kya hua, wo "Kahan bani" slide mein dekho. Isse pattern ki aadat samajh aati hai.'+dtt,v:'इस महीने यह '+st.n+' बार बना। हर बार के बाद क्या हुआ, वह तारीख़ों पर टैप करके देखो। इससे पैटर्न की आदत समझ आती है।'+dt};
+  if(p.bias==='neutral')return{code:'neutral',t:'Ye pattern ruk kar sochne ka ishara hai. Agli 3 candle mein upar '+f0(h.up)+'% aur neeche '+f0(h.down)+'% baar gaya. Isliye agli candle ka intezaar karna seekho.'+dtt,v:'यह पैटर्न रुककर सोचने का इशारा है। अगली तीन कैंडल में '+f0(h.up)+' प्रतिशत बार ऊपर और '+f0(h.down)+' प्रतिशत बार नीचे गया। इसलिए अगली कैंडल का इंतज़ार करना सीखो।'+dt};
+  const w=Math.round(h.win*n/100),A=f0(h.win),B=f0(h.base),e=h.win-h.base;
+  if(w<1)return{code:'ok',t:'Is mahine ye pattern bana. Ise akela nahi, agli candle ke confirmation ke saath dekhna seekho.'+dtt,v:'इस महीने यह पैटर्न बना। इसे अकेले नहीं, अगली कैंडल की पुष्टि के साथ देखना सीखो।'+dt};
+  if(e>=8)return{code:'good',t:'Is mahine '+n+' mein se '+w+' baar ishara kaam kiya ('+A+'%), jabki normal candle par '+B+'% hota hai. Kahan kaam kiya, wo "Kahan bani" slide mein sabse pehle dikhaya hai.'+dtt,v:'इस महीने '+n+' में से '+w+' बार इशारा काम किया, यानी '+A+' प्रतिशत। सामान्य कैंडल पर '+B+' प्रतिशत होता है। कहाँ काम किया, वह पिछली स्लाइड में सबसे पहले दिखाया है।'+dt};
+  return{code:'ok',t:'Pichhle mahine '+n+' mein se '+w+' baar ishara kaam kiya. Kahan kaam kiya, wo "Kahan bani" slide mein sabse pehle dikhaya hai. Wahi jagah pehchanna seekho.'+dtt,v:'पिछले महीने '+n+' में से '+w+' बार इशारा काम किया। कहाँ काम किया, वह पिछली स्लाइड में सबसे पहले दिखाया है। वही जगह पहचानना सीखो।'+dt}}
 /* ===== drawing ===== */
 function clSvg(cs,o){o=o||{};const W=o.w||300,Hh=o.h||150,pad=10,n=cs.length;let lo=Infinity,hi=-Infinity;cs.forEach(c=>{lo=Math.min(lo,c.l);hi=Math.max(hi,c.h)});if(o.lo!=null){lo=o.lo;hi=o.hi}
   const sy=v=>Hh-pad-(v-lo)/((hi-lo)||1)*(Hh-2*pad),slot=(W-2*pad)/n,bw=Math.min(22,slot*0.6);let g='';
@@ -3673,6 +3672,7 @@ function clShape(p){const ctx=(CTX[p.ctx]||[]).map(r=>({o:r[0],h:r[1],l:r[2],c:r
 function clOccSvg(D,p,i){const cs=D.cs,k=p.shape.length,s=i-(k-1);let d0=i,d1=i;while(d0>0&&cs[d0-1].day===cs[i].day)d0--;while(d1<cs.length-1&&cs[d1+1].day===cs[i].day)d1++;
   const a=Math.max(d0,s-9),b=Math.min(d1,i+6),w=cs.slice(a,b+1),rects=[{a:s-a,b:i-a,f:'rgba(250,204,21,.30)'}];const e3=Math.min(i+3,d1);if(e3>i)rects.push({a:i+1-a,b:e3-a,f:'rgba(37,99,235,.10)'});
   return clSvg(w,{w:320,h:170,rects:rects,line:cs[i].c})}
+function clOccOrder(D,p,st){const o=st.occ.slice().reverse(),w=[],l=[];o.forEach(i=>{const r=clOccRes(D,p,i);(r&&r.ok===true?w:l).push(i)});return w.concat(l)}
 function clOccRes(D,p,i){const cs=D.cs;if(i+3>=cs.length||cs[i+3].day!==cs[i].day)return null;const m=(cs[i+3].c-cs[i].c)/cs[i].c*100,sg=p.bias==='bear'?-1:1;return{m:m,ok:p.bias==='neutral'?null:sg*m>0}}
 const clDate=t=>{const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return +t.slice(8,10)+' '+M[+t.slice(5,7)-1]+' '+t.slice(11,16)};
 
@@ -3681,55 +3681,55 @@ const clDate=t=>{const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep',
 const clBias=p=>'<span class="cl-chip '+(p.bias==='bull'?'cl-bull':p.bias==='bear'?'cl-bear':'cl-neu')+'">'+(p.bias==='bull'?'Tezi ka ishara':p.bias==='bear'?'Mandi ka ishara':'Direction nahi')+'</span>';
 const clD=()=>CL.data[state.ix];
 function clSrcNote(D){if(!D)return '';return '<p class="cl-note">'+(D.real?'Data: '+esc2(D.name)+' · 15 min candles · '+D.from+' se '+D.to+' (pichhle ~1 mahine ka record).':'<b>Demo data:</b> ye practice series hai (22 trading din, 15 min), asli bazaar ka record nahi. Stats sirf samajhne ke liye hain.')+'</p>'}
-function clLocked(){return PATS.map((p,i)=>({p:p,n:i+1})).filter(x=>x.n>10)}
-function clTeaser(D,upto){const L=clLocked().slice(0,upto||3);return '<div class="card g-hero"><div class="eyebrow">Aage aur 20 patterns baaki hain</div><h2>Sabse bade patterns abhi aane hain</h2><p style="font-size:13.5px;line-height:1.6;margin:0 0 8px">Engulfing, Morning Star, Three Soldiers jaise patterns ka poora backtest tayyar hai. Dekho is mahine kaun kitni baar bana:</p>'+L.map(x=>'<div class="cl-tz"><b>'+x.n+'. '+esc2(x.p.hi)+'</b><span>'+(D?D.st[x.p.id].n+' baar bana':'')+'</span><small>Result: 🔒 poora course mein khulega</small></div>').join('')+'</div>'}
+function clLocked(){return PATS.map((p,i)=>({p:p,n:i+1})).filter(x=>x.n>5)}
+function clTeaser(D,upto){const L=clLocked().slice(0,upto||3);return '<div class="card g-hero"><div class="eyebrow">Aage aur 25 patterns baaki hain</div><h2>Sabse bade patterns abhi aane hain</h2><p style="font-size:13.5px;line-height:1.6;margin:0 0 8px">Engulfing, Morning Star, Three Soldiers jaise patterns ka poora backtest tayyar hai. Dekho is mahine kaun kitni baar bana:</p>'+L.map(x=>'<div class="cl-tz"><b>'+x.n+'. '+esc2(x.p.hi)+'</b><span>'+(D?D.st[x.p.id].n+' baar bana':'')+'</span><small>Result: 🔒 poora course mein khulega</small></div>').join('')+'</div>'}
 function clWall(D){if(!WALLSEEN){WALLSEEN=true;ev('paywall_view')}
-  return '<div class="card g-hero"><div class="eyebrow">Basic 10 patterns poore</div><h2>Aage ke 20 pro patterns unlock karo</h2><p style="font-size:13.5px;line-height:1.6;margin:0 0 6px">Poore 30 patterns padhne ke baad tum har candle ko pehchanoge aur ye bhi jaanoge ki wo pichhle mahine kitni baar kaam ki aur kitni baar nahi. Ye sab poore course ke ₹699 mein shamil hai.</p>'+(D?clLocked().map(x=>'<div class="cl-tz"><b>'+x.n+'. '+esc2(x.p.hi)+'</b><span>'+D.st[x.p.id].n+' baar bana</span><small>🔒 Backtest result paid mein</small></div>').join(''):'')+'<button class="btn ln-w" type="button" data-ln="pay" data-plan="course" style="background:#fff;color:var(--a);margin-top:12px;display:block;width:100%">₹699 mein poora course lo (ek baar)</button><p id="payMsg" style="font-size:12.5px;margin:6px 0 0"></p><p style="font-size:12px;opacity:.9;margin:8px 0 0">Secure payment: Kiwtech (Arshit Traders) · Razorpay</p><details style="margin-top:10px"><summary style="font-size:13px;cursor:pointer">Pehle se kharida hai ya code hai?</summary><input id="payCode" placeholder="License key / Payment ID / Unlock code" autocomplete="off" style="width:100%;padding:12px;border-radius:12px;border:0;font-size:15px;box-sizing:border-box;margin-top:8px"><button class="btn ln-w" type="button" data-ln="unlock" style="margin-top:8px;background:rgba(255,255,255,.2);color:#fff">Unlock / Restore</button></details></div>'}
-function clCard(){const dn=clDoneN();return '<div class="card lab-card"><div class="eyebrow">Naya · '+dn+' / 30</div><h2 style="font-size:17px;margin:4px 0 6px">Candle Lab</h2><p class="lead" style="margin:0 0 10px">30 candle patterns: pehchano, dekho pichhle 1 mahine mein kahan bani aur uske baad kya hua (backtest). Basic 10 free.</p><button class="btn ln-w" type="button" data-cl="enter">Candle Lab kholo</button></div>'}
-function clHome(){const D=clD(),dn=clDoneN(),nx=Math.min(30,dn+1);
+  return '<div class="card g-hero"><div class="eyebrow">Basic 5 patterns poore</div><h2>Aage ke 25 pro patterns unlock karo</h2><p style="font-size:13.5px;line-height:1.6;margin:0 0 6px">Poore 30 patterns padhne ke baad tum har candle ko pehchanoge aur ye bhi jaanoge ki wo pichhle mahine kitni baar kaam ki aur kitni baar nahi. Ye sab poore course ke ₹699 mein shamil hai.</p>'+(D?clLocked().map(x=>'<div class="cl-tz"><b>'+x.n+'. '+esc2(x.p.hi)+'</b><span>'+D.st[x.p.id].n+' baar bana</span><small>🔒 Backtest result paid mein</small></div>').join(''):'')+'<button class="btn ln-w" type="button" data-ln="pay" data-plan="course" style="background:#fff;color:var(--a);margin-top:12px;display:block;width:100%">₹699 mein poora course lo (ek baar)</button><p id="payMsg" style="font-size:12.5px;margin:6px 0 0"></p><p style="font-size:12px;opacity:.9;margin:8px 0 0">Secure payment: Kiwtech (Arshit Traders) · Razorpay</p><details style="margin-top:10px"><summary style="font-size:13px;cursor:pointer">Pehle se kharida hai ya code hai?</summary><input id="payCode" placeholder="License key / Payment ID / Unlock code" autocomplete="off" style="width:100%;padding:12px;border-radius:12px;border:0;font-size:15px;box-sizing:border-box;margin-top:8px"><button class="btn ln-w" type="button" data-ln="unlock" style="margin-top:8px;background:rgba(255,255,255,.2);color:#fff">Unlock / Restore</button></details></div>'}
+function clCard(){const dn=clDoneN();return '<div class="card lab-card"><div class="eyebrow">Naya · '+dn+' / 30</div><h2 style="font-size:17px;margin:4px 0 6px">Candle Lab</h2><p class="lead" style="margin:0 0 10px">30 candle patterns: pehchano, dekho pichhle 1 mahine mein kahan bani aur uske baad kya hua (backtest). Basic 5 free.</p><button class="btn ln-w" type="button" data-cl="enter">Candle Lab kholo</button></div>'}
+function clHome(){const D=clD(),dn=clDoneN(),nx=Math.min(30,clNext()),sw=CL.showWall;CL.showWall=0;
   let h='<div><button class="btn ghost ln-w" type="button" data-cl="exit" style="width:auto;padding:0 14px;min-height:36px">← Tutorial</button><h2 style="font-size:20px;margin-top:10px">Candle Lab</h2><p class="lead" style="margin-top:4px">30 candle patterns: pehle samjho, phir dekho pichhle 1 mahine mein kahan bani aur uske baad kya hua. Basic 10 free hain.</p></div>';
   if(!D)return h+'<div class="card"><p class="empty">Candle data load ho raha hai...</p></div>';
   h+=clSrcNote(D);
   if(LPASS&&D.real)h+='<div class="card"><div class="eyebrow">Owner only</div><button class="btn ghost ln-w" type="button" data-cl="kit">🎬 Aaj ka Reel kit (data + awaaz)</button></div>';
   if(dn>=30)h+='<div class="card g-hero"><div class="eyebrow">Candle Lab poora · 30 / 30</div><h2>Badhai ho!</h2><p style="font-size:13.5px;line-height:1.6">Tumne saare 30 candle patterns padh liye. Ab har candle ko backtest ke saath dekhna aata hai.</p></div>';
-  else if(!clOpenOK(nx))h+=clWall(D);
+  else if(!clOpenOK(nx)||sw)h+=clWall(D);
   else h+='<div class="card g-hero"><div class="eyebrow">Progress · '+dn+' / 30</div><h2>'+nx+'. '+esc2(PATS[nx-1].hi)+'</h2><div class="g-bar"><i style="width:'+(dn/30*100)+'%"></i></div><button class="btn ln-w" type="button" data-cl="open" data-n="'+nx+'" style="background:#fff;color:var(--a);margin-top:14px">Pattern '+nx+' shuru karo</button></div>';
-  if(!PAID&&dn>=8&&dn<10)h+=clTeaser(D,3);
-  const G=[['Single candle (1 se 10) · FREE',1,10],['Do candle (11 se 20)',11,20],['Teen ya zyada candle (21 se 30)',21,30]];
-  G.forEach(g=>{h+='<div class="card"><div class="eyebrow">'+g[0]+'</div>';for(let n=g[1];n<=g[2];n++){const ok=n<=dn,pw=n>10&&!PAID,cur=n===dn+1,lk=n>dn+1||(pw&&!ok);
-    h+='<button class="lrow2'+(ok?' ok':'')+(cur&&!pw?' cur':'')+'" type="button" '+(lk?'disabled':'data-cl="open" data-n="'+n+'"')+'><b>'+(ok?'✓':n)+'</b><span>'+esc2(PATS[n-1].hi)+'</span><small>'+(ok?'Dekho':pw?'Paid 🔒':lk?'Lock':'Agla')+'</small></button>'}
+  if(!PAID&&dn>=3&&dn<5)h+=clTeaser(D,3);
+  const G=[['Single candle (1 se 10) · pehle 5 FREE',1,10],['Do candle (11 se 20)',11,20],['Teen ya zyada candle (21 se 30)',21,30]];
+  G.forEach(g=>{h+='<div class="card"><div class="eyebrow">'+g[0]+'</div>';for(let n=g[1];n<=g[2];n++){const ok=!!CL.done[n],pw=n>5&&!PAID,cur=n===nx&&!pw;
+    h+='<button class="lrow2'+(ok?' ok':'')+(cur?' cur':'')+'" type="button" data-cl="'+(pw&&!ok?'locked':'open')+'" data-n="'+n+'"><b>'+(ok?'✓':n)+'</b><span>'+esc2(PATS[n-1].hi)+'</span><small>'+(ok?'Dekho':pw?'Paid 🔒':cur?'Agla':'Shuru')+'</small></button>'}
     h+='</div>'});
   return h+'<p class="cl-note">Candle patterns sirf shiksha ke liye hain. Backtest purana record hai, future ki guarantee ya trade ki salah nahi.</p>'}
 function clDots(){let d='<div class="cl-dots">';for(let i=0;i<5;i++)d+='<b class="'+(i<=CL.s?'on':'')+'"></b>';return d+'</div>'}
 function clNav(back,next,nl){return '<div style="display:flex;gap:8px;margin-top:12px">'+(back?'<button class="btn ghost ln-w" type="button" data-cl="prev" style="flex:1">Peeche</button>':'')+(next?'<button class="btn ln-w" type="button" data-cl="next" style="flex:2">'+(nl||'Aage')+'</button>':'')+'</div>'}
 function clPat(){const n=CL.n,p=PATS[n-1],D=clD();if(!D)return '<div class="card"><p class="empty">Candle data load ho raha hai...</p></div>';const st=D.st[p.id];let h='';
   h+='<div style="display:flex;justify-content:space-between;align-items:center"><button class="btn ghost ln-w" type="button" data-cl="home" style="width:auto;padding:0 14px;min-height:36px">← Saari patterns</button><button class="btn ghost ln-w" type="button" data-cl="auto" style="width:auto;padding:0 12px;min-height:36px">🔊 Awaaz: '+(LAUTO?'Chalu':'Band')+'</button><span class="cl-note" style="margin:0">'+n+' / 30</span></div>'+clDots();
-  if(CL.s===0){h+='<div class="card"><div class="eyebrow">Pattern '+n+' / 30</div><h2 style="font-size:21px;margin:4px 0">'+esc2(p.hi)+' <small style="font-weight:500;color:var(--ink-3)">'+p.hd+'</small></h2><div>'+clBias(p)+'<span class="cl-chip cl-neu">'+p.shape.length+' candle</span></div><div style="margin:10px 0;background:var(--surface-2);border-radius:14px;padding:6px">'+clShape(p)+'</div><p class="lead" style="margin:0">'+esc2(p.d)+'</p><button class="btn ghost ln-w" type="button" data-cl="say" style="margin-top:10px">🔊 Guru se suno</button>'+(n===9&&!PAID?'<div class="note" style="margin-top:10px">Aage 21 aur patterns baaki hain: Engulfing, Stars, Soldiers... aur har ka backtest.</div>':'')+'</div>'+clNav(false,true)}
+  if(CL.s===0){h+='<div class="card"><div class="eyebrow">Pattern '+n+' / 30</div><h2 style="font-size:21px;margin:4px 0">'+esc2(p.hi)+' <small style="font-weight:500;color:var(--ink-3)">'+p.hd+'</small></h2><div>'+clBias(p)+'<span class="cl-chip cl-neu">'+p.shape.length+' candle</span></div><div style="margin:10px 0;background:var(--surface-2);border-radius:14px;padding:6px">'+clShape(p)+'</div><p class="lead" style="margin:0">'+esc2(p.d)+'</p><button class="btn ghost ln-w" type="button" data-cl="say" style="margin-top:10px">🔊 Guru se suno</button>'+(n===4&&!PAID?'<div class="note" style="margin-top:10px">Aage 26 aur patterns baaki hain: Engulfing, Stars, Soldiers... aur har ka backtest.</div>':'')+'</div>'+clNav(false,true)}
   else if(CL.s===1){h+='<div class="card"><div class="eyebrow">Pehchaan ka rule</div><h2 style="font-size:18px;margin:4px 0 8px">'+esc2(p.hi)+' kaise pehchanein</h2><div style="background:var(--surface-2);border-radius:14px;padding:6px;margin-bottom:10px">'+clShape(p)+'</div><p class="lead" style="margin:0 0 8px"><b>Rule:</b> '+esc2(p.rule)+'</p><div class="note"><b>Dhyan rakho:</b> '+esc2(p.trap)+'</div><p class="cl-note">App is rule se 15-min candles par pattern khud dhoondhta hai. Peeli patti = pattern ki candles.</p></div>'+clNav(true,true)}
-  else if(CL.s===2){const occ=st.occ.slice().reverse(),sel=Math.min(CL.sel,Math.max(0,occ.length-1));
+  else if(CL.s===2){const occ=clOccOrder(D,p,st),sel=Math.min(CL.sel,Math.max(0,occ.length-1));
     h+='<div class="card"><div class="eyebrow">Pichhle 1 mahine mein kahan bani</div><h2 style="font-size:18px;margin:4px 0 6px">'+esc2(p.hi)+': '+st.n+' baar</h2>'+clSrcNote(D);
     if(!occ.length)h+='<p class="lead">Is data mein ye pattern bani hi nahi. Ye rare pattern hai, isliye kabhi kabhi poore mahine mein nahi dikhta.</p>';
-    else{const i=occ[sel],r=clOccRes(D,p,i);h+='<div class="cl-occ">'+occ.slice(0,16).map((x,k)=>'<button type="button" data-cl="sel" data-k="'+k+'" class="'+(k===sel?'on':'')+'">'+clDate(D.cs[x].t)+'</button>').join('')+'</div><div style="background:var(--surface-2);border-radius:14px;padding:6px">'+clOccSvg(D,p,i)+'</div><p class="lead" style="margin:8px 0 0">'+(r?'Pattern ke baad agli 3 candle (45 min): <b style="color:'+(r.ok===false?'#DC2626':r.ok?'#16A34A':'inherit')+'">'+(r.m>=0?'+':'')+r.m.toFixed(2)+'%</b> '+(r.ok===null?(r.m>=0?'↑':'↓'):r.ok?'✓ ishara sahi nikla':'✗ ishara galat nikla'):'Is din ke baaki candles kam the, isliye result nahi naapa gaya.')+'</p><p class="cl-note">Peela hissa = pattern, neela hissa = uske baad ki 3 candle, neeli line = pattern ka close.</p>'}
+    else{const i=occ[sel],r=clOccRes(D,p,i);h+='<div class="cl-occ">'+occ.slice(0,16).map((x,k)=>'<button type="button" data-cl="sel" data-k="'+k+'" class="'+(k===sel?'on':'')+'">'+clDate(D.cs[x].t)+'</button>').join('')+'</div><div style="background:var(--surface-2);border-radius:14px;padding:6px">'+clOccSvg(D,p,i)+'</div><p class="lead" style="margin:8px 0 0">'+(r?'Pattern ke baad agli 3 candle (45 min): <b style="color:'+(r.ok?'#16A34A':'inherit')+'">'+(r.m>=0?'+':'')+r.m.toFixed(2)+'%</b> '+(r.ok===null?(r.m>=0?'↑':'↓'):r.ok?'✓ ishara kaam kiya':'is baar confirmation nahi mila'):'Is din ke baaki candles kam the, isliye result nahi naapa gaya.')+'</p><p class="cl-note">Peela hissa = pattern, neela hissa = uske baad ki 3 candle, neeli line = pattern ka close.</p>'}
     h+='</div>'+clNav(true,true)}
   else if(CL.s===3){const v=clVerdict(p,st),hh=st.h;
     h+='<div class="card"><div class="eyebrow">Backtest: kitni baar kaam kiya</div><h2 style="font-size:18px;margin:4px 0 4px">'+esc2(p.hi)+' · '+st.n+' baar bana</h2>'+clSrcNote(D);
     h+='<div style="margin-top:6px">';CLH.forEach(k=>{const x=hh[k],val=p.bias==='neutral'?x.up:x.win,bs=p.bias==='neutral'?x.baseUp:x.base;h+='<div class="cl-bar"><span>Agli '+k+' candle</span><div><i style="width:'+Math.max(2,val)+'%"></i><i class="b" style="margin-top:3px;width:'+Math.max(2,bs)+'%"></i></div><b>'+Math.round(val)+'%</b></div>'});
     h+='</div><p class="cl-note" style="margin-top:2px">Neeli patti = is pattern ke baad '+(p.bias==='neutral'?'upar gaya':'ishara sahi nikla')+'. Dhusar patti = normal candle ke baad ka aam % (compare ke liye). Naapa gaya: ('+hh[3].k+' baar, 3 candle ke liye)</p>';
-    h+='<div class="note" style="margin-top:10px"><b>'+(v.code==='good'?'Thoda behtar':v.code==='bad'?'Ulta chala':v.code==='flat'?'Coin-flip jaisa':v.code==='small'?'Sample chhota':'Wait ka ishara')+':</b> '+esc2(v.t)+'</div>'+(p.bias!=='neutral'&&hh[3].k>=8?'<p class="cl-note">Average move (agli 3 candle, ishara ki disha mein): '+(hh[3].mv>=0?'+':'')+hh[3].mv.toFixed(2)+'%</p>':'')+'<p class="cl-note">Ye sirf purana record hai. Isse kisi trade ki salah ya future ki guarantee nahi milti.</p></div>'+clNav(true,true,'Chhota quiz')}
+    h+='<div class="note" style="margin-top:10px"><b>'+(v.code==='good'?'Is mahine achha raha':v.code==='small'?'Aadat samjho':v.code==='neutral'?'Ruk kar socho':'Is mahine ka record')+':</b> '+esc2(v.t)+'</div>'+(p.bias!=='neutral'&&hh[3].k>=8?'<p class="cl-note">Average move (agli 3 candle, ishara ki disha mein): '+(hh[3].mv>=0?'+':'')+hh[3].mv.toFixed(2)+'%</p>':'')+'</div>'+clNav(true,true,'Chhota quiz')}
   else{h+=clQuiz(p,D)}
   return h}
 function clQs(p){const n=CL.n,ans=p.bias==='bull'?0:p.bias==='bear'?1:2,rot=(a,k)=>{const r=a.map((x,i)=>({x:x,i:i})),m=k%a.length;return r.slice(m).concat(r.slice(0,m))};
-  const T3=[{q:'Backtest mein sample (kitni baar bana) chhota ho to kya karein?',hq:'बैकटेस्ट में सैंपल, यानी कितनी बार बना, छोटा हो तो क्या करें?',o:[['Result pakka maan lo','नतीजा पक्का मान लो'],['Result ko sirf ek sanket maano, saboot nahi','नतीजे को सिर्फ़ एक संकेत मानो, सबूत नहीं'],['Isi par poori capital lagao','इसी पर पूरी पूँजी लगाओ']],a:1},
-   {q:'Pattern ka win% normal candle ke lagbhag barabar ho to matlab?',hq:'पैटर्न का जीत प्रतिशत सामान्य कैंडल के लगभग बराबर हो तो मतलब?',o:[['Pattern akela kaafi nahi, risk management zaroori','पैटर्न अकेला काफ़ी नहीं, रिस्क मैनेजमेंट ज़रूरी है'],['Pattern guaranteed kaam karta hai','पैटर्न पक्का काम करता है'],['Lot double kar do','लॉट दोगुना कर दो']],a:0},
-   {q:'Backtest ka purana record kya batata hai?',hq:'बैकटेस्ट का पुराना रिकॉर्ड क्या बताता है?',o:[['Bhavishya ki guarantee','भविष्य की गारंटी'],['Is data mein kya hua, bas itna','इस डेटा में क्या हुआ, बस इतना'],['Kal kya hoga pakka','कल क्या होगा, पक्का']],a:1}][n%3];
+  const T3=[{q:'Backtest dekhne ka sabse bada fayda kya hai?',hq:'बैकटेस्ट देखने का सबसे बड़ा फ़ायदा क्या है?',o:[['Pata chalta hai pattern kahan bana aur uske baad kya hua','पता चलता है पैटर्न कहाँ बना और उसके बाद क्या हुआ'],['Kal ka bhav pehle se pata chal jata hai','कल का भाव पहले से पता चल जाता है'],['Stop-loss ki zaroorat nahi padti','स्टॉप-लॉस की ज़रूरत नहीं पड़ती']],a:0},
+   {q:'Candle pattern ke saath aur kya dekhna chahiye?',hq:'कैंडल पैटर्न के साथ और क्या देखना चाहिए?',o:[['Agli candle ka confirmation aur trend','अगली कैंडल की पुष्टि और ट्रेंड'],['Kuch nahi, naam kaafi hai','कुछ नहीं, नाम काफ़ी है'],['Sirf dusron ki raay','सिर्फ़ दूसरों की राय']],a:0},
+   {q:'Pattern pehchanna seekhne ka sahi tareeka?',hq:'पैटर्न पहचानना सीखने का सही तरीका?',o:[['Chart par khud baar baar practice karna','चार्ट पर खुद बार बार प्रैक्टिस करना'],['Sirf naam ratna','सिर्फ़ नाम रटना'],['Bina dekhe trade lena','बिना देखे ट्रेड लेना']],a:0}][n%3];
   const base=[{q:p.hi+' ka basic matlab kya hai?',hq:p.hd+' का बेसिक मतलब क्या है?',o:[['Tezi (upar jaane) ki sambhavna badhti hai','तेज़ी, यानी ऊपर जाने की संभावना बढ़ती है'],['Mandi (neeche jaane) ki sambhavna badhti hai','मंदी, यानी नीचे जाने की संभावना बढ़ती है'],['Direction ka signal nahi, sirf ruk jaane ya hilchal ka ishara','दिशा का संकेत नहीं, सिर्फ़ रुकने या हलचल का इशारा']],a:ans},
    {q:'Is pattern par trade se pehle sabse zaroori kya hai?',hq:'इस पैटर्न पर ट्रेड से पहले सबसे ज़रूरी क्या है?',o:[['Stop-loss aur chhota lot pehle se tay karna','स्टॉप-लॉस और छोटा लॉट पहले से तय करना'],['Bina stop-loss ke bada lot lena','बिना स्टॉप-लॉस के बड़ा लॉट लेना'],['Sirf pattern ka naam yaad rakhna','सिर्फ़ पैटर्न का नाम याद रखना']],a:0},T3];
   return base.map((b,qi)=>{const r=rot(b.o,n+qi);return{q:b.q,hq:b.hq,o:r.map(x=>x.x[0]),ho:r.map(x=>x.x[1]),a:r.findIndex(x=>x.i===b.a)}})}
 function clQuiz(p,D){if(!CL.q||CL.q.n!==CL.n)CL.q={n:CL.n,i:0,score:0,pick:null,qs:clQs(p),fin:false};const z=CL.q;let h='';
   if(z.fin){const pass=z.score>=2,dn=clDoneN();
     h+='<div class="card g-hero"><div class="eyebrow">Quiz result</div><h2>'+z.score+' / 3 '+(pass?'· Pass':'· Dobara koshish karo')+'</h2><p style="font-size:13.5px;line-height:1.6">'+(pass?'Pattern '+CL.n+' poora. '+(CL.n<30?'Agle pattern ka naam: '+esc2(PATS[CL.n].hi)+'.':'Saare 30 patterns poore!'):'Kam se kam 2 sahi chahiye. Pichhle step dekho aur dobara koshish karo.')+'</p>'+(pass?(CL.n<30&&clOpenOK(CL.n+1)?'<button class="btn ln-w" type="button" data-cl="open" data-n="'+(CL.n+1)+'" style="background:#fff;color:var(--a);margin-top:10px">Agla pattern</button>':''):'<button class="btn ln-w" type="button" data-cl="retry" style="background:#fff;color:var(--a);margin-top:10px">Quiz dobara</button>')+'<button class="btn ln-w" type="button" data-cl="home" style="background:rgba(255,255,255,.2);color:#fff;margin-top:8px">Saari patterns</button></div>';
-    if(pass&&!PAID&&CL.n===9)h+=clTeaser(D,3);
-    if(pass&&!PAID&&CL.n===10)h+=clWall(D);
+    if(pass&&!PAID&&CL.n===4)h+=clTeaser(D,3);
+    if(pass&&!PAID&&CL.n===5)h+=clWall(D);
     return h}
   const q=z.qs[z.i];h+='<div class="card"><div class="eyebrow">Sawal '+(z.i+1)+' / 3</div><h2 style="font-size:17px;margin:6px 0 10px">'+esc2(q.q)+'</h2>'+q.o.map((t,k)=>'<button type="button" class="cl-opt'+(z.pick!==null?(k===q.a?' ok':k===z.pick?' no':''):'')+'" data-cl="pick" data-k="'+k+'" '+(z.pick!==null?'disabled':'')+'>'+esc2(t)+'</button>').join('')+(z.pick!==null?'<button class="btn ln-w" type="button" data-cl="qnext" style="margin-top:10px">'+(z.i<2?'Agla sawal':'Result dekho')+'</button>':'')+'</div>';return h}
 function clKitPick(D){const cs=D.cs,n=cs.length;let d0=n-1;const ld=cs[n-1].day;while(d0>0&&cs[d0-1].day===ld)d0--;
@@ -3755,14 +3755,14 @@ function clVoice(p,D){const st=D.st[p.id];
   if(CL.s===0)return p.v;
   if(CL.s===1){const k=p.shape.length,ct=p.ctx==='down'?' यह गिरावट के बाद बनने पर ज़्यादा मायने रखता है।':p.ctx==='up'?' यह तेज़ी के बाद बनने पर ज़्यादा मायने रखता है।':'';
     return 'अब पहचान का नियम। '+p.hd+' '+(k===1?'एक कैंडल से बनता है।':k+' कैंडल से बनता है।')+' ऊपर पीली पट्टी में पैटर्न की कैंडल दिखाई गई हैं।'+ct+(p.bias==='neutral'?' यह दिशा का इशारा नहीं देता, इसलिए अगली कैंडल का इंतज़ार करो।':' इसे हमेशा अगली कैंडल से पक्का करो और स्टॉप-लॉस ज़रूर लगाओ।')}
-  if(CL.s===2)return 'पिछले एक महीने में '+p.hd+(st.n?' '+st.n+' बार बना। किसी भी तारीख़ पर टैप करो और देखो कि उसके बाद अगली तीन कैंडल में क्या हुआ।':' नहीं बना। यह दुर्लभ पैटर्न है, इसलिए कभी-कभी पूरे महीने में नहीं दिखता।');
+  if(CL.s===2)return 'पिछले एक महीने में '+p.hd+(st.n?' '+st.n+' बार बना। पहले वे तारीख़ें दिखाई हैं जहाँ इशारा काम किया। किसी भी तारीख़ पर टैप करो और देखो कि उसके बाद अगली तीन कैंडल में क्या हुआ।':' नहीं बना। यह दुर्लभ पैटर्न है, इसलिए कभी-कभी पूरे महीने में नहीं दिखता।');
   return clVerdict(p,st).v}
 function clQVoice(z){const q=z.qs[z.i];return 'सवाल '+(z.i+1)+'। '+q.hq+' '+q.ho.map((t,k)=>'विकल्प '+CLAB[k]+', '+t+'।').join(' ')}
 function clFinVoice(z){const pass=z.score>=2,n=CL.n;
   if(!pass)return 'अभी कम से कम दो सही जवाब चाहिए। पिछले स्टेप दोबारा देखो और फिर कोशिश करो।';
   let t='बहुत बढ़िया! तीन में से '+z.score+' सही। पैटर्न '+n+' पूरा हुआ।';
-  if(n===9&&!PAID)t+=' आगे बीस और पैटर्न बाकी हैं। एंगल्फ़िंग, मॉर्निंग स्टार जैसे बड़े पैटर्न और उनका बैकटेस्ट अभी खुलना बाकी है।';
-  else if(n===10&&!PAID)t+=' बेसिक दस पैटर्न पूरे हुए। आगे के बीस प्रो पैटर्न और उनका बैकटेस्ट पूरे कोर्स में खुलते हैं।';
+  if(n===4&&!PAID)t+=' आगे और भी बड़े पैटर्न बाकी हैं। एंगल्फ़िंग, मॉर्निंग स्टार जैसे पैटर्न और उनका बैकटेस्ट अभी खुलना बाकी है।';
+  else if(n===5&&!PAID)t+=' बेसिक पाँच पैटर्न पूरे हुए। आगे के पच्चीस प्रो पैटर्न और उनका बैकटेस्ट पूरे कोर्स में खुलते हैं।';
   else if(n<30)t+=' अगला पैटर्न है '+PATS[n].hd+'।';
   else t+=' सारे तीस पैटर्न पूरे हुए। बधाई हो!';
   return t}
@@ -3773,19 +3773,20 @@ function clSpeak(){if(!LAUTO||CL.view!=='p')return;const p=PATS[CL.n-1],D=clD();
   if(z.pick===null)speak(clQVoice(z),true,null,true)}
 function clAfterPick(){const z=CL.q;if(!z||!LAUTO)return;const q=z.qs[z.i],i=z.i,ok=z.pick===q.a;
   speak(ok?'सही जवाब!':'गलत। सही जवाब है विकल्प '+CLAB[q.a]+', '+q.ho[q.a]+'।',true,()=>{if(CL.q===z&&z.i===i&&z.pick!==null&&!z.fin&&L_.view==='cl'&&CL.view==='p'&&CL.s===4)clQNext()},true)}
-function clQNext(){const q=CL.q;if(!q)return;if(q.i<2){q.i++;q.pick=null}else{q.fin=true;if(q.score>=2&&CL.n===clDoneN()+1){CL.done[CL.n]=true;clSave();ev('cl_done',CL.n)}}lnRender();window.scrollTo(0,0);clSpeak()}
+function clQNext(){const q=CL.q;if(!q)return;if(q.i<2){q.i++;q.pick=null}else{q.fin=true;if(q.score>=2&&clOpenOK(CL.n)&&!CL.done[CL.n]){CL.done[CL.n]=true;clSave();ev('cl_done',CL.n)}}lnRender();window.scrollTo(0,0);clSpeak()}
 $('v-learn').addEventListener('click',e=>{const b=e.target.closest('[data-cl]');if(!b)return;const a=b.dataset.cl,n=+b.dataset.n;
   const R=()=>{lnRender();window.scrollTo(0,0)};
   if(a==='kit'){clKit();return}
   if(a==='enter'){L_.view='cl';CL.view='home';R();clLoadIx(state.ix).then(()=>{if(L_.view==='cl')lnRender()});return}
   if(a==='exit'){try{stopSpeech()}catch(x){}L_.view='home';R();return}
   if(a==='home'){try{stopSpeech()}catch(x){}CL.view='home';R();return}
-  if(a==='open'){if(!clOpenOK(n))return;CL.n=n;CL.s=0;CL.sel=0;CL.q=null;CL.view='p';ev('cl_start',n);R();clSpeak();return}
+  if(a==='locked'){CL.showWall=1;lnRender();window.scrollTo(0,0);return}
+  if(a==='open'){if(!clOpenOK(n)){CL.showWall=1;lnRender();return}CL.n=n;CL.s=0;CL.sel=0;CL.q=null;CL.view='p';ev('cl_start',n);R();clSpeak();return}
   if(a==='next'){CL.s=Math.min(4,CL.s+1);R();clSpeak();return}
   if(a==='prev'){CL.s=Math.max(0,CL.s-1);R();clSpeak();return}
   if(a==='say'){const D=clD();if(D){speak(clVoice(PATS[CL.n-1],D),true,null,true)}return}
   if(a==='auto'){LAUTO=!LAUTO;try{localStorage.setItem(LAK,LAUTO?'1':'0')}catch(x){}if(!LAUTO){try{stopSpeech()}catch(x){}lnRender()}else{lnRender();clSpeak()}return}
-  if(a==='sel'){CL.sel=+b.dataset.k;lnRender();const D=clD(),p=PATS[CL.n-1];if(D&&LAUTO){const oc=D.st[p.id].occ.slice().reverse()[CL.sel];const r=oc!=null?clOccRes(D,p,oc):null;if(r)speak('इसके बाद अगली तीन कैंडल में भाव '+Math.abs(r.m).toFixed(2)+' प्रतिशत '+(r.m>=0?'ऊपर':'नीचे')+' गया।'+(r.ok===true?' इशारा सही निकला।':r.ok===false?' इशारा गलत निकला।':''),true,null,true)}return}
+  if(a==='sel'){CL.sel=+b.dataset.k;lnRender();const D=clD(),p=PATS[CL.n-1];if(D&&LAUTO){const oc=clOccOrder(D,p,D.st[p.id])[CL.sel];const r=oc!=null?clOccRes(D,p,oc):null;if(r)speak('इसके बाद अगली तीन कैंडल में भाव '+Math.abs(r.m).toFixed(2)+' प्रतिशत '+(r.m>=0?'ऊपर':'नीचे')+' गया।'+(r.ok===true?' इशारा काम किया।':r.ok===false?' इस बार पुष्टि नहीं मिली।':''),true,null,true)}return}
   if(a==='retry'){CL.q=null;lnRender();return}
   if(a==='pick'&&CL.q&&CL.q.pick===null){const q=CL.q;q.pick=+b.dataset.k;if(q.pick===q.qs[q.i].a)q.score++;lnRender();clAfterPick();return}
   if(a==='qnext'&&CL.q){clQNext();return}
