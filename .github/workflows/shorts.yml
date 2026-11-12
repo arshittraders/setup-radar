@@ -14,7 +14,9 @@ permissions:
   contents: write
   id-token: write
 
-concurrency: { group: shorts-${{ github.event.inputs.kind || github.event.schedule }}, cancel-in-progress: false }
+concurrency:
+  group: shorts-${{ github.event.inputs.kind || github.event.schedule }}
+  cancel-in-progress: false
 
 env:
   START_DATE: '2026-11-13'
@@ -48,7 +50,8 @@ jobs:
           export OIDC=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=setup-radar-shorts" | jq -r .value)
           node shorts/make.js ${{ steps.p.outputs.kind }} ${{ steps.p.outputs.day }} job
       - name: Upload to release
-        env: { GH_TOKEN: '${{ github.token }}' }
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release view shorts >/dev/null 2>&1 || gh release create shorts --title "Daily Shorts" --notes "Auto-generated shorts" --prerelease
           cp job/out.mp4 "$TAG.mp4"; cp job/thumb.jpg "$TAG.jpg"; cp job/meta.json "$TAG.json"; cp job/script.json "$TAG-script.json"
