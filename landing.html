@@ -1,6 +1,10 @@
 <!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Setup Radar: F&O seekho, seedha dekhkar</title>
 <meta name="description" content="F&O beginners ke liye 30 lesson ka educational app. Pehle 10 lesson free. Android APK download karo.">
+<!-- Meta Pixel (Kiwtech business, shared pixel) -->
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','954588167496633');fbq('track','PageView');fbq('track','ViewContent',{content_name:'Setup Radar landing',content_category:'setup_radar'});</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=954588167496633&ev=PageView&noscript=1"/></noscript>
 <link rel="icon" href="/icon-192.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#FFF8EC;--ink:#1B2A41;--mut:#5B6B80;--card:#fff;--a:#2563EB;--b:#0891B2;--ok:#16A34A;--y:#FFE08A}
@@ -65,6 +69,7 @@ var id=g('sr_uid');if(!id){id='u'+Math.random().toString(36).slice(2,12)+Date.no
 function ev(e){try{navigator.sendBeacon('/api/ev',new Blob([JSON.stringify({id:id,e:e,src:src})],{type:'application/json'}))}catch(x){}}
 ev('land_view');
 document.getElementById('dl').href='/api/dl?s='+encodeURIComponent(src)+'&id='+id;
+document.getElementById('dl').addEventListener('click',function(){try{fbq('track','CompleteRegistration',{content_name:'Setup Radar APK',status:'download'});fbq('trackCustom','ApkDownload',{src:src})}catch(e){}});
 var chat=document.getElementById('chat'),hist=[];
 function add(t,c){var d=document.createElement('div');d.className='m '+c;d.textContent=t;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return d}
 var FB={'kya sikhaya':'30 lesson mein call, put, option chain, hedging, option selling aur risk management. Har lesson mein example, animation aur quiz hai. Neeche Download button se app lo.','kitne':'Pehle 10 lesson free. Poora course ₹699 (ek baar). AI Guru optional ₹299/month.','safe':'App sirf shiksha ke liye hai, ismein asli paisa nahi lagta (paper trading). F&O mein poori puunji doob sakti hai, isliye pehle practice karo.','apk':'Upar Download dabao, file kholo, "Install unknown apps" allow karo aur Install dabao. Detail neeche steps mein hai.'};
@@ -74,6 +79,6 @@ async function ask(t){t=t.trim();if(!t)return;add(t,'u');var w=add('...','b');
  chat.scrollTop=chat.scrollHeight}
 document.getElementById('f').onsubmit=function(e){e.preventDefault();var i=document.getElementById('q');ask(i.value);i.value=''};
 document.querySelectorAll('.chips button').forEach(function(b){b.onclick=function(){ask(b.textContent)}});
-document.getElementById('lb').onclick=async function(){var m=document.getElementById('lm');try{var r=await fetch('/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('ln').value,phone:document.getElementById('lp').value,src:src})});var j=await r.json();m.textContent=j.ok?'Done! Jaldi link bhejenge.':(j.error||'Number check karo')}catch(e){m.textContent='Dobara try karo'}};
+document.getElementById('lb').onclick=async function(){var m=document.getElementById('lm');try{var r=await fetch('/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('ln').value,phone:document.getElementById('lp').value,src:src})});var j=await r.json();if(j.ok){try{fbq('track','Lead',{content_name:'Setup Radar WhatsApp link'})}catch(e){}}m.textContent=j.ok?'Done! Jaldi link bhejenge.':(j.error||'Number check karo')}catch(e){m.textContent='Dobara try karo'}};
 })();
 </script></body></html>
