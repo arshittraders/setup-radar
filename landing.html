@@ -16,8 +16,8 @@
 .card{background:var(--card);border:3px solid var(--ink);border-radius:20px;box-shadow:5px 5px 0 var(--ink);padding:16px;margin:16px 0}
 .card h2{font-size:21px;margin-bottom:8px}.pts{list-style:none;padding:0;margin:0}.pts li{padding:7px 0 7px 34px;position:relative;font-weight:600}
 .pts li:before{content:"✓";position:absolute;left:0;top:7px;width:24px;height:24px;border-radius:50%;background:#BBF7D0;border:2px solid var(--ink);text-align:center;line-height:20px;font-weight:800;font-size:14px}
-.price{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}.price div{border:3px solid var(--ink);border-radius:14px;padding:10px 4px;background:#F8FAFC}
-.price b{display:block;font:800 22px Poppins}.price span{font-size:12.5px;color:var(--mut);font-weight:600}
+.price{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}.price div,.price a{border:3px solid var(--ink);border-radius:14px;padding:10px 4px;background:#F8FAFC}
+.price a{display:block;text-decoration:none;color:var(--ink)}.price b{display:block;font:800 22px Poppins}.price span{font-size:12.5px;color:var(--mut);font-weight:600}
 .chat{height:300px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:2px}
 .m{max-width:88%;padding:9px 13px;border:2.5px solid var(--ink);border-radius:16px;font-size:15px;font-weight:600;white-space:pre-wrap}
 .m.b{background:#DBEAFE;border-bottom-left-radius:4px;align-self:flex-start}.m.u{background:var(--y);border-bottom-right-radius:4px;align-self:flex-end}
@@ -36,7 +36,7 @@ details{border-top:2px dashed #CBD5E1;padding:9px 0}details summary{font-weight:
 <div class="card"><h2>App mein kya milta hai</h2><ul class="pts">
 <li>Call, put, naked put, hedging: sab app khud chalakar dikhata hai</li><li>Candle Lab: 30 candle patterns aur pichhle 1 mahine ka backtest, kitni baar bani aur uske baad kya hua</li><li>Option chain, payoff chart aur hedge lab</li><li>₹5,00,000 ka virtual paisa, paper trading practice</li><li>Hindi awaaz mein AI Guru, galti par dost jaisa saath</li></ul></div>
 
-<div class="card"><h2>Price</h2><div class="price"><div><b>Free</b><span>pehle 10 lesson</span></div><div><b>₹699</b><span>poora course, ek baar</span></div><div><b>₹299</b><span>AI Guru / mahina (optional)</span></div></div>
+<div class="card"><h2>Price</h2><div class="price"><a href="/#learn"><b>Free</b><span>pehle 10 lesson</span></a><a href="/#learn"><b>₹699</b><span>poora course, ek baar</span></a><a href="/#learn"><b>₹299</b><span>AI Guru / mahina (optional)</span></a></div><p style="font-size:12px;color:var(--mut);margin:8px 0 0;font-weight:600">Tap karo: app khulega. Payment app ke andar hota hai (pehle 10 lesson dekhne ke baad).</p>
 <p class="sub" style="margin:10px 0 0">Payment Kiwtech ke secure Razorpay checkout se (UPI, card, netbanking)</p></div>
 
 <div class="card"><h2>Kuch poochna hai?</h2><div class="chat" id="chat"><div class="m b">Namaste! Main Setup Radar ka guide hoon. Course, price ya app ke baare mein kuch bhi poochiye 🙂</div></div>
