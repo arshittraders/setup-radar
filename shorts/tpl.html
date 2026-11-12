@@ -27,6 +27,8 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
 #card .show{font-size:76px;line-height:1.14;font-weight:900}
 #card .show span{display:inline-block;margin:0 .14em}
 #card .sub{font-size:42px;line-height:1.35;font-weight:600;color:var(--mut);margin-top:30px}
+#emo{position:absolute;left:50%;top:600px;width:300px;height:300px;margin-left:-150px;border-radius:50%;background:#fff;box-shadow:0 24px 70px rgba(91,91,247,.22);display:flex;align-items:center;justify-content:center;font-size:170px;line-height:1}
+#emo:before{content:'';position:absolute;inset:-18px;border-radius:50%;border:6px dashed rgba(91,91,247,.25)}
 #dots{position:absolute;left:0;right:0;display:flex;justify-content:center;gap:16px}
 #dots i{width:18px;height:18px;border-radius:9px;background:#d6d9ec}
 #dots i.on{width:56px;background:linear-gradient(90deg,var(--a),var(--b))}
@@ -44,7 +46,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
   <div id="prog"><span id="pl"></span><div class="bar"><i id="pb"></i></div><span id="pr"></span></div>
   <div id="topic"><small id="tk"></small><h1 id="tt"></h1></div>
   <svg id="chart" viewBox="0 0 900 520"></svg>
-  <div id="card"><div class="tag" id="ctag"></div><div class="show" id="cshow"></div><div class="sub" id="csub"></div></div>
+  <div id="emo"></div><div id="card"><div class="tag" id="ctag"></div><div class="show" id="cshow"></div><div class="sub" id="csub"></div></div>
   <div id="dots"></div>
   <div id="disc">Sirf shiksha ke liye · Investment advice nahi</div>
   <div id="outro"><img src="icon.png"><h2>Setup Radar</h2><p>F&amp;O seekho, aasaan Hindi mein</p><div class="cta">FREE App · Link in Bio</div><div class="nx" id="onx"></div></div>
@@ -65,8 +67,8 @@ window.setup=function(d){
   else { $('pl').textContent='Day '+d.day; $('pb').style.width=(d.day/90*100)+'%'; $('pr').textContent='90'; $('tk').textContent=d.kind==='lesson'?'Aaj ka lesson':'Aaj ka candle'; $('tt').textContent=d.topic; }
   const isC=d.kind==='candle';
   $('chart').style.display=isC?'block':'none';
-  $('card').style.top=(isC?1130:600)+'px';
-  $('dots').style.top=(isC?1700:1640)+'px';
+  $('card').style.top=(isC?1130:960)+'px'; $('emo').style.display=isC?'none':'flex';
+  $('dots').style.top=(isC?1700:1720)+'px';
   $('dots').innerHTML=d.scenes.map(()=>'<i></i>').join('');
   $('onx').textContent=d.next||'';
   if(isC){ // chart geometry
@@ -135,10 +137,11 @@ window.render=function(t){
   const card=$('card'), ck=ease(p/0.35), out=ease((t-(sc.end-0.25))/0.25);
   card.style.opacity=ck*(1-out*(si<d.scenes.length-1?1:0));
   card.style.transform=`translateY(${(1-ck)*60}px) scale(${0.96+0.04*ck})`;
-  const tg=$('ctag'); const tag=sc.tag||(d.kind==='lesson'?'POINT '+(si+1):d.kind==='candle'?(d.bias==='bull'?'BULLISH':d.bias==='bear'?'BEARISH':'NEUTRAL'):'');
+  const tg=$('ctag'); const tag=(sc.tag||'').toUpperCase()||(d.kind==='lesson'?'POINT '+(si+1):d.kind==='candle'?(d.bias==='bull'?'BULLISH':d.bias==='bear'?'BEARISH':'NEUTRAL'):'');
   if(si===0&&d.kind!=='news'){ tg.textContent='🔥 SUNO'; tg.style.background='linear-gradient(90deg,#f59e0b,#ec4899)'; }
   else { tg.textContent=tag; tg.style.background=TAGC[tag]||(d.bias==='bull'?'#10b981':d.bias==='bear'?'#ef4444':'linear-gradient(90deg,#5b5bf7,#ec4899)'); }
   tg.style.display=tag||si===0?'inline-block':'none';
+  if(d.kind!=='candle'){ const e=$('emo'); const em=sc.emoji||'📈'; if(e._t!==em){e._t=em;e.textContent=em;} const k=back(p/0.5); e.style.transform=`scale(${0.4+0.6*k}) rotate(${(1-k)*-25+Math.sin(t*2.2)*4}deg) translateY(${Math.sin(t*2)*8}px)`; e.style.opacity=clamp(p/0.25)*(1-out*(si<d.scenes.length-1?1:0)); }
   words($('cshow'),sc.show||'',p-0.1);
   const sb=$('csub'); sb.textContent=sc.sub||''; sb.style.opacity=clamp((p-0.5)/0.4); sb.style.transform=`translateY(${(1-ease((p-0.5)/0.4))*20}px)`;
   [...$('dots').children].forEach((e,i)=>e.className=i===si?'on':'');
