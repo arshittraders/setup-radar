@@ -1,0 +1,81 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@700;800&family=Rozha+One&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+.bg{position:absolute;inset:-80px;background-size:cover;background-position:center;filter:blur(38px) brightness(.55) saturate(1.25);opacity:0}
+.fr{position:absolute;left:0;top:520px;width:1080px;height:740px;overflow:hidden;opacity:0;box-shadow:0 0 0 2px rgba(255,255,255,.06)}
+.fr img{position:absolute;left:0;top:0;width:1080px;height:740px;object-fit:cover;transform-origin:50% 50%}
+#title{position:absolute;left:0;right:0;top:150px;text-align:center;font-family:'Rozha One',serif;color:#ffcf3a;font-size:110px;line-height:1;text-shadow:0 0 30px rgba(255,90,0,.6),4px 4px 0 #3a0000}
+#part{position:absolute;left:50%;top:290px;transform:translateX(-50%);font-family:Mukta,sans-serif;font-weight:800;font-size:46px;color:#fff;background:#b3001b;padding:6px 34px;border-radius:12px;box-shadow:0 8px 30px rgba(179,0,27,.5)}
+#sub{position:absolute;left:50px;right:50px;top:1320px;text-align:center;font-family:Mukta,sans-serif;font-weight:800;font-size:64px;line-height:1.28;color:#fff;
+  text-shadow:0 0 8px #000,0 0 18px #000,3px 3px 0 #000,-3px -3px 0 #000,3px -3px 0 #000,-3px 3px 0 #000}
+#sub b{color:#ff4d4d}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 47%,transparent 40%,rgba(0,0,0,.5) 75%,rgba(0,0,0,.9) 100%)}
+#grain{position:absolute;inset:0;pointer-events:none;opacity:.13;mix-blend-mode:overlay}
+#red{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,rgba(160,0,0,0) 30%,rgba(160,0,0,.55) 100%);opacity:0}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+#black{position:absolute;inset:0;background:#000;pointer-events:none}
+#end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Mukta,sans-serif;color:#fff;opacity:0}
+#end h1{font-family:'Rozha One',serif;font-size:120px;color:#ffcf3a;text-shadow:0 0 30px rgba(255,90,0,.6)}
+#end h2{font-size:70px;font-weight:800;color:#ff4d4d;margin-top:20px}
+#end p{font-size:50px;font-weight:800;margin-top:50px}
+</style></head><body>
+<div id="stage"></div>
+<div id="vig"></div>
+<svg id="grain" width="1080" height="1920"><filter id="n"><feTurbulence id="turb" type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="1"/><feColorMatrix type="saturate" values="0"/></filter><rect width="1080" height="1920" filter="url(#n)"/></svg>
+<div id="red"></div>
+<div id="title"></div><div id="part"></div>
+<div id="sub"></div>
+<div id="flash"></div>
+<div id="black"></div>
+<div id="end"><h1 id="et"></h1><h2 id="en"></h2><p>Follow karo 🔔 taaki agla bhaag miss na ho</p></div>
+<script>
+let D;const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),ease=x=>{x=cl(x);return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2};
+const nz=t=>Math.sin(t*12.9898)*0.5+Math.sin(t*78.233)*0.3+Math.sin(t*37.719)*0.2;
+window.setup=d=>{D=d;
+  const st=$('stage');
+  d.shots.forEach((s,i)=>{st.insertAdjacentHTML('beforeend',`<div class="bg" id="bg${i}" style="background-image:url('${s.src}')"></div><div class="fr" id="fr${i}"><img src="${s.src}"></div>`);});
+  $('title').textContent=d.title;$('part').textContent=d.part;$('et').textContent=d.title;$('en').textContent=d.next;
+};
+window.render=t=>{
+  const d=D; let cur=0; d.shots.forEach((s,i)=>{if(t>=s.start)cur=i;});
+  let shake=0;
+  d.shots.forEach((s,i)=>{
+    const fin=i===0?1:ease((t-s.start)/0.22), next=d.shots[i+1], fout=next?cl((next.start-t)/0.01):1;
+    const on=(i===cur)||(i===cur-1&&t-d.shots[cur].start<0.22);
+    const a=on?(i===cur?fin:1):0;
+    $('fr'+i).style.opacity=a; $('bg'+i).style.opacity=a;
+    if(!on) return;
+    const k=cl((t-s.start)/Math.max(0.5,s.end-s.start));
+    let sc=1.04,tx=0,ty=0;
+    if(s.move==='in'){sc=1.04+0.14*k;} else if(s.move==='out'){sc=1.2-0.15*k;} else if(s.move==='panR'){sc=1.16;tx=-60+120*k;} else if(s.move==='panL'){sc=1.16;tx=60-120*k;}
+    else if(s.move==='snap'){sc=1.0+0.32*ease(k*3);}
+    if(s.shake&&t-s.start<1.4){shake=Math.max(shake,22*Math.exp(-(t-s.start)*2.2));}
+    if(s.hook){sc=1.25-0.15*k; shake=Math.max(shake,10);}
+    const im=$('fr'+i).querySelector('img');
+    im.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`;
+    let br=1; if(s.flicker){br=nz(t*2.3)>0.25?0.45:1;}
+    im.style.filter=`brightness(${br}) contrast(1.08) saturate(1.08)`;
+  });
+  d.slams.forEach(x=>{const q=t-x;if(q>0&&q<0.3)shake=Math.max(shake,26*(1-q/0.3));});
+  if(t>d.sting&&t<d.sting+0.7) shake=Math.max(shake,34*(1-(t-d.sting)/0.7));
+  const sx=shake*nz(t*3),sy=shake*nz(t*3+7);
+  $('stage').style.transform=`translate(${sx}px,${sy}px)`;
+  $('turb').setAttribute('seed',Math.floor(t*24)%97);
+  // title
+  const ti=cl((t-d.hookEnd)/0.4)*(1-cl((t-(d.hookEnd+3.2))/0.6));
+  $('title').style.opacity=ti; $('part').style.opacity=ti; $('title').style.transform=`scale(${0.85+0.15*ease((t-d.hookEnd)/0.5)})`;
+  // subtitles
+  const g=d.segs.find(x=>t>=x.start-0.05&&t<x.end+0.3); const sb=$('sub'); const tx2=g&&t<d.sting+0.5?g.sub:'';
+  if(sb._t!==tx2){sb._t=tx2; sb.innerHTML=tx2.startsWith('"')?'<b>'+tx2.replace(/"/g,'')+'</b>':tx2;}
+  sb.style.opacity=g?cl((t-g.start+0.05)/0.15):0;
+  // red pulse on ghost lines
+  const gl=d.segs.some(x=>x.who!=='N'&&t>=x.start&&t<x.end+0.3); $('red').style.opacity=gl?0.6+0.4*Math.abs(Math.sin(t*4)):0;
+  $('flash').style.opacity=(t<d.hookEnd&&t>0.05&&t<0.14)?0.8:(t>d.hookEnd&&t<d.hookEnd+0.1?0.6:(t>d.sting&&t<d.sting+0.12?0.9:0));
+  const endT=d.sting+1.6; $('black').style.opacity=t<0.04?1:(t>d.sting+0.9?1:0);
+  const ek=cl((t-endT)/0.6); $('end').style.opacity=ek; $('end').style.zIndex=10;
+};
+</script></body></html>

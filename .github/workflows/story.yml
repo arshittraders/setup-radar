@@ -1,0 +1,41 @@
+name: Image Story Short
+on:
+  workflow_dispatch:
+    inputs:
+      story: { description: 'story json path', required: true, default: 'story/haar/part1.json' }
+permissions:
+  contents: write
+  id-token: write
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Install renderer + Vulkan (CPU) for Real-ESRGAN
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji mesa-vulkan-drivers libvulkan1 libgomp1 unzip >/dev/null
+          npm i --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+      - name: AI upscale panels (Real-ESRGAN anime)
+        continue-on-error: true
+        run: |
+          mkdir -p esr job/img && cd esr
+          curl -sSL -o r.zip https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-ubuntu.zip
+          unzip -oq r.zip && chmod +x realesrgan-ncnn-vulkan
+          D=$(dirname ../${{ github.event.inputs.story }})/panels
+          for f in $D/*.png; do n=$(basename $f); timeout 300 ./realesrgan-ncnn-vulkan -i $f -o ../job/img/$n -n realesr-animevideov3 -s 4 -g -1 >/dev/null 2>&1 || timeout 300 ./realesrgan-ncnn-vulkan -i $f -o ../job/img/$n -n realesr-animevideov3 -s 4 || true; done
+          ls -la ../job/img
+      - name: Build
+        run: |
+          export OIDC=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=setup-radar-shorts" | jq -r .value)
+          node story/make.js ${{ github.event.inputs.story }} job
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          N=story-$(echo ${{ github.event.inputs.story }} | sed 's#story/##; s#/#-#g; s#.json##')
+          gh release view shorts >/dev/null 2>&1 || gh release create shorts --title "Daily Shorts" --notes "Auto-generated shorts" --prerelease
+          cp job/out.mp4 "$N.mp4"; cp job/thumb.jpg "$N.jpg"
+          gh release upload shorts "$N.mp4" "$N.jpg" --clobber
