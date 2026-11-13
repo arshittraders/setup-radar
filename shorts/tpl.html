@@ -1,6 +1,6 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&family=Mukta:wght@800&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#121735;--mut:#5b6283;--bg:#f6f7fc;--a:#5b5bf7;--b:#ec4899;--o:#f97316;--g:#10b981;--r:#ef4444;--y:#ffe14d}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -34,8 +34,10 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
 #card .show span{display:inline-block;margin:0 .12em;position:relative;transform-origin:50% 70%}
 #card .show span.hl:before{content:'';position:absolute;left:-10px;right:-10px;bottom:6px;height:42%;background:var(--y);border-radius:10px;z-index:-1;transform-origin:left;transform:scaleX(var(--hl,0))}
 #card .sub{font-size:44px;line-height:1.3;font-weight:700;color:var(--mut);margin-top:26px}
+#cap{position:absolute;left:40px;right:40px;top:1515px;text-align:center;font-family:'Mukta','Poppins',sans-serif;font-weight:800;font-size:58px;line-height:1.25;z-index:4;text-shadow:0 3px 0 rgba(0,0,0,.25)}
+#cap span{padding:0 6px;border-radius:12px}
 #flash{position:absolute;inset:0;background:#fff;pointer-events:none;z-index:8}
-#dots{position:absolute;left:0;right:0;top:1660px;display:flex;justify-content:center;gap:16px;z-index:3}
+#dots{position:absolute;left:0;right:0;top:1700px;display:flex;justify-content:center;gap:16px;z-index:3}
 #dots i{width:18px;height:18px;border-radius:9px;background:#d6d9ec}
 #dots i.on{width:60px;background:linear-gradient(90deg,var(--a),var(--b))}
 #disc{position:absolute;left:0;right:0;bottom:60px;text-align:center;font-size:26px;font-weight:600;color:#8a90ad;z-index:3}
@@ -58,6 +60,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
   <div id="orb"><div class="spin"></div><div class="ring" id="r1"></div><div class="ring" id="r2"></div><div class="core" id="emo"></div></div>
   <svg id="chart" viewBox="0 0 940 520"></svg>
   <div id="card"><div class="tag" id="ctag"></div><div class="show" id="cshow"></div><div class="sub" id="csub"></div></div>
+  <div id="cap"></div>
   <div id="dots"></div>
   <div id="disc">Sirf shiksha ke liye · Investment advice nahi</div>
 </div>
@@ -198,6 +201,7 @@ window.render=function(t){
   const sb=$('csub'); sb.textContent=sc.sub||''; sb.style.opacity=clamp((p-0.45)/0.25); sb.style.transform=`translateY(${(1-ease((p-0.45)/0.3))*30}px)`;
   [...$('dots').children].forEach((e,i)=>e.className=i===si?'on':'');
   $('dots').style.opacity=si===0?0:1;
+  if(window.karaoke){ const cp=$('cap'); window.karaoke(cp,d.scenes,t,{max:4,on:si===0?'#ffe14d':'#ec4899',done:si===0?'#ffffff':'#121735',off:si===0?'rgba(255,255,255,.7)':'rgba(18,23,53,.45)'}); if(t>=d.outro.start) cp.style.opacity=0; }
   if(d.kind==='candle'){ drawChart(t); $('chart').style.opacity=si===0?0:1; $('chart').style.transform=`scale(${0.9+0.1*back((t-d.scenes[0].end+0.1)/0.4)})`; }
   // outro
   const op=t-d.outro.start, ok=ease(op/0.25); const o=$('outro'); o.style.display=ok>0?'flex':'none'; o.style.opacity=ok;

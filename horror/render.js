@@ -1,6 +1,7 @@
 // Render the horror short: <job>/story.json + <job>/a<i>.mp3 (one per segment) -> <job>/out.mp4 + thumb.jpg
 const fs = require('fs'), path = require('path'), { execFileSync, spawn } = require('child_process');
 const { chromium } = require('playwright');
+const CAP = require('../shorts/captions');
 const FPS = 30;
 const job = path.resolve(process.argv[2]);
 const S = JSON.parse(fs.readFileSync(path.join(job, 'story.json'), 'utf8'));
@@ -56,10 +57,12 @@ filt.push(all.map((_, i) => `[x${i}]`).join('') + `amix=inputs=${all.length}:nor
 ff([...inputs, '-filter_complex', filt.join(';'), '-map', '[a]', '-t', TOTAL.toFixed(2), '-ac', '2', '-c:a', 'aac', '-b:a', '192k', W('audio.m4a')]);
 
 (async () => {
+  for (let i = 0; i < S.segments.length; i++) { const g = S.segments[i]; g.words = await CAP.wordTimes(W(`v${i}.wav`), String(g.sub || g.text).replace(/["“”]/g, '')); g.ghost = (S.voices[g.who] || {}).fx === 'ghost'; }
   const br = await chromium.launch();
   const pg = await br.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
   await pg.goto('file://' + path.join(__dirname, 'tpl.html'));
   await pg.evaluate(() => document.fonts.ready);
+  await pg.addScriptTag({ content: CAP.CLIENT });
   await pg.evaluate(d => window.setup(d), { segs: S.segments, knocks });
   const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
     '-i', W('audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', W('out.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });

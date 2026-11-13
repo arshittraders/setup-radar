@@ -1,6 +1,7 @@
 // Image-panel story short: <job>/story.json + <job>/a<i>.mp3 + panels in <job>/img/<ID>.png -> <job>/out.mp4
 const fs = require('fs'), path = require('path'), { execFileSync, spawn } = require('child_process');
 const { chromium } = require('playwright');
+const CAP = require('../shorts/captions');
 const FPS = 30, job = path.resolve(process.argv[2]), W = p => path.join(job, p);
 const S = JSON.parse(fs.readFileSync(W('story.json'), 'utf8'));
 const ff = a => execFileSync('ffmpeg', ['-y', '-v', 'error', ...a]);
@@ -60,10 +61,12 @@ S.segments.forEach((g, i) => {
 shots.forEach((s, i) => { if (shots[i + 1]) s.end = shots[i + 1].start; else s.end = sting + 0.9; });
 
 (async () => {
+  for (let i = 0; i < S.segments.length; i++) { const g = S.segments[i]; g.words = await CAP.wordTimes(W(`v${i}.wav`), String(g.sub || g.text).replace(/["“”]/g, '')); }
   const br = await chromium.launch({ args: ['--allow-file-access-from-files'] });
   const pg = await br.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
   await pg.goto('file://' + path.join(__dirname, 'tpl.html'));
   await pg.evaluate(() => document.fonts.ready);
+  await pg.addScriptTag({ content: CAP.CLIENT });
   await pg.evaluate(d => window.setup(d), { shots, segs: S.segments, slams, sting, hookEnd, title: S.title, part: S.part, next: S.next, horror: (S.mood || 'horror') === 'horror' });
   await pg.waitForTimeout(800);
   const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-i', W('audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', W('out.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });

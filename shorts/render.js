@@ -2,6 +2,7 @@
 // usage: node shorts/render.js <jobdir>
 const fs = require('fs'), path = require('path'), { execFileSync, spawn } = require('child_process');
 const { chromium } = require('playwright');
+const CAP = require('./captions');
 const FPS = 30, GAP = 0.12, LEAD = 0.15, BPM = 124;
 const SPEED = Number(process.env.VOICE_SPEED || 1.22), PITCH = Number(process.env.VOICE_PITCH || 0.95);
 
@@ -41,11 +42,13 @@ filt.push(`[vo][md]amix=inputs=2:normalize=0,alimiter=limit=0.95[a]`);
 execFileSync('ffmpeg', ['-y', '-v', 'error', ...inputs, '-filter_complex', filt.join(';'), '-map', '[a]', '-t', TOTAL.toFixed(2), '-c:a', 'aac', '-b:a', '192k', path.join(job, 'audio.m4a')]);
 
 (async () => {
+  for (let i = 0; i < S.scenes.length; i++) { const sc = S.scenes[i]; sc.words = await CAP.wordTimes(path.join(job, `v${i}.wav`), sc.say || ''); }
   fs.copyFileSync(path.join(__dirname, '..', 'icon-512.png'), path.join(__dirname, 'icon.png'));
   const br = await chromium.launch();
   const pg = await br.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
   await pg.goto('file://' + path.join(__dirname, 'tpl.html'));
   await pg.evaluate(() => document.fonts.ready);
+  await pg.addScriptTag({ content: CAP.CLIENT });
   await pg.evaluate(d => window.setup(d), S);
   const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
     '-i', path.join(job, 'audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p',
