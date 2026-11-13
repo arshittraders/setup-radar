@@ -1,0 +1,235 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@700;800&family=Creepster&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#cam{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0}
+svg{display:block}
+#sub{position:absolute;left:60px;right:60px;top:1395px;text-align:center;font-family:Mukta,sans-serif;font-weight:800;font-size:62px;line-height:1.28;color:#fff;
+  text-shadow:0 0 6px #000,0 0 14px #000,3px 3px 0 #000,-3px -3px 0 #000,3px -3px 0 #000,-3px 3px 0 #000}
+#sub b{color:#ffd23f;font-weight:800}
+#black{position:absolute;inset:0;background:#000;pointer-events:none}
+#flash{position:absolute;inset:0;background:#fff;pointer-events:none;mix-blend-mode:screen}
+#end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;font-family:Mukta,sans-serif}
+#end h1{font-family:Creepster,cursive;font-size:150px;color:#d10f1b;letter-spacing:6px;text-shadow:0 0 30px rgba(255,0,0,.7)}
+#end p{font-size:58px;font-weight:800;margin-top:40px}
+#end small{font-size:42px;font-weight:700;opacity:.85;margin-top:22px}
+#grain{position:absolute;inset:0;pointer-events:none;opacity:.16;mix-blend-mode:overlay}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 35%,rgba(0,0,0,.55) 70%,rgba(0,0,0,.92) 100%)}
+</style></head>
+<body>
+<div id="cam">
+<svg id="world" width="1080" height="1920" viewBox="0 0 1080 1920">
+<defs>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1a3a"/><stop offset="1" stop-color="#050b1c"/></linearGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a1022"/><stop offset="1" stop-color="#02040a"/></linearGradient>
+  <linearGradient id="beam" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="rgba(150,185,255,.28)"/><stop offset="1" stop-color="rgba(150,185,255,0)"/></linearGradient>
+  <radialGradient id="moon"><stop offset="0" stop-color="#f3f6ff"/><stop offset=".7" stop-color="#cdd8ff"/><stop offset="1" stop-color="#9fb2ef"/></radialGradient>
+  <radialGradient id="moonGlow"><stop offset="0" stop-color="rgba(170,195,255,.55)"/><stop offset="1" stop-color="rgba(170,195,255,0)"/></radialGradient>
+  <radialGradient id="phoneGlow"><stop offset="0" stop-color="rgba(140,200,255,.85)"/><stop offset=".45" stop-color="rgba(90,150,255,.25)"/><stop offset="1" stop-color="rgba(90,150,255,0)"/></radialGradient>
+  <radialGradient id="redGlow"><stop offset="0" stop-color="rgba(255,40,40,.7)"/><stop offset="1" stop-color="rgba(255,40,40,0)"/></radialGradient>
+  <linearGradient id="doorG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a1a12"/><stop offset=".5" stop-color="#3a2618"/><stop offset="1" stop-color="#22150e"/></linearGradient>
+  <linearGradient id="gapLight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7a8"/><stop offset="1" stop-color="#b98a3a"/></linearGradient>
+  <linearGradient id="spill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,220,150,.45)"/><stop offset="1" stop-color="rgba(255,220,150,0)"/></linearGradient>
+  <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c98f62"/><stop offset="1" stop-color="#9c6640"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f4a63"/><stop offset="1" stop-color="#262d40"/></linearGradient>
+  <linearGradient id="ghost" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfd8d2"/><stop offset="1" stop-color="#8e9c95"/></linearGradient>
+  <linearGradient id="blanket" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b2a55"/><stop offset="1" stop-color="#2b3c73"/></linearGradient>
+  <filter id="blur8"><feGaussianBlur stdDeviation="8"/></filter>
+  <filter id="blur20"><feGaussianBlur stdDeviation="20"/></filter>
+</defs>
+<!-- room -->
+<rect width="1080" height="1520" fill="url(#wall)"/>
+<rect y="1500" width="1080" height="420" fill="url(#floor)"/>
+<line x1="0" y1="1500" x2="1080" y2="1500" stroke="#16224a" stroke-width="6"/>
+<!-- window -->
+<g id="win">
+  <rect x="60" y="300" width="360" height="430" rx="8" fill="#060d22" stroke="#22305a" stroke-width="14"/>
+  <circle cx="300" cy="420" r="150" fill="url(#moonGlow)"/>
+  <circle cx="300" cy="420" r="62" fill="url(#moon)"/>
+  <circle cx="282" cy="404" r="10" fill="#b8c6f2" opacity=".6"/><circle cx="318" cy="440" r="7" fill="#b8c6f2" opacity=".5"/>
+  <line x1="240" y1="300" x2="240" y2="730" stroke="#22305a" stroke-width="10"/>
+  <line x1="60" y1="515" x2="420" y2="515" stroke="#22305a" stroke-width="10"/>
+  <path id="curtain" d="M50 285 C 110 400, 70 560, 120 760 L 40 760 L 40 285 Z" fill="#3b1220" opacity=".95"/>
+</g>
+<polygon id="beamPoly" points="70,730 420,730 760,1500 120,1500" fill="url(#beam)"/>
+<!-- door -->
+<g id="door">
+  <rect x="690" y="560" width="340" height="950" fill="#120b07"/>
+  <g id="doorLeaf">
+    <rect x="700" y="570" width="320" height="928" rx="4" fill="url(#doorG)"/>
+    <rect x="735" y="620" width="250" height="360" rx="6" fill="none" stroke="#1a100a" stroke-width="10"/>
+    <rect x="735" y="1040" width="250" height="400" rx="6" fill="none" stroke="#1a100a" stroke-width="10"/>
+    <circle cx="745" cy="1040" r="16" fill="#8a7040"/><circle cx="745" cy="1040" r="7" fill="#c9a95f"/>
+  </g>
+  <rect id="gap" x="700" y="1498" width="320" height="9" fill="url(#gapLight)"/>
+  <polygon id="spillPoly" points="700,1507 1020,1507 1080,1640 640,1640" fill="url(#spill)"/>
+  <g id="feet" opacity="0">
+    <rect x="790" y="1497" width="58" height="11" fill="#000"/><rect x="880" y="1497" width="58" height="11" fill="#000"/>
+    <polygon points="790,1508 848,1508 860,1640 770,1640" fill="rgba(0,0,0,.75)"/><polygon points="880,1508 938,1508 960,1640 870,1640" fill="rgba(0,0,0,.75)"/>
+  </g>
+</g>
+<!-- side table + clock -->
+<g id="table">
+  <rect x="40" y="1190" width="210" height="320" fill="#1a1410"/><rect x="30" y="1175" width="230" height="22" rx="4" fill="#2a2018"/>
+  <circle id="clockGlow" cx="145" cy="1135" r="120" fill="url(#redGlow)"/>
+  <rect x="70" y="1095" width="150" height="80" rx="12" fill="#0a0a0a" stroke="#222" stroke-width="4"/>
+  <text id="clockTxt" x="145" y="1155" text-anchor="middle" font-family="monospace" font-weight="700" font-size="52" fill="#ff2a2a">2:17</text>
+</g>
+<!-- bed -->
+<g id="bed">
+  <rect x="250" y="1150" width="440" height="60" rx="10" fill="#2a1d14"/>
+  <rect x="240" y="1210" width="470" height="200" rx="18" fill="url(#blanket)"/>
+  <rect x="250" y="1400" width="30" height="110" fill="#1d140e"/><rect x="670" y="1400" width="30" height="110" fill="#1d140e"/>
+  <ellipse cx="330" cy="1200" rx="80" ry="34" fill="#c8ccd8" opacity=".85"/>
+</g>
+<!-- Rohan -->
+<g id="rohan">
+  <path d="M330 1395 L 315 1560 L 365 1565 L 380 1400 Z M455 1395 L 470 1560 L 520 1555 L 505 1395 Z" fill="#1d2b4a"/>
+  <ellipse cx="338" cy="1565" rx="34" ry="14" fill="#0e0e12"/><ellipse cx="497" cy="1560" rx="34" ry="14" fill="#0e0e12"/>
+  <path id="torso" d="M300 1040 Q 420 990 540 1040 L 560 1260 Q 540 1330 420 1340 Q 300 1330 280 1260 Z" fill="url(#shirt)"/>
+  <rect x="280" y="1250" width="280" height="160" rx="40" fill="#1d2b4a"/>
+  <path id="armL" d="" stroke="url(#skin)" stroke-width="44" stroke-linecap="round" fill="none"/>
+  <path d="M520 1060 Q 600 1160 560 1300" stroke="#3a445c" stroke-width="54" stroke-linecap="round" fill="none"/>
+  <path d="M560 1300 Q 545 1330 520 1335" stroke="url(#skin)" stroke-width="40" stroke-linecap="round" fill="none"/>
+  <rect x="392" y="955" width="56" height="70" rx="20" fill="#a46c45"/>
+  <g id="head">
+    <ellipse cx="420" cy="880" rx="112" ry="128" fill="url(#skin)"/>
+    <ellipse cx="308" cy="890" rx="20" ry="30" fill="#a46c45"/><ellipse cx="532" cy="890" rx="20" ry="30" fill="#a46c45"/>
+    <path d="M305 850 Q 300 740 420 735 Q 545 738 535 850 Q 520 790 470 800 Q 480 770 440 780 Q 430 755 400 785 Q 370 770 365 800 Q 320 795 305 850 Z" fill="#0d0a09"/>
+    <path id="browL" d="M350 842 L 400 836" stroke="#0d0a09" stroke-width="11" stroke-linecap="round"/>
+    <path id="browR" d="M440 836 L 490 842" stroke="#0d0a09" stroke-width="11" stroke-linecap="round"/>
+    <g id="eyes">
+      <ellipse id="eyeWL" cx="375" cy="878" rx="24" ry="16" fill="#eef1f5"/><ellipse id="eyeWR" cx="465" cy="878" rx="24" ry="16" fill="#eef1f5"/>
+      <circle id="pupL" cx="375" cy="878" r="10" fill="#1a0f08"/><circle id="pupR" cx="465" cy="878" r="10" fill="#1a0f08"/>
+      <circle cx="379" cy="874" r="3" fill="#fff"/><circle cx="469" cy="874" r="3" fill="#fff"/>
+      <rect id="lidL" x="348" y="860" width="54" height="0" fill="#a46c45"/><rect id="lidR" x="438" y="860" width="54" height="0" fill="#a46c45"/>
+    </g>
+    <path d="M420 885 Q 412 920 405 930 Q 420 938 435 930" stroke="#7d4f31" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path id="mouth" d="" fill="#3a0d0d" stroke="#5a2a1d" stroke-width="5"/>
+    <path id="sweat" d="M520 830 Q 528 850 520 862 Q 510 850 520 830 Z" fill="#bfe6ff" opacity="0"/>
+    <path id="tear" d="M352 900 Q 358 925 352 936 Q 344 925 352 900 Z" fill="#bfe6ff" opacity="0"/>
+  </g>
+  <g id="phone"><rect x="-26" y="-48" width="52" height="96" rx="10" fill="#0b0b10" stroke="#2c3240" stroke-width="4"/><rect id="scr" x="-21" y="-40" width="42" height="80" rx="6" fill="#7fb6ff"/></g>
+</g>
+<!-- glows (light layer) -->
+<circle id="pglow" cx="560" cy="1300" r="260" fill="url(#phoneGlow)" style="mix-blend-mode:screen"/>
+<!-- ghost hand (behind -> onto shoulder) -->
+<g id="ghand" opacity="0">
+  <path d="M120 760 C 200 830, 260 930, 300 1010" stroke="url(#ghost)" stroke-width="58" stroke-linecap="round" fill="none"/>
+  <path d="M270 990 C 300 975, 345 985, 360 1010 L 395 1035 C 405 1045, 395 1058, 382 1052 L 352 1036 L 380 1068 C 390 1080, 378 1092, 366 1084 L 336 1056 L 352 1092 C 358 1106, 344 1112, 336 1100 L 318 1066 L 318 1098 C 318 1112, 302 1112, 300 1098 L 292 1050 C 270 1040, 262 1010, 270 990 Z" fill="url(#ghost)" stroke="#5f6d66" stroke-width="3"/>
+  <path d="M392 1050 l10 6 M378 1084 l9 8 M350 1104 l5 9 M309 1104 l0 10" stroke="#2a2a2a" stroke-width="5" stroke-linecap="round"/>
+</g>
+<rect id="dark" width="1080" height="1920" fill="#000" opacity=".25"/>
+</svg>
+</div>
+<svg id="grain" width="1080" height="1920"><filter id="n"><feTurbulence id="turb" type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="1"/><feColorMatrix type="saturate" values="0"/></filter><rect width="1080" height="1920" filter="url(#n)"/></svg>
+<div id="vig"></div>
+<div id="sub"></div>
+<div id="flash" style="opacity:0"></div>
+<div id="black"></div>
+<div id="end" style="opacity:0"><h1>THE END?</h1><p>Part 2 chahiye? 👇</p><small>Comment mein likho "PART 2"</small><small>Follow karo 🔔</small></div>
+<script>
+let D=null;const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)), ease=x=>{x=cl(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}, lerp=(a,b,k)=>a+(b-a)*k;
+const nz=t=>Math.sin(t*12.9898)*0.5+Math.sin(t*78.233)*0.3+Math.sin(t*37.719)*0.2; // pseudo noise
+window.setup=d=>{D=d;};
+function seg(i){return D.segs[i]||{start:0,end:0};}
+function sceneAt(t){let s=1;D.segs.forEach(g=>{if(t>=g.start-0.01)s=g.scene;});return s;}
+function sceneStart(n){const g=D.segs.find(x=>x.scene===n);return g?g.start:0;}
+// camera shots: [cx,cy,scale] (world point at screen centre)
+function shot(cx,cy,s){return {cx,cy,s};}
+function mix(a,b,k){return {cx:lerp(a.cx,b.cx,k),cy:lerp(a.cy,b.cy,k),s:lerp(a.s,b.s,k)};}
+const WIDE=shot(540,1060,1.0), CLOCK=shot(145,1135,3.4), FACE=shot(420,900,2.3), HANDS=shot(330,930,2.6), DOOR=shot(860,1060,1.55), GAP=shot(860,1520,3.0), MED=shot(450,1000,1.6);
+function camera(t){
+  const s1=sceneStart(1),s2=sceneStart(2),s3=sceneStart(3),s4=sceneStart(4),s5=sceneStart(5),s6=sceneStart(6);
+  const k3=D.segs.find(g=>g.sfx_after==='knock'), knockT=k3?k3.end+0.15:s3+3;
+  if(t<1.4) return mix(CLOCK,shot(145,1135,3.0),t/1.4);
+  if(t<s2) return mix(shot(500,1100,1.05),shot(470,1020,1.35),ease((t-1.4)/(s2-1.4)));
+  if(t<s3) return mix(shot(440,960,1.6),FACE,ease((t-s2)/1.2));
+  if(t<knockT-0.1) return mix(HANDS,shot(320,920,2.9),(t-s3)/(knockT-s3));
+  if(t<s4) return mix(DOOR,shot(860,1000,1.9),ease((t-knockT)/(s4-knockT)));
+  if(t<s5) return mix(shot(420,890,2.6),shot(420,880,2.9),(t-s4)/(s5-s4));
+  if(t<s6) return mix(GAP,shot(860,1500,3.6),ease((t-s5)/(s6-s5)));
+  const last=D.segs[D.segs.length-1];
+  if(t<last.start) return mix(MED,shot(420,920,2.2),ease((t-s6)/(last.start-s6)));
+  return mix(shot(380,960,2.0),shot(370,960,2.6),ease((t-last.start)/(last.end-last.start)));
+}
+function mouthPath(type,k){ // around (420,960)
+  if(type==='o') return `M405 958 Q420 ${948-6*k} 435 958 Q420 ${972+8*k} 405 958 Z`;
+  if(type==='scream') return `M392 950 Q420 ${935-6*k} 448 950 Q445 ${995+12*k} 420 ${1000+12*k} Q395 ${995+12*k} 392 950 Z`;
+  if(type==='talk') return `M402 958 Q420 952 438 958 Q420 ${966+10*Math.abs(k)} 402 958 Z`;
+  return 'M400 960 Q420 956 440 960';
+}
+window.render=function(t){
+  const d=D, sc=sceneAt(t), last=d.segs[d.segs.length-1];
+  const handT=last.start+(last.end-last.start)*0.62, stingT=last.end+0.05, endT=stingT+0.9;
+  // camera + shake
+  let c=camera(t); let shake=0;
+  d.knocks.forEach(k=>{const q=t-k; if(q>0&&q<0.25) shake=Math.max(shake,18*(1-q/0.25));});
+  if(t>stingT&&t<stingT+0.6) shake=Math.max(shake,30*(1-(t-stingT)/0.6));
+  if(sc===3&&t<(d.knocks[0]||0)) shake=Math.max(shake,4); // trembling hands
+  if(sc===4) shake=Math.max(shake,3);
+  const sx=shake*nz(t*3), sy=shake*nz(t*3+5);
+  $('cam').style.transform=`translate(${540-c.cx*c.s+sx}px,${960-c.cy*c.s+sy}px) scale(${c.s})`;
+  // environment
+  $('curtain').setAttribute('d',`M50 285 C ${110+18*Math.sin(t*1.3)} 400, ${70+14*Math.sin(t*1.7)} 560, ${120+20*Math.sin(t*1.1)} 760 L 40 760 L 40 285 Z`);
+  const flick=sc>=5?0.55+0.45*(nz(t*2)>-.2?1:0.2):1;
+  $('beamPoly').style.opacity=0.8*flick;
+  $('clockGlow').style.opacity=0.6+0.4*Math.abs(Math.sin(t*3));
+  $('clockTxt').style.opacity=(Math.floor(t*2)%2===0||t<1.4)?1:0.75;
+  // phone: on bed (ringing) until pick-up in scene 2
+  const s2=sceneStart(2), pick=ease((t-s2)/0.9);
+  const ring=t<s2?(Math.sin(t*40)*(Math.floor(t*1.6)%2===0?1:0)):0;
+  const px=lerp(565,318,pick)+ring*4, py=lerp(1305,890,pick), rot=lerp(-80,-10,pick)+ring*6;
+  $('phone').setAttribute('transform',`translate(${px} ${py}) rotate(${rot})`);
+  $('scr').setAttribute('fill', t<s2? (Math.floor(t*2)%2? '#9fd0ff':'#5d9cff') : '#5d9cff');
+  $('pglow').setAttribute('cx',px); $('pglow').setAttribute('cy',py); $('pglow').setAttribute('r', t<s2? 230+40*Math.abs(Math.sin(t*6)) : 300);
+  $('pglow').style.opacity=t<1.2?0:Math.min(1,(t-1.2)/0.4)*(sc>=5?0.75+0.25*flick:1);
+  // arm to phone
+  $('armL').setAttribute('d', pick<=0? 'M330 1060 Q 290 1180 320 1300' : `M330 1060 Q ${lerp(290,250,pick)} ${lerp(1180,1000,pick)} ${px+8} ${py+30}`);
+  // rohan backs away in scene 6
+  const back=sc===6?ease((t-sceneStart(6))/1.5)*-60:0;
+  $('rohan').setAttribute('transform',`translate(${back} 0)`);
+  // door knocks
+  let dk=0; d.knocks.forEach(k=>{const q=t-k; if(q>0&&q<0.18) dk=Math.max(dk,1-q/0.18);});
+  $('doorLeaf').setAttribute('transform',`translate(${dk*6} ${dk*-3})`);
+  // feet shadow under door (scene 5+)
+  const fk=ease((t-sceneStart(5))/2.2); $('feet').style.opacity=sc>=5?fk:0;
+  $('feet').setAttribute('transform',`translate(${(1-fk)*-140+6*Math.sin(t*1.5)} 0)`);
+  $('gap').style.opacity=sc>=5?0.7+0.3*flick:0.55;
+  // expressions
+  let eye=1, pupil=10, brow=0, mouth='closed', mk=0, sweat=0, tear=0, lid=0;
+  if(sc===1){ eye=t<s2-1.5?0.55:0.9; lid=t<s2-1.5?7:0; }
+  if(sc===2){ eye=1.25; pupil=8; brow=8; mouth='o'; mk=.4; }
+  if(sc===3){ eye=1.35; pupil=7; brow=12; mouth='o'; mk=.6; sweat=1; }
+  if(sc===4){ eye=1.45; pupil=6; brow=16; mouth='scream'; mk=0.6+0.4*Math.abs(Math.sin(t*9)); sweat=1; tear=1; }
+  if(sc===5){ eye=1.5; pupil=5; brow=14; mouth='o'; mk=.8; sweat=1; tear=1; }
+  if(sc===6){ eye=t>handT-0.4?1.9:1.55; pupil=t>handT-0.4?3.5:5; brow=18; mouth=t>handT?'scream':'o'; mk=1; sweat=1; tear=1; }
+  // talk when Rohan speaks
+  d.segs.forEach(g=>{ if(g.who==='ROHAN'&&t>=g.start&&t<g.end){ mouth='scream'; mk=0.5+0.5*Math.abs(Math.sin(t*14)); }});
+  const blink=(sc<=2&&(t%3.7)<0.12)?1:0;
+  ['L','R'].forEach((s,i)=>{ $('eyeW'+s).setAttribute('ry',16*eye*(1-blink*0.9)); $('pup'+s).setAttribute('r',pupil);
+    const jitter=sc>=3?1.5*nz(t*20+i):0; $('pup'+s).setAttribute('cx',(i?465:375)+jitter+(sc===6&&t>handT-0.4?(i?-6:-6):0)); $('lid'+s).setAttribute('height',lid); });
+  $('browL').setAttribute('d',`M350 ${842-brow*0.4} L 400 ${836-brow}`); $('browR').setAttribute('d',`M440 ${836-brow} L 490 ${842-brow*0.4}`);
+  $('mouth').setAttribute('d',mouthPath(mouth,mk));
+  $('sweat').style.opacity=sweat*(0.6+0.4*Math.sin(t*2)); $('sweat').setAttribute('transform',`translate(0 ${sweat?((t*25)%60):0})`);
+  $('tear').style.opacity=tear*0.85; $('tear').setAttribute('transform',`translate(0 ${tear?((t*18)%50):0})`);
+  // ghost hand
+  const hk=ease((t-handT)/0.9); $('ghand').style.opacity=t>handT?Math.min(1,hk*1.4):0;
+  $('ghand').setAttribute('transform',`translate(${(1-hk)*-120+back} ${(1-hk)*-160})`);
+  // darkness / flicker
+  $('dark').style.opacity=t<1.2?0.55:(sc>=5?0.32+0.25*(1-flick):0.22);
+  // grain seed
+  $('turb').setAttribute('seed',Math.floor(t*24)%97);
+  // subtitles
+  const g=d.segs.find(x=>t>=x.start-0.05&&t<x.end+0.25); const sub=$('sub');
+  const txt=g&&t<stingT?g.sub:''; if(sub._t!==txt){sub._t=txt; sub.innerHTML=txt.startsWith('"')?'<b>'+txt.replace(/"/g,'')+'</b>':txt;}
+  sub.style.opacity=g?cl((t-g.start+0.05)/0.15):0;
+  // black open + flash + end
+  $('black').style.opacity=t<0.25?1-t/0.25:(t>stingT+0.12?1:0);
+  $('flash').style.opacity=t>stingT&&t<stingT+0.12?0.9:(t>handT&&t<handT+0.08?0.35:0);
+  const ek=cl((t-endT)/0.6); $('end').style.opacity=ek; $('end').style.transform=`scale(${1.15-0.15*ek})`;
+};
+</script></body></html>
