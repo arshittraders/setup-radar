@@ -4,7 +4,7 @@ on:
     inputs:
       kind: { description: 'lesson | candle | news', required: true, default: 'lesson' }
       day: { description: 'day 1-90 (blank = auto)', required: false, default: '' }
-      voice: { description: 'onyx | ash | echo | verse ...', required: false, default: 'onyx' }
+      voice: { description: 'blank = default (onyx); set only for test variants', required: false, default: '' }
       style: { description: 'bass | warm', required: false, default: 'bass' }
   schedule:
     - cron: '17 2 * * *'    # news   -> ready ~8:00 IST (approve in admin)
