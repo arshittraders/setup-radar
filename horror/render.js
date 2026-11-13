@@ -19,7 +19,8 @@ let t = 0; const knocks = []; const parts = [];
 S.segments.forEach((g, i) => {
   const v = S.voices[g.who];
   const out = W(`v${i}.wav`);
-  ff(['-i', W(`a${i}.mp3`), '-af', `aresample=44100,silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse,${FX[v.fx] || FX.dry},loudnorm=I=-15:TP=-1.5`, '-ac', '1', '-ar', '44100', out]);
+  const tempo = { narr: 1.32, phone: 1.18, ghost: 1.12, dry: 1.1 }[v.fx] || 1.15;
+  ff(['-i', W(`a${i}.mp3`), '-af', `aresample=44100,silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=stop_periods=-1:stop_duration=0.38:stop_threshold=-45dB,atempo=${tempo},${FX[v.fx] || FX.dry},loudnorm=I=-15:TP=-1.5`, '-ac', '1', '-ar', '44100', out]);
   t += g.pre || 0.3; g.start = t; g.end = t + dur(out); t = g.end;
   parts.push({ f: out, at: g.start });
   if (g.sfx_after === 'knock') { [0.15, 0.6, 1.05].forEach(k => knocks.push(g.end + k)); }
