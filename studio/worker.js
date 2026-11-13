@@ -21,6 +21,9 @@ async function api(body, tries = 3) {
     if (i >= tries) throw new Error('api: ' + JSON.stringify(j).slice(0, 300)); await new Promise(r => setTimeout(r, 5000 * i));
   }
 }
+// retry wrapper: long renders leave idle keep-alive sockets that the server closes
+const _fetch = global.fetch;
+global.fetch = async (u, o) => { let e; for (let i = 1; i <= 4; i++) { try { return await _fetch(u, o); } catch (x) { e = x; await new Promise(r => setTimeout(r, 1500 * i)); } } throw e; };
 const sh = (cmd, args) => execFileSync(cmd, args, { stdio: 'inherit' });
 
 (async () => {
