@@ -1,0 +1,43 @@
+{
+ "title": "Nifty, Bank Nifty aur Lot Size | Lesson 3/90 #shorts",
+ "caption": "Trade se pehle ka sabse zaroori hisaab: lot size! 🧮\n#stockmarket #optionstrading #nifty #sharemarket #trading #fno #setupradar",
+ "outroSay": "रोज़ एक नया lesson. Follow करो और Setup Radar app free में download करो, link bio में है। कल मिलते हैं Lesson 4 में!",
+ "scenes": [
+  {
+   "say": "Nifty, Bank Nifty, Sensex… रोज़ सुनते हो, पर इनका lot size क्या होता है? चलो समझते हैं!",
+   "show": "Lot size kya hai?",
+   "sub": "Nifty, Bank Nifty, Sensex",
+   "emoji": "❓"
+  },
+  {
+   "say": "Nifty 50 और Sensex देश की बड़ी companies के index हैं। Bank Nifty सिर्फ़ बड़े banks का index है, इसलिए ये ज़्यादा तेज़ी से हिलता है।",
+   "show": "Index = Bade shares",
+   "sub": "Bank Nifty zyada tez",
+   "emoji": "🏦"
+  },
+  {
+   "say": "Index options cash-settled होते हैं। Expiry पर shares नहीं मिलते, सिर्फ़ फ़ायदा या नुकसान पैसे में आता है।",
+   "show": "Cash Settled",
+   "sub": "Expiry par sirf paisa",
+   "emoji": "💵"
+  },
+  {
+   "say": "Lot size मतलब एक contract में कितनी quantity. Exchange इसे समय-समय पर बदलता है, इसलिए अपने broker में ज़रूर check करो।",
+   "show": "Lot = Quantity",
+   "sub": "Broker mein check karo",
+   "emoji": "📦"
+  },
+  {
+   "say": "हिसाब आसान है: premium गुणा lot size. Premium 100 और lot 75, तो एक lot हुआ 7,500 रुपये का।",
+   "show": "100 × 75 = ₹7,500",
+   "sub": "Premium × Lot size",
+   "emoji": "🧮"
+  },
+  {
+   "say": "Smart trader trade से पहले हमेशा हिसाब लगाता है। अब आप भी ये हिसाब जानते हो, शाबाश!",
+   "show": "Hisaab pehle, trade baad",
+   "sub": "Shabaash! 👏",
+   "emoji": "🏆"
+  }
+ ]
+}

@@ -1,0 +1,43 @@
+{
+ "title": "Call aur Put ka asli matlab | Lesson 2/90 #shorts",
+ "caption": "Call aur Put samajh gaye to Options ka aadha khel samajh gaye! 💪\n#stockmarket #optionstrading #nifty #sharemarket #trading #fno #setupradar",
+ "outroSay": "रोज़ एक नया lesson. Follow करो और Setup Radar app free में download करो, link bio में है। कल मिलते हैं Lesson 3 में!",
+ "scenes": [
+  {
+   "say": "Call और Put… ये दो शब्द समझ गए, तो Options का आधा खेल समझ गए!",
+   "show": "Call aur Put",
+   "sub": "Options ka aadha khel",
+   "emoji": "🎯"
+  },
+  {
+   "say": "Call option मतलब, एक तय कीमत यानी strike पर खरीदने का हक़। बाज़ार ऊपर जाए, तो Call का भाव बढ़ता है।",
+   "show": "CALL = Kharidne ka haq",
+   "sub": "Bazaar upar, Call upar",
+   "emoji": "📈"
+  },
+  {
+   "say": "Put option मतलब, तय कीमत पर बेचने का हक़। बाज़ार नीचे जाए, तो Put का भाव बढ़ता है।",
+   "show": "PUT = Bechne ka haq",
+   "sub": "Bazaar neeche, Put upar",
+   "emoji": "📉"
+  },
+  {
+   "say": "Example: Nifty 25,800 पर है। 25,800 का CE लिया और Nifty 25,900 गया, तो Call बढ़ेगा। PE लिया और Nifty 25,700 गया, तो Put बढ़ेगा।",
+   "show": "Nifty 25,800 example",
+   "sub": "CE upar chaal, PE neeche chaal",
+   "emoji": "🧮"
+  },
+  {
+   "say": "लेकिन सिर्फ़ दिशा सही होना काफ़ी नहीं। चाल समय पर और काफ़ी बड़ी होनी चाहिए, वरना premium घट सकता है।",
+   "show": "Disha + Samay + Size",
+   "sub": "Teeno chahiye",
+   "emoji": "⏰"
+  },
+  {
+   "say": "Short में याद रखो, CE मतलब Call, PE मतलब Put. और खरीदने वाले का risk बस premium जितना। आसान है ना?",
+   "show": "CE = Call, PE = Put",
+   "sub": "Buyer ka risk = premium",
+   "emoji": "😎"
+  }
+ ]
+}

@@ -4,6 +4,8 @@ on:
     inputs:
       kind: { description: 'lesson | candle | news', required: true, default: 'lesson' }
       day: { description: 'day 1-90 (blank = auto)', required: false, default: '' }
+      voice: { description: 'onyx | ash | echo | verse ...', required: false, default: 'onyx' }
+      style: { description: 'bass | warm', required: false, default: 'bass' }
 # schedule is switched on after the sample videos are approved
 #  schedule:
 #    - cron: '40 2 * * *'    # news   -> ready ~8:30 IST
@@ -40,7 +42,7 @@ jobs:
           if [ -z "$D" ]; then D=$(( ( $(date -u -d "$(TZ=Asia/Kolkata date +%F)" +%s) - $(date -u -d "$START_DATE" +%s) ) / 86400 + 1 )); fi
           [ "$D" -lt 1 ] && D=1
           echo "kind=$K" >> $GITHUB_OUTPUT; echo "day=$D" >> $GITHUB_OUTPUT
-          echo "TAG=$K-$( [ $K = news ] && TZ=Asia/Kolkata date +%F || printf '%02d' $D )" >> $GITHUB_ENV
+          echo "TAG=${{ github.event.inputs.voice && format('v-{0}-', github.event.inputs.voice) || '' }}$K-$( [ $K = news ] && TZ=Asia/Kolkata date +%F || printf '%02d' $D )" >> $GITHUB_ENV
       - name: Install renderer
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji >/dev/null
@@ -48,6 +50,7 @@ jobs:
       - name: Build short
         run: |
           export OIDC=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=setup-radar-shorts" | jq -r .value)
+          export VOICE='${{ github.event.inputs.voice }}' STYLE='${{ github.event.inputs.style }}'
           node shorts/make.js ${{ steps.p.outputs.kind }} ${{ steps.p.outputs.day }} job
       - name: Upload to release
         env:

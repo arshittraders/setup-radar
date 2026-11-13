@@ -1,0 +1,43 @@
+{
+ "title": "F&O kya hai? 40 sec mein samjho | Lesson 1/90 #shorts",
+ "caption": "90 din ka F&O course shuru! 🚀 Aaj samjho F&O asal mein hai kya.\n#stockmarket #optionstrading #nifty #sharemarket #trading #fno #setupradar",
+ "outroSay": "रोज़ एक नया lesson. Follow करो और Setup Radar app free में download करो, link bio में है। कल मिलते हैं Lesson 2 में!",
+ "scenes": [
+  {
+   "say": "दोस्तों, F&O का नाम तो सुना होगा… पर ये असल में है क्या? आज 40 सेकंड में समझते हैं!",
+   "show": "F&O asal mein kya hai?",
+   "sub": "40 second mein samjho",
+   "emoji": "🤔"
+  },
+  {
+   "say": "F&O का मतलब है Futures और Options. ये derivatives हैं, यानी इनकी कीमत Nifty या किसी share की चाल से बनती है।",
+   "show": "Futures + Options",
+   "sub": "Derivatives: keemat kisi aur se",
+   "emoji": "📊"
+  },
+  {
+   "say": "Share खरीदा, तो आप company के हिस्सेदार बने। F&O में आप सिर्फ़ एक contract लेते हो, कि भाव ऊपर जाएगा या नीचे।",
+   "show": "Share nahi, Contract",
+   "sub": "Bhaav upar ya neeche ka sauda",
+   "emoji": "📝"
+  },
+  {
+   "say": "Futures में दोनों तरफ़ ज़िम्मेदारी होती है। Options में खरीदने वाले को हक़ मिलता है, ज़िम्मेदारी नहीं। इसलिए उसका risk तय रहता है।",
+   "show": "Options = Haq",
+   "sub": "Buyer ka risk tay",
+   "emoji": "⚖️"
+  },
+  {
+   "say": "F&O lot में चलता है, जैसे एक lot में 75 quantity. इसलिए छोटी सी चाल का भी बड़ा असर होता है।",
+   "show": "Lot = 75 Quantity",
+   "sub": "Chhoti chaal, bada asar",
+   "emoji": "📦"
+  },
+  {
+   "say": "तो याद रखो, पहले सीखो, फिर कमाओ। रोज़ एक कदम, और 90 दिन में आप F&O को अंदर से समझोगे!",
+   "show": "Pehle seekho, phir kamao!",
+   "sub": "Roz ek kadam, 90 din",
+   "emoji": "🚀"
+  }
+ ]
+}

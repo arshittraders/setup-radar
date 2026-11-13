@@ -1,0 +1,43 @@
+{
+ "title": "Doji Candle ka raaz | Candle 1/90 #shorts",
+ "caption": "90 Candles in 90 Days shuru! 🕯️ Pehli candle: Doji\n#stockmarket #optionstrading #nifty #sharemarket #trading #fno #setupradar",
+ "outroSay": "ऐसे ही रोज़ एक नई candle सीखो। Follow करो, और Setup Radar app free में, link bio में है। कल मिलते हैं Candle 2 में!",
+ "scenes": [
+  {
+   "say": "Chart पर एक candle दिखी जो बस एक plus जैसी है? उसका नाम है Doji, और ये बहुत कुछ कहती है!",
+   "show": "Plus jaisi candle?",
+   "sub": "Iska naam hai Doji",
+   "emoji": "🕯️"
+  },
+  {
+   "say": "देखो, Doji में open और close लगभग एक ही जगह होते हैं। Body बस एक पतली सी line.",
+   "show": "Open = Close",
+   "sub": "Body bas patli line",
+   "emoji": "👀"
+  },
+  {
+   "say": "इसे तराज़ू की तरह समझो। खरीदने वाले और बेचने वाले, दोनों ने पूरा ज़ोर लगाया, पर कोई जीता नहीं।",
+   "show": "Tarazu barabar",
+   "sub": "Koi nahi jeeta",
+   "emoji": "⚖️"
+  },
+  {
+   "say": "पहचान: body पूरी candle की range के 10% से भी कम होती है।",
+   "show": "Body < 10% range",
+   "sub": "Pehchaan ka rule",
+   "emoji": "🔍"
+  },
+  {
+   "say": "ये बाज़ार के सोचने का पल है। इसलिए अकेली Doji पर फ़ैसला नहीं। अगली candle का इंतज़ार करो, वही दिशा बताएगी।",
+   "show": "Agli candle dekho",
+   "sub": "Wahi disha batayegi",
+   "emoji": "⏳"
+  },
+  {
+   "say": "Candle पढ़ना एक superpower है, और आज आपने पहली candle सीख ली!",
+   "show": "Candle = Superpower",
+   "sub": "Pehli candle done ✅",
+   "emoji": "💪"
+  }
+ ]
+}
