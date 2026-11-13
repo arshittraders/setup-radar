@@ -17,7 +17,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: shorts-${{ github.event.inputs.kind || github.event.schedule }}
+  group: shorts-${{ github.event.inputs.kind || github.event.schedule }}-${{ github.event.inputs.voice }}-${{ github.event.inputs.day }}
   cancel-in-progress: false
 
 env:
