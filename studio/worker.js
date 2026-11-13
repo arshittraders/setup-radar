@@ -62,8 +62,17 @@ const sh = (cmd, args) => execFileSync(cmd, args, { stdio: 'inherit' });
     // 6) upload + done
     const u = await sup({ action: 'w_upload', job_id: J.id });
     for (const [k, f, ct] of [['video', 'out.mp4', 'video/mp4'], ['thumb', 'thumb.jpg', 'image/jpeg']]) {
-      const r = await fetch(u[k].url, { method: 'PUT', headers: { 'Content-Type': ct, 'x-upsert': 'true' }, body: fs.readFileSync(path.join(job, f)) });
-      if (!r.ok) throw new Error('upload ' + k + ' ' + r.status + ' ' + (await r.text()).slice(0, 200));
+      console.log('upload to', new URL(u[k].url).host, new URL(u[k].url).pathname.slice(0, 60));
+      let r, last = '';
+      for (let i = 1; i <= 3; i++) {
+        try {
+          const fd = new FormData(); fd.append('cacheControl', '3600'); fd.append('', new Blob([fs.readFileSync(path.join(job, f))], { type: ct }), f);
+          r = await fetch(u[k].url, { method: 'PUT', headers: { 'x-upsert': 'true' }, body: fd });
+          if (r.ok) break; last = r.status + ' ' + (await r.text()).slice(0, 200);
+        } catch (e) { last = String(e.cause || e); }
+        await new Promise(x => setTimeout(x, 3000 * i));
+      }
+      if (!r || !r.ok) throw new Error('upload ' + k + ' ' + last);
     }
     const dur = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path.join(job, 'out.mp4')]).toString().trim());
     await sup({ action: 'w_done', job_id: J.id, video_path: u.video.path, thumb_path: u.thumb.path, duration: dur });
