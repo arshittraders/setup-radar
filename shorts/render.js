@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), { execFileSync, spawn } = require('child_process');
 const { chromium } = require('playwright');
 const FPS = 30, GAP = 0.12, LEAD = 0.15, BPM = 124;
-const SPEED = Number(process.env.VOICE_SPEED || 1.14), PITCH = Number(process.env.VOICE_PITCH || 0.95);
+const SPEED = Number(process.env.VOICE_SPEED || 1.22), PITCH = Number(process.env.VOICE_PITCH || 0.95);
 
 const job = path.resolve(process.argv[2]);
 const S = JSON.parse(fs.readFileSync(path.join(job, 'script.json'), 'utf8'));
@@ -12,7 +12,7 @@ const dur = f => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries',
 // punchy voice: slightly deeper, faster, bass boost, compressed, trimmed silence
 function prep(src, dst) {
   execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', src, '-af',
-    `silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse,` +
+    `silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=stop_periods=-1:stop_duration=0.32:stop_threshold=-42dB,` +
     `aresample=44100,asetrate=${Math.round(44100 * PITCH)},aresample=44100,atempo=${(SPEED / PITCH).toFixed(4)},` +
     `equalizer=f=110:t=q:w=1:g=5,equalizer=f=3200:t=q:w=1.2:g=3,acompressor=threshold=-20dB:ratio=4:attack=4:release=80:makeup=4,loudnorm=I=-14:TP=-1.5`,
     '-ar', '44100', '-ac', '1', dst]);
