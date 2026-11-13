@@ -61,7 +61,7 @@ window.render=t=>{
     im.style.filter=`brightness(${br}) contrast(1.08) saturate(1.08)`;
   });
   d.slams.forEach(x=>{const q=t-x;if(q>0&&q<0.3)shake=Math.max(shake,26*(1-q/0.3));});
-  if(t>d.sting&&t<d.sting+0.7) shake=Math.max(shake,34*(1-(t-d.sting)/0.7));
+  if(d.horror&&t>d.sting&&t<d.sting+0.7) shake=Math.max(shake,34*(1-(t-d.sting)/0.7));
   const sx=shake*nz(t*3),sy=shake*nz(t*3+7);
   $('stage').style.transform=`translate(${sx}px,${sy}px)`;
   $('turb').setAttribute('seed',Math.floor(t*24)%97);
@@ -73,9 +73,9 @@ window.render=t=>{
   if(sb._t!==tx2){sb._t=tx2; sb.innerHTML=tx2.startsWith('"')?'<b>'+tx2.replace(/"/g,'')+'</b>':tx2;}
   sb.style.opacity=g?cl((t-g.start+0.05)/0.15):0;
   // red pulse on ghost lines
-  const gl=d.segs.some(x=>x.who!=='N'&&t>=x.start&&t<x.end+0.3); $('red').style.opacity=gl?0.6+0.4*Math.abs(Math.sin(t*4)):0;
-  $('flash').style.opacity=(t<d.hookEnd&&t>0.05&&t<0.14)?0.8:(t>d.hookEnd&&t<d.hookEnd+0.1?0.6:(t>d.sting&&t<d.sting+0.12?0.9:0));
-  const endT=d.sting+1.6; $('black').style.opacity=t<0.04?1:(t>d.sting+0.9?1:0);
+  const gl=d.segs.some(x=>x.ghost&&t>=x.start&&t<x.end+0.3); $('red').style.opacity=gl?0.6+0.4*Math.abs(Math.sin(t*4)):0;
+  $('flash').style.opacity=(t<d.hookEnd&&t>0.05&&t<0.14)?0.8:(t>d.hookEnd&&t<d.hookEnd+0.1?0.6:(d.horror&&t>d.sting&&t<d.sting+0.12?0.9:0));
+  const endT=d.sting+1.6; $('black').style.opacity=t<0.04?1:(t>d.sting+(d.horror?0.9:0.6)?1:0);
   const ek=cl((t-endT)/0.6); $('end').style.opacity=ek; $('end').style.zIndex=10;
 };
 </script></body></html>
