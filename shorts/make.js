@@ -47,7 +47,7 @@ async function call(body, tries = 3) {
   if (sources) fs.writeFileSync(path.join(out, 'sources.json'), JSON.stringify(sources, null, 1));
   execFileSync('node', [path.join(__dirname, 'render.js'), out], { stdio: 'inherit' });
   // caption file for posting
-  const cap = (S.caption || '') + '\n\n📲 Free app: Setup Radar (link in bio)\n⚠️ Sirf shiksha ke liye. Investment advice nahi.';
-  fs.writeFileSync(path.join(out, 'meta.json'), JSON.stringify({ kind, day: S.day, title: S.title, caption: cap }, null, 1));
+  const seo = require('./seo').build(S);
+  fs.writeFileSync(path.join(out, 'meta.json'), JSON.stringify({ kind, day: S.day, ...seo }, null, 1));
   console.log('TITLE:', S.title);
 })().catch(e => { console.error(e); process.exit(1); });
