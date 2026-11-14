@@ -23,9 +23,10 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
           python -m venv /tmp/vp && python -m venv /tmp/vf
           /tmp/vp/bin/pip install -q torch torchaudio --index-url https://download.pytorch.org/whl/cpu
-          /tmp/vp/bin/pip install -q git+https://github.com/huggingface/parler-tts.git soundfile
+          /tmp/vp/bin/pip install -q git+https://github.com/huggingface/parler-tts.git soundfile sentencepiece && /tmp/vp/bin/pip install -q 'protobuf>=5,<6'
           /tmp/vf/bin/pip install -q torch torchaudio --index-url https://download.pytorch.org/whl/cpu
           /tmp/vf/bin/pip install -q git+https://github.com/ai4bharat/IndicF5.git soundfile || echo "IndicF5 install failed"
+          /tmp/vf/bin/pip install -q "pyarrow<15" || true
       - name: Bench
         run: |
           [ -n "$HF_TOKEN" ] || echo "::warning::HF_TOKEN secret missing — gated models will fail"
