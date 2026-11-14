@@ -7,9 +7,9 @@ on:
       voice: { description: 'blank = default (onyx); set only for test variants', required: false, default: '' }
       style: { description: 'bass | warm', required: false, default: 'bass' }
   schedule:
-    - cron: '17 2 * * *'    # news   -> ready ~8:00 IST (approve in admin)
-    - cron: '7 7 * * *'     # lesson -> ready before 13:00 IST
-    - cron: '7 13 * * *'    # candle -> ready before 19:00 IST
+    - cron: '23 0 * * *'    # lesson -> 5:53 IST (posts 13:00) — GitHub cron can run 1-2h late
+    - cron: '41 0 * * *'    # candle -> 6:11 IST (posts 19:00)
+    - cron: '7 1 * * *'     # news   -> 6:37 IST (approve after it lands, ~7-8 AM)
 
 permissions:
   contents: write
@@ -35,7 +35,7 @@ jobs:
         run: |
           K="${{ github.event.inputs.kind }}"
           case "${{ github.event.schedule }}" in
-            '17 2 * * *') K=news;; '7 7 * * *') K=lesson;; '7 13 * * *') K=candle;;
+            '7 1 * * *') K=news;; '23 0 * * *') K=lesson;; '41 0 * * *') K=candle;;
           esac
           D="${{ github.event.inputs.day }}"
           if [ -z "$D" ]; then D=$(( ( $(date -u -d "$(TZ=Asia/Kolkata date +%F)" +%s) - $(date -u -d "$START_DATE" +%s) ) / 86400 + 1 )); fi
