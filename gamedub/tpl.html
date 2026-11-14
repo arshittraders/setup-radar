@@ -1,0 +1,132 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>@font-face{font-family:Bangers;src:url(node_modules/@fontsource/bangers/files/bangers-latin-400-normal.woff2)}@font-face{font-family:'Baloo 2';font-weight:800;src:url(node_modules/@fontsource/baloo-2/files/baloo-2-latin-800-normal.woff2)}</style>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000;font-family:'Baloo 2',sans-serif}
+#stage{position:absolute;inset:0;overflow:hidden}
+#g{position:absolute;left:0;top:0;width:1080px;height:1920px;object-fit:cover;transform-origin:50% 40%}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+#vig{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0,rgba(0,0,0,0) 14%,rgba(0,0,0,0) 52%,rgba(0,0,0,.82) 78%,rgba(0,0,0,.95) 100%)}
+#badge{position:absolute;left:40px;top:120px;font-family:Bangers;font-size:84px;letter-spacing:3px;color:#fff;padding:6px 30px 0;border-radius:22px;border:6px solid #000;box-shadow:8px 8px 0 #000;transform-origin:left center}
+#title{position:absolute;left:0;right:0;top:560px;text-align:center;font-family:Bangers;font-size:150px;line-height:1;color:#ffe600;-webkit-text-stroke:8px #000;paint-order:stroke fill;text-shadow:10px 10px 0 #000;letter-spacing:4px}
+#title small{display:block;font-size:110px;color:#fff;margin-top:14px}
+#cap{position:absolute;left:50px;right:50px;top:1150px;text-align:center;font-family:'Baloo 2';font-weight:800;font-size:70px;line-height:1.12;color:#fff;-webkit-text-stroke:7px #000;paint-order:stroke fill;text-shadow:0 6px 0 #000}
+#cap .w{display:inline-block;margin:0 9px;transition:none}
+#cap .on{color:#ffe600;transform:scale(1.12) rotate(-2deg)}
+#who{position:absolute;left:0;right:0;top:1066px;text-align:center}
+#who span{font-family:Bangers;font-size:54px;letter-spacing:3px;padding:2px 24px 0;border-radius:14px;border:5px solid #000;color:#000}
+.av{position:absolute;top:1430px;width:400px;height:430px;transform-origin:50% 100%}
+#avB{left:50px}#avP{right:50px}
+.av .ring{position:absolute;left:50px;top:20px;width:300px;height:300px;border-radius:50%;border:8px solid #000;box-shadow:0 0 0 8px #fff,10px 14px 0 8px #000}
+.av .nm{position:absolute;left:0;right:0;top:330px;text-align:center;font-family:Bangers;font-size:64px;letter-spacing:3px;color:#fff;-webkit-text-stroke:5px #000;paint-order:stroke fill}
+.st{position:absolute;font-size:200px;line-height:1;filter:drop-shadow(8px 8px 0 #000)}
+.tag{position:absolute;font-family:Bangers;font-size:96px;letter-spacing:3px;padding:6px 30px 0;border-radius:20px;border:7px solid #000;box-shadow:10px 10px 0 #000;color:#000}
+#cta{position:absolute;left:60px;right:60px;top:600px;text-align:center}
+#cta div{display:inline-block;margin:16px;font-family:Bangers;font-size:96px;letter-spacing:3px;padding:10px 40px 0;border-radius:26px;border:8px solid #000;box-shadow:12px 12px 0 #000}
+</style></head><body>
+<div id="stage">
+ <img id="g">
+ <div id="vig"></div>
+ <div id="badge"></div>
+ <div id="title">NOOB vs PRO<small>vs HERO 🌋</small></div>
+ <div id="who"><span></span></div>
+ <div id="cap"></div>
+ <div id="stk"></div>
+ <div id="cta"><div style="background:#ffe600">💬 COMMENT KARO</div><div style="background:#38e07b">👍 FOLLOW BHIDU</div></div>
+ <div class="av" id="avB"><div class="ring" style="background:#ff7a1a"></div><svg id="faceB" width="400" height="340" viewBox="0 0 400 340" style="position:absolute;left:0;top:0"></svg><div class="nm">BHIDU</div></div>
+ <div class="av" id="avP"><div class="ring" style="background:#29b6ff"></div><svg id="faceP" width="400" height="340" viewBox="0 0 400 340" style="position:absolute;left:0;top:0"></svg><div class="nm">PAPPU</div></div>
+ <div id="flash"></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+// original cartoon faces (drawn here, not from any franchise)
+function faceB(m, blink) { // Bhidu: tan face, backwards red cap, shades, toothpick, gold chain
+  return `<g transform="translate(200,175)">
+  <path d="M-95,95 Q0,150 95,95 L110,150 L-110,150Z" fill="#1f1f1f"/>
+  <path d="M-60,118 Q0,150 60,118" stroke="#ffcc00" stroke-width="10" fill="none"/>
+  <ellipse cx="0" cy="0" rx="98" ry="112" fill="#c98a5a" stroke="#000" stroke-width="8"/>
+  <path d="M-102,-40 Q-100,-130 0,-128 Q100,-130 102,-40 Q60,-70 0,-70 Q-60,-70 -102,-40Z" fill="#e8262c" stroke="#000" stroke-width="8"/>
+  <rect x="70" y="-62" width="62" height="22" rx="10" fill="#e8262c" stroke="#000" stroke-width="7"/>
+  <rect x="-80" y="-30" width="70" height="44" rx="14" fill="#111" stroke="#000" stroke-width="6"/><rect x="10" y="-30" width="70" height="44" rx="14" fill="#111" stroke="#000" stroke-width="6"/>
+  <rect x="-10" y="-18" width="20" height="8" fill="#111"/><path d="M-68,-22 L-48,-22" stroke="#fff" stroke-width="6" opacity=".7"/><path d="M22,-22 L42,-22" stroke="#fff" stroke-width="6" opacity=".7"/>
+  <path d="M-30,30 Q0,${42} 30,30" stroke="#000" stroke-width="7" fill="none" opacity="${m > .15 ? 0 : 1}"/>
+  <ellipse cx="0" cy="${46 + m * 10}" rx="${30 + m * 6}" ry="${4 + m * 30}" fill="#5a0e0e" stroke="#000" stroke-width="7" opacity="${m > .15 ? 1 : 0}"/>
+  <ellipse cx="0" cy="${40 + m * 4}" rx="${22 + m * 4}" ry="6" fill="#fff" opacity="${m > .15 ? 1 : 0}"/>
+  <path d="M28,44 L78,58" stroke="#d9a35c" stroke-width="7" stroke-linecap="round"/>
+  <path d="M-55,60 Q-40,70 -25,62" stroke="#3b2414" stroke-width="7" fill="none"/></g>`;
+}
+function faceP(m, blink) { // Pappu: round pale face, big round glasses, side parting, buck teeth
+  return `<g transform="translate(200,175)">
+  <path d="M-95,95 Q0,150 95,95 L110,150 L-110,150Z" fill="#f2f2f2" stroke="#000" stroke-width="6"/>
+  <circle cx="0" cy="0" r="108" fill="#ffd9b0" stroke="#000" stroke-width="8"/>
+  <path d="M-108,-20 Q-110,-118 0,-115 Q90,-115 106,-40 Q40,-95 -40,-70 Q-80,-60 -108,-20Z" fill="#2a1a10" stroke="#000" stroke-width="7"/>
+  <circle cx="-42" cy="-6" r="40" fill="#fff" stroke="#000" stroke-width="9"/><circle cx="42" cy="-6" r="40" fill="#fff" stroke="#000" stroke-width="9"/>
+  <path d="M-2,-6 L2,-6" stroke="#000" stroke-width="9"/>
+  ${blink ? '<path d="M-60,-4 L-24,-4 M24,-4 L60,-4" stroke="#000" stroke-width="8"/>' : `<circle cx="${-38 + m * 4}" cy="-4" r="13" fill="#000"/><circle cx="${46 + m * 4}" cy="-4" r="13" fill="#000"/>`}
+  <ellipse cx="0" cy="${52 + m * 10}" rx="${26 + m * 8}" ry="${6 + m * 28}" fill="#5a0e0e" stroke="#000" stroke-width="7"/>
+  <rect x="-14" y="${44 + m * 2}" width="13" height="${14 + m * 4}" fill="#fff" stroke="#000" stroke-width="4"/><rect x="1" y="${44 + m * 2}" width="13" height="${14 + m * 4}" fill="#fff" stroke="#000" stroke-width="4"/>
+  <circle cx="-80" cy="40" r="14" fill="#ff9aa2" opacity=".7"/><circle cx="80" cy="40" r="14" fill="#ff9aa2" opacity=".7"/></g>`;
+}
+const ease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+const back = x => { x = Math.min(1, Math.max(0, x)); const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+let TL, GAGS, curSrc = '';
+window.setup = (tl, gags) => { TL = tl; GAGS = gags; };
+window.render = (t) => {
+  const L = TL.lines; let li = -1;
+  for (let i = 0; i < L.length; i++) if (t >= L[i].t - 0.001) li = i;
+  // source frame mapping (slow-mo to fit voice, freeze in hook/outro)
+  let st;
+  if (li < 0) st = 0;
+  else { const l = L[li], nx = li + 1 < L.length ? L[li + 1].t : l.t + l.d + 0.4, p = Math.min(1, (t - l.t) / (nx - l.t)); st = l.src[0] + (l.src[1] - l.src[0]) * p; }
+  const fi = Math.max(1, Math.min(920, Math.round(st * 30) + 1)), src = 'fr/' + String(fi).padStart(4, '0') + '.jpg';
+  if (src !== curSrc) { $('g').src = src; curSrc = src; }
+  // camera gags: punches / shake
+  let z = 1, dx = 0, dy = 0, rot = 0, fl = 0, sat = 1;
+  for (const g of GAGS) {
+    const k = t - g.t;
+    if (g.zoom && k >= 0 && k < g.len) { const e = k < 0.12 ? ease(k / 0.12) : 1 - ease((k - g.len + 0.35) / 0.35) * (k > g.len - 0.35 ? 1 : 0); z = Math.max(z, 1 + (g.zoom - 1) * e); }
+    if (g.shake && k >= 0 && k < g.len) { const a = g.shake * (1 - k / g.len); dx += Math.sin(t * 91) * a; dy += Math.cos(t * 73) * a; rot += Math.sin(t * 57) * a * 0.04; }
+    if (g.flash && k >= 0 && k < 0.25) fl = Math.max(fl, (1 - k / 0.25) * g.flash);
+    if (g.gray && k >= 0 && k < g.len) sat = 0.15;
+  }
+  $('g').style.transform = `translate(${dx}px,${dy}px) scale(${z}) rotate(${rot}deg)`;
+  $('g').style.filter = `saturate(${sat}) contrast(${sat < 1 ? 1.3 : 1.05})`;
+  $('flash').style.opacity = fl;
+  // hook title
+  const ht = t; $('title').style.opacity = ht < TL.hook + 0.5 ? 1 - ease((ht - TL.hook) / 0.5) : 0;
+  $('title').style.transform = `scale(${0.3 + 0.7 * back(ht / 0.45)}) rotate(${-4 + 4 * ease(ht / 0.5)}deg)`;
+  // section badge
+  const sec = li < 0 ? '' : li <= 1 ? 'NOOB 🤡' : li <= 4 ? 'PRO 😎' : 'HERO 🔥', col = li <= 1 ? '#ff5c8a' : li <= 4 ? '#38e07b' : '#ffb000';
+  const bd = $('badge'); if (bd.textContent !== sec) { bd.textContent = sec; bd.dataset.t = t; } bd.style.background = col;
+  bd.style.opacity = sec ? 1 : 0; bd.style.transform = `scale(${back((t - Number(bd.dataset.t || 0)) / 0.35)})`;
+  // captions (word pop) + speaker
+  const end = TL.total - 1.6;
+  if (li >= 0 && t < end) {
+    const l = L[li], words = l.sub.split(' '), p = (t - l.t) / l.d, on = Math.min(words.length - 1, Math.floor(p * words.length));
+    const k = li + ':' + on; if ($('cap').dataset.k !== k) { $('cap').innerHTML = words.map((w, i) => `<span class="w${i === on && p < 1 ? ' on' : ''}">${w}</span>`).join(' '); $('cap').dataset.k = k; }
+    $('cap').style.opacity = 1; $('cap').style.transform = `scale(${0.85 + 0.15 * back((t - l.t) / 0.25)})`;
+    const ws = $('who').firstElementChild; ws.textContent = l.who === 'B' ? 'BHIDU 🧢' : 'PAPPU 🤓'; ws.style.background = l.who === 'B' ? '#ff7a1a' : '#29b6ff'; $('who').style.opacity = 1;
+  } else { $('cap').style.opacity = 0; $('who').style.opacity = 0; }
+  // avatars: talking one bounces, mouth from voice envelope
+  for (const W of ['B', 'P']) {
+    let m = 0, act = false;
+    if (li >= 0 && L[li].who === W && t < L[li].t + L[li].d) { act = true; m = L[li].env[Math.min(L[li].env.length - 1, Math.floor((t - L[li].t) * 30))] || 0; }
+    const blink = (Math.floor(t * 10) % (W === 'B' ? 37 : 43)) === 0;
+    $('face' + W).innerHTML = W === 'B' ? faceB(m, blink) : faceP(m, blink);
+    const av = $('av' + W), s = act ? 1.08 + m * 0.08 : 0.94, by = act ? -Math.abs(Math.sin(t * 9)) * 14 * m : 0;
+    av.style.transform = `translateY(${by}px) scale(${s}) rotate(${act ? Math.sin(t * 6) * 3 : 0}deg)`; av.style.opacity = act || li < 0 || t >= end ? 1 : 0.65;
+  }
+  // stickers
+  let html = '';
+  for (const g of GAGS) {
+    if (!g.st && !g.tag) continue; const k = t - g.t, len = g.len || 1.4; if (k < 0 || k > len) continue;
+    const a = back(k / 0.3), o = k > len - 0.25 ? 1 - (k - len + 0.25) / 0.25 : 1;
+    let x = g.x, y = g.y; if (g.fly) { x = -250 + (1330) * ease(k / len); }
+    if (g.st) html += `<div class="st" style="left:${x}px;top:${y}px;opacity:${o};transform:scale(${a}) rotate(${(g.r || 0) + Math.sin(k * 12) * 6}deg)">${g.st}</div>`;
+    if (g.tag) html += `<div class="tag" style="left:${x}px;top:${y}px;background:${g.bg || '#ffe600'};opacity:${o};transform:scale(${a}) rotate(${g.r || -6}deg)">${g.tag}</div>`;
+  }
+  $('stk').innerHTML = html;
+  // outro CTA
+  const ok = t - end; $('cta').style.opacity = ok > 0 ? 1 : 0; $('cta').style.transform = `scale(${ok > 0 ? back(ok / 0.4) : 0})`;
+};
+</script></body></html>
