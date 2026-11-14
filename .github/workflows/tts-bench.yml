@@ -16,7 +16,8 @@ jobs:
         with:
           python-version: '3.11'
       - name: Gated?
-        run: for m in ai4bharat/indic-parler-tts ai4bharat/IndicF5; do echo "$m: $(curl -s https://huggingface.co/api/models/$m | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d.get("gated"),d.get("cardData",{}).get("license"))')"; done
+        run: |
+          for m in ai4bharat/indic-parler-tts ai4bharat/IndicF5; do curl -s https://huggingface.co/api/models/$m | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d.get("id"),"gated=",d.get("gated"),d.get("cardData",{}).get("license"))'; done
       - name: Install
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
