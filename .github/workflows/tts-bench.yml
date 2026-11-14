@@ -18,21 +18,26 @@ jobs:
       - name: Gated?
         run: |
           for m in ai4bharat/indic-parler-tts ai4bharat/IndicF5; do curl -s https://huggingface.co/api/models/$m | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d.get("id"),"gated=",d.get("gated"),d.get("cardData",{}).get("license"))'; done
-      - name: Install
+      - name: Install (separate envs — parler and IndicF5 need different transformers)
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
-          pip install -q torch torchaudio --index-url https://download.pytorch.org/whl/cpu
-          pip install -q git+https://github.com/huggingface/parler-tts.git soundfile
-          pip install -q git+https://github.com/ai4bharat/IndicF5.git || echo "IndicF5 install failed"
+          python -m venv /tmp/vp && python -m venv /tmp/vf
+          /tmp/vp/bin/pip install -q torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          /tmp/vp/bin/pip install -q git+https://github.com/huggingface/parler-tts.git soundfile
+          /tmp/vf/bin/pip install -q torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          /tmp/vf/bin/pip install -q git+https://github.com/ai4bharat/IndicF5.git soundfile || echo "IndicF5 install failed"
       - name: Bench
-        run: python studio/tts_bench.py bench
+        run: |
+          [ -n "$HF_TOKEN" ] || echo "::warning::HF_TOKEN secret missing — gated models will fail"
+          /tmp/vp/bin/python studio/tts_bench.py bench parler
+          /tmp/vf/bin/python studio/tts_bench.py bench f5
       - name: Upload samples
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd bench || exit 0
-          for f in *.wav; do ffmpeg -v error -y -i "$f" -b:a 128k "tts-${f%.wav}.mp3"; done
+          ls *.wav >/dev/null 2>&1 || exit 0; for f in *.wav; do ffmpeg -v error -y -i "$f" -b:a 128k "tts-${f%.wav}.mp3"; done
           cp bench.json tts-bench.json || true
           gh release view studio-debug >/dev/null 2>&1 || gh release create studio-debug -t studio-debug -n debug --prerelease
           gh release upload studio-debug tts-*.mp3 tts-bench.json --clobber || true
