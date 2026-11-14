@@ -32,12 +32,24 @@ jobs:
           pip install -q opencv-python-headless numpy pillow
           npm i --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
           mkdir -p esr && cd esr && curl -sSL -o r.zip https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-ubuntu.zip && unzip -oq r.zip && chmod +x realesrgan-ncnn-vulkan || true
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Free Indic female voice (IndicF5)
+        continue-on-error: true
+        run: |
+          python -m venv $HOME/vf
+          $HOME/vf/bin/pip install -q "torch==2.7.1" "torchaudio==2.7.1" --index-url https://download.pytorch.org/whl/cpu
+          $HOME/vf/bin/pip install -q git+https://github.com/ai4bharat/IndicF5.git soundfile
+          $HOME/vf/bin/pip install -q -U numpy pyarrow "transformers==4.49.0" "datasets==3.3.2" "huggingface_hub<0.30"
+          $HOME/vf/bin/pip install -q "torch==2.7.1" "torchaudio==2.7.1" --index-url https://download.pytorch.org/whl/cpu
+          $HOME/vf/bin/python -c "import f5_tts, transformers; print('f5 ok')" && echo "F5_PY=$HOME/vf/bin/python" >> $GITHUB_ENV
       - name: Render (stays on duty ~5h, picks new jobs within a minute)
         run: |
           export STAY_MIN=${{ inputs.stay || '300' }}
           export OIDC_S=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=studio-worker" | jq -r .value)
           export OIDC_V=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=setup-radar-shorts" | jq -r .value)
           export ESR=$PWD/esr/realesrgan-ncnn-vulkan
+          export HF_TOKEN=${{ secrets.HF_TOKEN }}
           node studio/worker.js sjob
       - name: Hand over to next shift (keeps worker on duty 24x7)
         if: always() && (github.event_name == 'schedule' || inputs.stay != '0')

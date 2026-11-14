@@ -106,9 +106,19 @@ async function one() {
       if (!ok) execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', src, '-vf', 'scale=iw*4:ih*4:flags=lanczos,unsharp=5:5:0.8', dst]);
     }
     }
-    // 4) voices
+    // 4) voices — young female characters use the fixed free Indic voice (IndicF5), rest OpenAI
+    const vOf = g => plan.voices[g.who] || plan.voices.N;
+    const f5 = plan.segments.map((g, i) => ({ i, text: g.text, v: vOf(g) })).filter(x => x.v.engine === 'f5');
+    if (f5.length && process.env.F5_PY) {
+      try {
+        fs.writeFileSync(path.join(job, 'f5.json'), JSON.stringify(f5.map(({ i, text }) => ({ i, text }))));
+        execFileSync(process.env.F5_PY, [path.join(__dirname, 'tts_f5.py'), path.join(job, 'f5.json'), job], { stdio: 'inherit', timeout: 40 * 60e3 });
+        for (const x of f5) { const w = path.join(job, `a${x.i}.wav`); if (fs.existsSync(w)) { sh('ffmpeg', ['-y', '-v', 'error', '-i', w, '-af', 'loudnorm=I=-16:TP=-1.5', '-ar', '44100', '-b:a', '160k', path.join(job, `a${x.i}.mp3`)]); x.done = true; } }
+      } catch (e) { console.log('f5 failed → OpenAI fallback:', String(e.message || e).slice(0, 200)); }
+    }
     for (let i = 0; i < plan.segments.length; i++) {
-      const g = plan.segments[i], v = plan.voices[g.who] || plan.voices.N;
+      if (fs.existsSync(path.join(job, `a${i}.mp3`))) continue;
+      const g = plan.segments[i], v = vOf(g);
       fs.writeFileSync(path.join(job, `a${i}.mp3`), Buffer.from((await api({ action: 'tts', text: g.text, voice: v.voice, style: v.style })).mp3, 'base64'));
     }
     // 5) render
