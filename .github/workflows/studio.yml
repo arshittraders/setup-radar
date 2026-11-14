@@ -6,7 +6,7 @@ on:
   schedule:
     - cron: '7 * * * *'
 permissions:
-  contents: read
+  contents: write
   id-token: write
 concurrency:
   group: studio-worker
@@ -38,14 +38,14 @@ jobs:
           export OIDC_V=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=setup-radar-shorts" | jq -r .value)
           export ESR=$PWD/esr/realesrgan-ncnn-vulkan
           node studio/worker.js sjob
-      - uses: actions/upload-artifact@v4
+      - name: Debug copy (release studio-debug)
         if: always()
-        with:
-          name: last-job
-          path: |
-            sjob/out.mp4
-            sjob/thumb.jpg
-            sjob/sheet.jpg
-            sjob/img/*
-          retention-days: 2
-          if-no-files-found: ignore
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          [ -f sjob/out.mp4 ] || exit 0
+          gh release view studio-debug >/dev/null 2>&1 || gh release create studio-debug -t studio-debug -n debug --prerelease
+          cd sjob && cp out.mp4 dbg-out.mp4 && (python3 -c "
+          import glob;from PIL import Image
+          f=sorted(glob.glob('img/*.png'))[:9];ims=[Image.open(x).convert('RGB').resize((512,341)) for x in f]+([Image.open('sheet.jpg').convert('RGB').resize((512,341))] if __import__('os').path.exists('sheet.jpg') else [])
+          c=Image.new('RGB',(1024,341*((len(ims)+1)//2)));[c.paste(im,((i%2)*512,(i//2)*341)) for i,im in enumerate(ims)];c.save('dbg-grid.jpg',quality=85)" || true)
+          gh release upload studio-debug dbg-out.mp4 dbg-grid.jpg --clobber || true

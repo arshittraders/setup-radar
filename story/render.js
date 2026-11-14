@@ -15,7 +15,7 @@ const hookEnd = S.hook ? S.hook.dur : 0;
 let t = hookEnd + 0.15; const parts = [], slams = [], sfxAt = [];
 S.segments.forEach((g, i) => {
   const v = S.voices[g.who], out = W(`v${i}.wav`);
-  const tempo = v.fx === 'narr' ? ((S.mood || 'horror') === 'horror' ? 1.28 : 1.15) : 1.1;
+  const tempo = v.fx === 'narr' ? (S.scenes ? 1.12 : ((S.mood || 'horror') === 'horror' ? 1.28 : 1.15)) : (S.scenes ? 1.05 : 1.1);
   ff(['-i', W(`a${i}.mp3`), '-af', `aresample=44100,silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=stop_periods=-1:stop_duration=0.38:stop_threshold=-45dB,atempo=${tempo},${FX[v.fx] || FX.narr},loudnorm=I=-15:TP=-1.5`, '-ac', '1', '-ar', '44100', out]);
   t += g.pre || 0.3; g.start = t; g.end = t + dur(out); t = g.end;
   parts.push({ f: out, at: g.start });
