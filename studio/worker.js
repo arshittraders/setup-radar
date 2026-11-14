@@ -108,7 +108,7 @@ async function one() {
     }
     // 4) voices — young female characters use the fixed free Indic voice (IndicF5), rest OpenAI
     const vOf = g => plan.voices[g.who] || plan.voices.N;
-    const f5 = plan.segments.map((g, i) => ({ i, text: g.text, v: vOf(g) })).filter(x => x.v.engine === 'f5');
+    const f5 = plan.segments.map((g, i) => ({ i, text: g.text, v: vOf(g) })).filter(x => x.v.engine === 'f5' || x.v.style === 'char_f');
     if (f5.length && process.env.F5_PY) {
       try {
         fs.writeFileSync(path.join(job, 'f5.json'), JSON.stringify(f5.map(({ i, text }) => ({ i, text }))));
