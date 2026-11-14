@@ -45,5 +45,5 @@ if MODE in ('all', 'f5'):
           sf.write(f'{OUT}/f5_{k}.wav', a, 24000); R['f5_' + k] = {'gen_s': round(time.time() - t0, 1), 'audio_s': dur(a, 24000)}
           print('f5', k, R['f5_' + k], flush=True)
   except Exception as e:
-      R['f5_error'] = traceback.format_exc()[-1500:]; print(R['f5_error'], flush=True)
+      tb = traceback.format_exc(); R['f5_error'] = tb[-1500:]; print('\n'.join(l for l in tb.split('\n') if '/torch/' not in l), flush=True)
 json.dump(R, open(f'{OUT}/bench.json', 'w'), ensure_ascii=False, indent=1); print(json.dumps(R, ensure_ascii=False))

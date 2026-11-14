@@ -30,7 +30,7 @@ jobs:
       - name: Bench
         run: |
           [ -n "$HF_TOKEN" ] || echo "::warning::HF_TOKEN secret missing — gated models will fail"
-          /tmp/vp/bin/python studio/tts_bench.py bench parler
+          [ -n "$SKIP_PARLER" ] || /tmp/vp/bin/python studio/tts_bench.py bench parler
           /tmp/vf/bin/python studio/tts_bench.py bench f5
       - name: Upload samples
         if: always()
