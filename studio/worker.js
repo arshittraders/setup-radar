@@ -26,13 +26,64 @@ const _fetch = global.fetch;
 global.fetch = async (u, o) => { let e; for (let i = 1; i <= 4; i++) { try { return await _fetch(u, o); } catch (x) { e = x; await new Promise(r => setTimeout(r, 1500 * i)); } } throw e; };
 const sh = (cmd, args) => execFileSync(cmd, args, { stdio: 'inherit' });
 
-(async () => {
+// ---------- AI story part: scenes → consistent cartoon images ----------
+const STYLE = 'Polished 2D Indian cartoon animation still (like a high quality Hindi kids/teen animated web series): bold clean outlines, cel shading, rich cinematic colors, expressive big eyes and faces, detailed painted backgrounds, 16:9 widescreen composition. No text, no letters, no captions, no speech bubbles, no watermark, no borders.';
+const MOODS = { horror: 'Eerie spooky atmosphere: moonlit night, deep blues and teal with warm lantern-orange highlights, fog, long shadows. Scary but not gory, suitable for all ages.', story: 'Warm, bright, friendly atmosphere with soft daylight or cozy lamp light.' };
+async function putFile(u, file, ct) {
+  let r, last = '';
+  for (let i = 1; i <= 3; i++) {
+    try { const fd = new FormData(); fd.append('cacheControl', '3600'); fd.append('', new Blob([fs.readFileSync(file)], { type: ct }), path.basename(file)); r = await fetch(u, { method: 'PUT', headers: { 'x-upsert': 'true' }, body: fd }); if (r.ok) return; last = r.status + ' ' + (await r.text()).slice(0, 200); } catch (e) { last = String(e.cause || e); }
+    await new Promise(x => setTimeout(x, 3000 * i));
+  }
+  throw new Error('upload ' + last);
+}
+async function aiPart(J, CH, S) {
+  const O = S.outline, mood = CH.mood === 'story' ? 'story' : 'horror';
+  let plan = J.plan && J.plan.scenes && J.plan.segments && J.plan.segments.length ? J.plan : null;
+  if (!plan) { plan = (await api({ action: 'aiscenes', outline: O, part_no: J.part_no || 1, mood, narrator: CH.voice || 'onyx' })).plan; plan.imgs = {}; await sup({ action: 'w_update', job_id: J.id, plan }); }
+  const look = k => { const c = O.characters.find(x => x.key === k); return c ? `${c.key}: ${c.look}` : ''; };
+  // character sheet (once per series)
+  let ref = null;
+  if (S.sheet_url) { const r = await fetch(S.sheet_url); if (r.ok) ref = Buffer.from(await r.arrayBuffer()).toString('base64'); }
+  if (!ref) {
+    const pr = `${STYLE} ${MOODS[mood]}\nCHARACTER REFERENCE SHEET: these ${O.characters.length} characters standing side by side, full body, front view, neutral pose, evenly spaced, plain soft light-grey background, same scale, clearly separated. Exactly these designs:\n${O.characters.map((c, i) => `${i + 1}. ${c.look}${c.ghost ? ' (a ghost/spirit: pale, glowing eyes, translucent edges)' : ''}`).join('\n')}`;
+    const g = await api({ action: 'image', prompt: pr, quality: 'medium' }, 2); ref = g.b64; console.log('sheet via', g.model);
+    fs.writeFileSync(path.join(job, 'sheet.jpg'), Buffer.from(ref, 'base64'));
+    const u = await sup({ action: 'w_upload', job_id: J.id, names: ['sheet.jpg'] }); await putFile(u['sheet.jpg'].url, path.join(job, 'sheet.jpg'), 'image/jpeg');
+    await sup({ action: 'w_series', series_id: S.id, sheet_path: u['sheet.jpg'].path });
+  }
+  // scene images (reuse saved ones on re-render), 3 at a time
+  const todo = plan.scenes.filter(sc => !(plan.imgs || {})[sc.id]);
+  for (const sc of plan.scenes.filter(sc => (plan.imgs || {})[sc.id])) { const r = await fetch(plan.imgs[sc.id]); if (r.ok) fs.writeFileSync(path.join(job, 'img', sc.id + '.png'), Buffer.from(await r.arrayBuffer())); else todo.push(sc); }
+  let models = new Set();
+  for (let i = 0; i < todo.length; i += 3) {
+    await Promise.all(todo.slice(i, i + 3).map(async sc => {
+      const chars = (sc.chars || []).map(look).filter(Boolean);
+      const pr = `${STYLE} ${MOODS[mood]}\nWorld: ${O.world || ''}\nUse EXACTLY the same character designs (faces, hairstyles, outfits, colors) as in the reference character sheet image.${chars.length ? '\nCharacters in this shot: ' + chars.join(' | ') : ' No people in this shot unless described.'}\nSCENE: ${sc.img}`;
+      const g = await api({ action: 'image', prompt: pr, ref }, 3); models.add(g.model);
+      fs.writeFileSync(path.join(job, 'img', sc.id + '.png'), Buffer.from(g.b64, 'base64'));
+    }));
+  }
+  if (todo.length) {
+    console.log('images', todo.length, 'via', [...models].join(','));
+    const u = await sup({ action: 'w_upload', job_id: J.id, names: todo.map(sc => sc.id + '.jpg') });
+    plan.imgs = plan.imgs || {};
+    for (const sc of todo) { await putFile(u[sc.id + '.jpg'].url, path.join(job, 'img', sc.id + '.png'), 'image/jpeg'); plan.imgs[sc.id] = u[sc.id + '.jpg'].pub; }
+    await sup({ action: 'w_update', job_id: J.id, plan });
+  }
+  return plan;
+}
+
+async function one() {
   const c = await sup({ action: 'w_claim' });
-  if (!c.job) { console.log('no queued job'); fs.writeFileSync(path.join(process.cwd(), 'NOJOB'), '1'); return; }
+  if (!c.job) { console.log('no queued job'); return false; }
   const J = c.job, CH = c.channel || {};
-  console.log('job', J.id, J.title);
+  console.log('job', J.id, J.title, J.kind || 'board');
+  fs.rmSync(job, { recursive: true, force: true });
   try {
     fs.mkdirSync(path.join(job, 'img'), { recursive: true }); fs.mkdirSync(path.join(job, 'panels'), { recursive: true });
+    let plan;
+    if (J.kind === 'ai') { if (!c.series) throw new Error('series missing'); plan = await aiPart(J, CH, c.series); } else {
     // 1) storyboard -> panels
     const b = await fetch(c.board_url); if (!b.ok) throw new Error('board download ' + b.status);
     fs.writeFileSync(path.join(job, 'board.png'), Buffer.from(await b.arrayBuffer()));
@@ -40,7 +91,7 @@ const sh = (cmd, args) => execFileSync(cmd, args, { stdio: 'inherit' });
     const P = JSON.parse(fs.readFileSync(path.join(job, 'panels', 'panels.json'), 'utf8'));
     if (P.length < 3) throw new Error('image se panels nahi nikle (' + P.length + ') — saaf grid wali storyboard image daalo');
     // 2) plan (reuse saved plan on re-render)
-    let plan = J.plan && J.plan.segments && J.plan.segments.length ? J.plan : null;
+    plan = J.plan && J.plan.segments && J.plan.segments.length ? J.plan : null;
     if (!plan) {
       const panels = P.map(p => { const t = path.join(job, 'panels', p.id + '.jpg'); execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', path.join(job, 'panels', p.id + '.png'), '-vf', 'scale=384:-2', '-q:v', '5', t]); return { id: p.id, b64: fs.readFileSync(t).toString('base64') }; });
       plan = (await api({ action: 'plan', story: J.story_text, title: J.title, part: J.part, mood: CH.mood || 'horror', narrator: CH.voice || 'onyx', panels })).plan;
@@ -53,6 +104,7 @@ const sh = (cmd, args) => execFileSync(cmd, args, { stdio: 'inherit' });
       let ok = false;
       if (process.env.ESR && fs.existsSync(process.env.ESR)) { try { execFileSync(process.env.ESR, ['-i', src, '-o', dst, '-n', 'realesr-animevideov3', '-s', '4'], { cwd: path.dirname(process.env.ESR), stdio: 'ignore', timeout: 300000 }); ok = fs.existsSync(dst); } catch (_) { } }
       if (!ok) execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', src, '-vf', 'scale=iw*4:ih*4:flags=lanczos,unsharp=5:5:0.8', dst]);
+    }
     }
     // 4) voices
     for (let i = 0; i < plan.segments.length; i++) {
@@ -83,6 +135,12 @@ const sh = (cmd, args) => execFileSync(cmd, args, { stdio: 'inherit' });
   } catch (e) {
     console.error(e);
     await sup({ action: 'w_fail', job_id: J.id, error: String(e.message || e).slice(0, 500) }).catch(() => { });
-    process.exit(1);
+    process.exitCode = 1;
   }
+  return true;
+}
+(async () => {
+  const t0 = Date.now(); let n = 0;
+  while (Date.now() - t0 < 32 * 60e3 && n < 5) { if (!(await one())) break; n++; }
+  if (!n) fs.writeFileSync(path.join(process.cwd(), 'NOJOB'), '1');
 })().catch(e => { console.error(e); process.exit(1); });

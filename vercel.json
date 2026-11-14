@@ -72,5 +72,10 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/hub.js": {
+      "maxDuration": 300
+    }
+  }
 }
