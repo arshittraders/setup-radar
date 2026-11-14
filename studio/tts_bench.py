@@ -34,7 +34,7 @@ if MODE in ('all', 'parler'):
 if MODE in ('all', 'f5'):
   try:
       from transformers import AutoModel
-      t0 = time.time(); F = AutoModel.from_pretrained('ai4bharat/IndicF5', trust_remote_code=True); R['f5_load_s'] = round(time.time() - t0, 1)
+      t0 = time.time(); F = AutoModel.from_pretrained('ai4bharat/IndicF5', trust_remote_code=True, low_cpu_mem_usage=False); R['f5_load_s'] = round(time.time() - t0, 1)
       tests = [('narr', 'अचानक गलियारे के अंत में एक सफेद साया दिखाई दिया... और वो धीरे-धीरे उनकी ओर बढ़ने लगा।'),
                ('girl', 'नहीं अर्जुन! उस अंगूठी को मत छूना, कुछ बहुत बुरा होने वाला है!')]
       for k, text in tests:
