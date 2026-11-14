@@ -59,8 +59,8 @@ async function aiPart(J, CH, S) {
   for (let i = 0; i < todo.length; i += 3) {
     await Promise.all(todo.slice(i, i + 3).map(async sc => {
       const chars = (sc.chars || []).map(look).filter(Boolean);
-      const pr = `${STYLE} ${MOODS[mood]}\nWorld: ${O.world || ''}\nUse EXACTLY the same character designs (faces, hairstyles, outfits, colors) as in the reference character sheet image.${chars.length ? '\nCharacters in this shot: ' + chars.join(' | ') : ' No people in this shot unless described.'}\nSCENE: ${sc.img}`;
-      const g = await api({ action: 'image', prompt: pr, ref }, 3); models.add(g.model);
+      const pr = `${STYLE} ${MOODS[mood]}\nWorld: ${O.world || ''}\n${chars.length ? 'The reference image is ONLY a character model sheet: copy the exact faces, hairstyles, outfits and colors of the characters, but do NOT copy its line-up pose, plain background or composition. Show ONLY these characters (nobody else from the sheet): ' + chars.join(' | ') : 'No people in this shot unless described.'}\nSCENE: ${sc.img}`;
+      const g = await api({ action: 'image', prompt: pr, ref: chars.length ? ref : null }, 3); models.add(g.model);
       fs.writeFileSync(path.join(job, 'img', sc.id + '.png'), Buffer.from(g.b64, 'base64'));
     }));
   }
