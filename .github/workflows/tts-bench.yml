@@ -1,15 +1,20 @@
 name: TTS bench (free Hindi voices)
-on: { workflow_dispatch: {} }
-permissions: { contents: write }
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   bench:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    env: { HF_TOKEN: '${{ secrets.HF_TOKEN }}', HF_HUB_DISABLE_PROGRESS_BARS: '1' }
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_HUB_DISABLE_PROGRESS_BARS: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
+        with:
+          python-version: '3.11'
       - name: Gated?
         run: for m in ai4bharat/indic-parler-tts ai4bharat/IndicF5; do echo "$m: $(curl -s https://huggingface.co/api/models/$m | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d.get("gated"),d.get("cardData",{}).get("license"))')"; done
       - name: Install
@@ -22,7 +27,8 @@ jobs:
         run: python studio/tts_bench.py bench
       - name: Upload samples
         if: always()
-        env: { GH_TOKEN: '${{ github.token }}' }
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           cd bench || exit 0
           for f in *.wav; do ffmpeg -v error -y -i "$f" -b:a 128k "tts-${f%.wav}.mp3"; done
