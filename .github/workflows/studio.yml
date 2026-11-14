@@ -1,6 +1,8 @@
 name: Story Studio Worker
 on:
   workflow_dispatch:
+    inputs:
+      stay: { description: 'minutes to stay on duty', default: '300' }
   schedule:
     - cron: '7 * * * *'
 permissions:
@@ -31,7 +33,7 @@ jobs:
           mkdir -p esr && cd esr && curl -sSL -o r.zip https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-ubuntu.zip && unzip -oq r.zip && chmod +x realesrgan-ncnn-vulkan || true
       - name: Render (stays on duty ~5h, picks new jobs within a minute)
         run: |
-          export STAY_MIN=300
+          export STAY_MIN=${{ inputs.stay || '300' }}
           export OIDC_S=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=studio-worker" | jq -r .value)
           export OIDC_V=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=setup-radar-shorts" | jq -r .value)
           export ESR=$PWD/esr/realesrgan-ncnn-vulkan
