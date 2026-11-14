@@ -28,7 +28,7 @@ jobs:
       - name: Install
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji mesa-vulkan-drivers libvulkan1 libgomp1 unzip >/dev/null
-          pip install -q opencv-python-headless numpy
+          pip install -q opencv-python-headless numpy pillow
           npm i --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
           mkdir -p esr && cd esr && curl -sSL -o r.zip https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-ubuntu.zip && unzip -oq r.zip && chmod +x realesrgan-ncnn-vulkan || true
       - name: Render (stays on duty ~5h, picks new jobs within a minute)
