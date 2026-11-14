@@ -7,6 +7,7 @@ on:
     - cron: '7 * * * *'
 permissions:
   contents: write
+  actions: write
   id-token: write
 concurrency:
   group: studio-worker
@@ -38,6 +39,10 @@ jobs:
           export OIDC_V=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=setup-radar-shorts" | jq -r .value)
           export ESR=$PWD/esr/realesrgan-ncnn-vulkan
           node studio/worker.js sjob
+      - name: Hand over to next shift (keeps worker on duty 24x7)
+        if: always() && (github.event_name == 'schedule' || inputs.stay != '0')
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: gh workflow run studio.yml -R ${{ github.repository }} -f stay=300 || true
       - name: Debug copy (release studio-debug)
         if: always()
         env: { GH_TOKEN: '${{ github.token }}' }
