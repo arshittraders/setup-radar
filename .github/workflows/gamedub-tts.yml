@@ -1,0 +1,22 @@
+name: Gamedub voices
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  id-token: write
+jobs:
+  tts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Voices
+        run: node gamedub/tts.js gd
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view studio-debug >/dev/null 2>&1 || gh release create studio-debug -t studio-debug -n debug --prerelease
+          gh release upload studio-debug gd/gd-*.mp3 --clobber
