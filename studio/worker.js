@@ -140,7 +140,12 @@ async function one() {
   return true;
 }
 (async () => {
-  const t0 = Date.now(); let n = 0;
-  while (Date.now() - t0 < 32 * 60e3 && n < 5) { if (!(await one())) break; n++; }
-  if (!n) fs.writeFileSync(path.join(process.cwd(), 'NOJOB'), '1');
+  // stay on duty (GitHub cron is slow): pick up new jobs within ~1 min for up to STAY minutes
+  const t0 = Date.now(), STAY = Number(process.env.STAY_MIN || 0) * 60e3; let n = 0;
+  for (;;) {
+    if (await one()) { n++; continue; }
+    if (Date.now() - t0 > STAY) break;
+    await new Promise(r => setTimeout(r, 60e3));
+  }
+  console.log('jobs done:', n);
 })().catch(e => { console.error(e); process.exit(1); });
