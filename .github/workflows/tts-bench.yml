@@ -26,7 +26,7 @@ jobs:
           /tmp/vp/bin/pip install -q git+https://github.com/huggingface/parler-tts.git soundfile sentencepiece && /tmp/vp/bin/pip install -q -U protobuf
           /tmp/vf/bin/pip install -q torch torchaudio --index-url https://download.pytorch.org/whl/cpu
           /tmp/vf/bin/pip install -q git+https://github.com/ai4bharat/IndicF5.git soundfile || echo "IndicF5 install failed"
-          /tmp/vf/bin/pip install -q -U numpy pyarrow || true
+          /tmp/vf/bin/pip install -q -U numpy pyarrow "transformers==4.49.0" "datasets==3.3.2" "huggingface_hub<0.30" || true
       - name: Bench
         run: |
           [ -n "$HF_TOKEN" ] || echo "::warning::HF_TOKEN secret missing — gated models will fail"
