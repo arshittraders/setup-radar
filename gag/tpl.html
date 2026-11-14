@@ -1,0 +1,162 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#cam{position:absolute;inset:0;transform-origin:0 0}
+.cap{position:absolute;left:50px;right:50px;text-align:center;font-family:'Inter Display','Inter',sans-serif;font-weight:900;color:#fff;line-height:1.08;
+  text-shadow:0 0 2px #000,4px 4px 0 #000,-4px -4px 0 #000,4px -4px 0 #000,-4px 4px 0 #000,0 6px 0 #000}
+#top{top:150px;font-size:76px}
+#bot{top:1500px;font-size:70px;color:#ffe14d}
+#slo{position:absolute;right:60px;top:560px;font-family:'Inter Display',sans-serif;font-weight:900;font-size:48px;color:#fff;background:#e11d48;padding:6px 18px;border-radius:12px;transform:rotate(6deg)}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.35) 100%)}
+#black{position:absolute;inset:0;background:#000}
+</style></head><body>
+<div id="cam"><svg id="w" width="1080" height="1920" viewBox="0 0 1080 1920">
+<defs>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fde7c7"/><stop offset="1" stop-color="#f6d3a3"/></linearGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c98b55"/><stop offset="1" stop-color="#9c6339"/></linearGradient>
+  <radialGradient id="skin"><stop offset="0" stop-color="#ffd9b8"/><stop offset="1" stop-color="#f2b48a"/></radialGradient>
+  <radialGradient id="dskin"><stop offset="0" stop-color="#e9b48a"/><stop offset="1" stop-color="#c98c62"/></radialGradient>
+  <pattern id="check" width="60" height="60" patternUnits="userSpaceOnUse"><rect width="60" height="60" fill="#fff"/><rect width="30" height="30" fill="#e23b3b"/><rect x="30" y="30" width="30" height="30" fill="#e23b3b"/></pattern>
+  <pattern id="stripe" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#2f80ed"/><rect y="20" width="40" height="20" fill="#56a3ff"/></pattern>
+  <radialGradient id="flame"><stop offset="0" stop-color="#fff7b0"/><stop offset=".5" stop-color="#ffb400"/><stop offset="1" stop-color="#ff5a00" stop-opacity="0"/></radialGradient>
+</defs>
+<rect x="-40" y="-40" width="1160" height="1540" fill="url(#wall)"/>
+<rect x="-40" y="1440" width="1160" height="520" fill="url(#floor)"/>
+<rect y="1430" width="1080" height="20" fill="#8a5a33"/>
+<g opacity=".9"><rect x="380" y="420" width="320" height="380" rx="10" fill="#bfe6ff" stroke="#fff" stroke-width="18"/><line x1="540" y1="420" x2="540" y2="800" stroke="#fff" stroke-width="12"/><line x1="380" y1="610" x2="700" y2="610" stroke="#fff" stroke-width="12"/>
+<ellipse cx="470" cy="740" rx="120" ry="60" fill="#7ccf6a"/><ellipse cx="640" cy="760" rx="140" ry="70" fill="#5fbf55"/></g>
+<rect x="780" y="470" width="190" height="150" rx="8" fill="#fff" stroke="#c8a27a" stroke-width="10"/><circle cx="875" cy="545" r="40" fill="#ffcf5a"/>
+<!-- banner -->
+<path d="M90 330 Q 300 400 520 330 Q 740 400 990 330" stroke="#888" stroke-width="3" fill="none"/>
+<g fill="#ff6b9a"><polygon points="140,345 180,345 160,395"/><polygon points="260,368 300,370 280,420"/><polygon points="400,358 440,354 420,404"/><polygon points="640,358 680,362 660,410"/><polygon points="780,372 820,368 800,420"/><polygon points="900,348 940,344 920,394"/></g>
+<!-- DAD (behind table, right) -->
+<g id="dad">
+  <rect x="760" y="1000" width="230" height="260" rx="60" fill="#3aa76d"/>
+  <g id="dadHead">
+    <ellipse cx="875" cy="900" rx="105" ry="115" fill="url(#dskin)"/>
+    <ellipse cx="772" cy="905" rx="18" ry="28" fill="#c98c62"/><ellipse cx="978" cy="905" rx="18" ry="28" fill="#c98c62"/>
+    <path d="M775 840 Q 875 760 975 840 Q 960 800 875 790 Q 790 800 775 840 Z" fill="#3b2a20"/>
+    <g id="dadEyes"><circle cx="840" cy="890" r="13" fill="#2b1d16"/><circle cx="910" cy="890" r="13" fill="#2b1d16"/>
+      <rect x="815" y="868" width="50" height="40" rx="12" fill="none" stroke="#222" stroke-width="5"/><rect x="885" y="868" width="50" height="40" rx="12" fill="none" stroke="#222" stroke-width="5"/><line x1="865" y1="886" x2="885" y2="886" stroke="#222" stroke-width="5"/></g>
+    <path d="M820 945 Q 875 925 930 945 Q 900 960 875 952 Q 850 960 820 945 Z" fill="#3b2a20"/>
+    <ellipse id="dadMouth" cx="875" cy="975" rx="20" ry="8" fill="#7a2b2b"/>
+    <polygon id="hat" points="875,690 830,800 920,800" fill="#8b5cf6"/><circle cx="875" cy="690" r="14" fill="#ffd400"/>
+    <g id="cream" opacity="0">
+      <path d="M770 860 Q 760 800 820 790 Q 840 760 880 775 Q 930 755 960 790 Q 1000 800 985 860 Q 1010 900 980 950 Q 990 1000 940 1010 Q 900 1040 860 1015 Q 810 1035 790 990 Q 750 970 770 930 Q 745 895 770 860 Z" fill="#fff7ef"/>
+      <path d="M800 990 q 6 40 0 60 q -8 -20 0 -60 Z M930 1005 q 6 50 0 70 q -8 -25 0 -70 Z" fill="#fff7ef"/>
+      <circle cx="830" cy="850" r="10" fill="#ff5d8f"/><circle cx="930" cy="830" r="10" fill="#ffd400"/><circle cx="880" cy="980" r="9" fill="#4fd1c5"/><circle cx="960" cy="930" r="8" fill="#ff5d8f"/>
+      <g id="creamEyes"><ellipse cx="845" cy="895" rx="20" ry="22" fill="#fff"/><ellipse cx="910" cy="895" rx="20" ry="22" fill="#fff"/><circle cx="845" cy="898" r="9" fill="#2b1d16"/><circle cx="910" cy="898" r="9" fill="#2b1d16"/><rect id="creamLid" x="820" y="872" width="115" height="0" fill="#fff7ef"/></g>
+      <g id="candleOnHead"><rect x="868" y="745" width="14" height="60" rx="4" fill="#4fd1c5"/><ellipse cx="875" cy="735" rx="14" ry="22" fill="url(#flame)"/></g>
+    </g>
+  </g>
+  <path d="M770 1080 Q 720 1150 760 1200" stroke="#3aa76d" stroke-width="50" stroke-linecap="round" fill="none"/>
+  <circle cx="765" cy="1200" r="26" fill="url(#dskin)"/>
+</g>
+<!-- TABLE -->
+<g id="table">
+  <rect x="150" y="1200" width="800" height="26" rx="6" fill="#8b5a2b"/>
+  <rect x="190" y="1226" width="26" height="214" fill="#7a4d24"/><rect x="884" y="1226" width="26" height="214" fill="#7a4d24"/>
+</g>
+<g id="items">
+  <g id="plate1"><ellipse cx="330" cy="1192" rx="80" ry="16" fill="#fff" stroke="#d9d9d9" stroke-width="4"/><ellipse cx="330" cy="1184" rx="34" ry="10" fill="#f2a65a"/></g>
+  <g id="glass"><path d="M450 1110 L 500 1110 L 492 1192 L 458 1192 Z" fill="rgba(180,220,255,.7)" stroke="#9cc9ee" stroke-width="4"/><rect x="456" y="1140" width="40" height="50" fill="rgba(255,140,0,.7)"/></g>
+  <g id="plate2"><ellipse cx="590" cy="1192" rx="80" ry="16" fill="#fff" stroke="#d9d9d9" stroke-width="4"/><circle cx="570" cy="1180" r="12" fill="#6bbf59"/><circle cx="600" cy="1182" r="12" fill="#e94b4b"/></g>
+  <g id="cake">
+    <rect x="690" y="1080" width="170" height="110" rx="14" fill="#ff8fb1"/>
+    <rect x="690" y="1080" width="170" height="34" rx="14" fill="#fff7ef"/>
+    <path d="M700 1112 q 10 20 20 0 q 10 20 20 0 q 10 20 20 0 q 10 20 20 0 q 10 20 20 0 q 10 20 20 0 q 10 20 20 0 q 10 20 20 0" fill="#fff7ef"/>
+    <rect id="candle" x="768" y="1020" width="14" height="62" rx="4" fill="#4fd1c5"/>
+    <ellipse id="fl" cx="775" cy="1008" rx="14" ry="22" fill="url(#flame)"/>
+    <ellipse cx="775" cy="1192" rx="100" ry="14" fill="#e8e8e8"/>
+  </g>
+</g>
+<path id="cloth" d="" fill="url(#check)" stroke="#c62828" stroke-width="3"/>
+<!-- KID (left) -->
+<g id="kid">
+  <rect x="135" y="1300" width="40" height="150" rx="16" fill="url(#skin)"/><rect x="205" y="1300" width="40" height="150" rx="16" fill="url(#skin)"/>
+  <ellipse cx="152" cy="1452" rx="34" ry="14" fill="#333"/><ellipse cx="228" cy="1452" rx="34" ry="14" fill="#333"/>
+  <rect x="120" y="1240" width="140" height="80" rx="24" fill="#e74c3c"/>
+  <rect x="110" y="1090" width="160" height="170" rx="56" fill="url(#stripe)"/>
+  <path id="kidArm" d="" stroke="url(#skin)" stroke-width="36" stroke-linecap="round" fill="none"/>
+  <path id="kidArm2" d="" stroke="url(#skin)" stroke-width="36" stroke-linecap="round" fill="none"/>
+  <g id="kidHead">
+    <ellipse cx="190" cy="960" rx="130" ry="125" fill="url(#skin)"/>
+    <ellipse cx="62" cy="975" rx="22" ry="32" fill="#f2b48a"/><ellipse cx="318" cy="975" rx="22" ry="32" fill="#f2b48a"/>
+    <path d="M120 850 Q 150 800 175 845 Q 190 790 215 842 Q 245 805 262 852 Q 230 835 190 838 Q 150 835 120 850 Z" fill="#ff8c1a"/>
+    <path id="browL" d="" stroke="#6b3b16" stroke-width="10" stroke-linecap="round" fill="none"/><path id="browR" d="" stroke="#6b3b16" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <ellipse cx="148" cy="955" rx="38" ry="44" fill="#fff"/><ellipse cx="232" cy="955" rx="38" ry="44" fill="#fff"/>
+    <circle id="pL" cx="152" cy="960" r="16" fill="#1b1b1b"/><circle id="pR" cx="236" cy="960" r="16" fill="#1b1b1b"/>
+    <ellipse cx="192" cy="1005" rx="14" ry="11" fill="#f0a07a"/>
+    <path id="kmouth" d="" fill="#7a2b2b" stroke="#5a1d1d" stroke-width="4"/>
+  </g>
+</g>
+<!-- flying splats / crumbs -->
+<g id="fx"></g>
+</svg></div>
+<div id="vig"></div>
+<div class="cap" id="top"></div><div class="cap" id="bot"></div><div id="slo">SLOW-MO</div>
+<div id="black"></div>
+<script>
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),ease=x=>{x=cl(x);return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2},easeOut=x=>1-Math.pow(1-cl(x),3);
+const back=x=>{x=cl(x);const c=1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const lerp=(a,b,k)=>a+(b-a)*k, nz=t=>Math.sin(t*12.9898)*.5+Math.sin(t*78.233)*.3+Math.sin(t*37.719)*.2;
+// beats
+const B={grab:2.2,yank:3.6,splat:5.7,pan:7.2,grin:7.6,end:9.9};
+function shot(t){ // [cx,cy,scale]
+  if(t<B.grab) return [lerp(540,500,t/B.grab),1100,lerp(1.05,1.18,t/B.grab)];
+  if(t<B.yank) return [lerp(500,330,ease((t-B.grab)/0.6)),lerp(1100,1150,ease((t-B.grab)/0.6)),lerp(1.18,1.5,ease((t-B.grab)/1.2))];
+  if(t<B.yank+0.3) return [330,1150,1.5];
+  if(t<B.splat) { const k=ease((t-B.yank-0.3)/(B.splat-B.yank-0.3)); return [lerp(400,850,k),lerp(1120,960,k),lerp(1.25,1.6,k)]; }
+  if(t<B.pan) return [860,950,lerp(1.6,1.75,(t-B.splat)/(B.pan-B.splat))];
+  const k=ease((t-B.pan)/0.45); return [lerp(860,200,k),lerp(950,1020,k),lerp(1.75,1.7,k)];
+}
+function render(t){
+  // camera
+  let [cx,cy,s]=shot(t); let sh=0; if(t>B.splat&&t<B.splat+0.5) sh=26*(1-(t-B.splat)/0.5); if(t>B.yank&&t<B.yank+0.25) sh=Math.max(sh,10);
+  const tx=cl(540-cx*s,1080-1080*s-8,8), ty=cl(960-cy*s,1920-1920*s-8,8);
+  $('cam').style.transform=`translate(${tx+sh*nz(t*3)}px,${ty+sh*nz(t*3+5)}px) scale(${s})`;
+  // cloth: drapes over table; yank pulls it left fast
+  const y=ease((t-B.yank)/0.28)*1150; const L=140-y, R=960-y;
+  $('cloth').setAttribute('d',`M${L} 1196 L ${R} 1196 L ${R} 1300 L ${R-6} 1300 L ${R-6} 1206 L ${L+6} 1206 L ${L+6} 1300 L ${L} 1300 Z`);
+  // items fly after yank (slow-mo window)
+  const f=t-B.yank-0.2, slow=B.splat-B.yank-0.2;
+  const fly=(id,vx,vy,rot)=>{ if(f<=0){$(id).setAttribute('transform','');return;} const k=f/slow; const x=vx*k*slow, yy=vy*k*slow+700*Math.pow(k*slow,2)*.6; $(id).setAttribute('transform',`translate(${x} ${yy}) rotate(${rot*k*slow} ${id==='plate1'?330:id==='glass'?475:590} 1180)`); };
+  fly('plate1',-260,-520,-260); fly('glass',-90,-760,420); fly('plate2',160,-600,300);
+  // cake arcs to dad's face
+  const ck=cl(f/slow); const cxp=lerp(0,100,ck), cyp=-260*Math.sin(Math.PI*ck)-lerp(0,190,ck);
+  $('cake').setAttribute('transform', t<B.splat? `translate(${cxp} ${cyp}) rotate(${-25*ck} 775 1130)` : 'translate(100 -190) scale(0)');
+  $('fl').setAttribute('ry',22+4*Math.sin(t*25));
+  // dad
+  const sp=t>=B.splat; $('cream').style.opacity=sp?1:0; $('hat').style.opacity=sp?0:1;
+  $('dadHead').setAttribute('transform',`translate(0 ${t<B.yank? -6*Math.sin(t*2):0}) rotate(${sp?(-4*Math.exp(-(t-B.splat)*4)*Math.sin((t-B.splat)*30)):(t<B.yank?3*Math.sin(t*1.6):0)} 875 900)`);
+  $('dadMouth').setAttribute('ry', t<B.yank? 8+5*Math.abs(Math.sin(t*3)) : (t<B.splat? 26: 8));
+  $('dadEyes').style.opacity=sp?0:1;
+  const blink=sp&&((t-B.splat)%1.6>1.1&&(t-B.splat)%1.6<1.25); $('creamLid').setAttribute('height', blink?46:0);
+  $('candleOnHead').querySelector('ellipse').setAttribute('ry',22+4*Math.sin(t*25));
+  // kid
+  let grabK=ease((t-B.grab)/0.5), yankK=ease((t-B.yank)/0.2);
+  const handX = t<B.grab? 330 : lerp(lerp(330,150,grabK),40,yankK), handY = t<B.grab? 1150 : lerp(lerp(1150,1250,grabK),1250,yankK);
+  $('kidArm').setAttribute('d', t<B.grab? 'M245 1120 Q 300 1190 275 1250' : `M245 1120 Q ${(245+handX)/2+20} ${(1120+handY)/2+40} ${handX} ${handY}`);
+  $('kidArm2').setAttribute('d', t<B.grin? `M135 1120 Q 80 1200 ${t>B.grab?lerp(110,30,yankK):110} ${t>B.grab?1240:1250}` : 'M135 1120 Q 120 1210 175 1240');
+  if(t>=B.grin) $('kidArm').setAttribute('d','M245 1120 Q 260 1210 205 1240');
+  const lean = t>B.yank&&t<B.yank+0.6? -8*Math.sin((t-B.yank)/0.6*Math.PI) : 0;
+  $('kid').setAttribute('transform',`rotate(${lean} 190 1450) translate(0 ${t>=B.grin? -14*Math.abs(Math.sin((t-B.grin)*7)) :0})`);
+  // eyebrows: wiggle in intro, raised in grin
+  const wig = t<B.grab? (Math.sin(t*9)>0.3?-14:0) : (t>=B.grin? -16 : 0);
+  $('browL').setAttribute('d',`M115 ${895+wig} Q 148 ${878+wig} 182 ${895+wig}`); $('browR').setAttribute('d',`M200 ${895+wig} Q 232 ${878+wig} 265 ${895+wig}`);
+  const look = t<1.4? 0 : (t<B.grab? 12 : (t>B.yank&&t<B.pan? 22 : 0));
+  $('pL').setAttribute('cx',152+look); $('pR').setAttribute('cx',236+look); $('pL').setAttribute('cy',960); $('pR').setAttribute('cy',960);
+  if(t>=B.grin){ $('kmouth').setAttribute('d','M130 1035 Q 192 1100 255 1035 Q 192 1060 130 1035 Z'); $('kmouth').setAttribute('fill','#fff'); }
+  else if(t>B.yank&&t<B.pan){ $('kmouth').setAttribute('d','M170 1040 Q 192 1018 214 1040 Q 192 1075 170 1040 Z'); $('kmouth').setAttribute('fill','#7a2b2b'); }
+  else { $('kmouth').setAttribute('d','M150 1040 Q 205 1062 240 1030'); $('kmouth').setAttribute('fill','none'); }
+  // captions
+  const tp=$('top'); tp.textContent='POV: you watched ONE magic trick video'; tp.style.opacity=cl((t-0.2)/0.3); tp.style.transform=`scale(${0.8+0.2*back((t-0.2)/0.4)})`;
+  const bt=$('bot'); bt.textContent='Tag someone who would do this'; bt.style.opacity=cl((t-8.3)/0.3); bt.style.transform=`scale(${0.7+0.3*back((t-8.3)/0.45)})`;
+  $('slo').style.opacity=(t>B.yank+0.3&&t<B.splat)?1:0;
+  $('black').style.opacity=t<0.2?1-t/0.2:0;
+}
+window.render=render;
+</script></body></html>
