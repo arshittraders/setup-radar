@@ -22,9 +22,15 @@ function medianF0(file) {   // autocorrelation pitch on voiced 40 ms frames
 }
 const atempoChain = (x) => { const f = []; while (x > 2) { f.push('atempo=2'); x /= 2; } while (x < 0.5) { f.push('atempo=0.5'); x /= 0.5; } f.push('atempo=' + x.toFixed(4)); return f.join(','); };
 const lines = S.lines.filter((l) => l.who === 'G' || l.who === 'B');
+const F0 = {};
 for (const l of lines) {
   ff(['-i', W(`tn-${l.id}.mp3`), '-af', 'silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.3:stop_threshold=-45dB', '-ar', '44100', '-ac', '1', W(`c-${l.id}.wav`)]);
-  const f0 = medianF0(W(`c-${l.id}.wav`)), p = f0 ? Math.max(0.7, Math.min(1.9, TARGET[l.who] / f0)) : 1.05;
+  F0[l.id] = medianF0(W(`c-${l.id}.wav`));
+}
+const med = (w) => { const v = lines.filter((l) => l.who === w && F0[l.id]).map((l) => F0[l.id]).sort((a, b) => a - b); return v.length ? v[Math.floor(v.length / 2)] : 0; };
+const CM = { G: med('G'), B: med('B') };
+for (const l of lines) {   // keep the character's own voice, only pull outlier lines back to its median pitch
+  const f0 = F0[l.id], p = f0 && CM[l.who] ? Math.max(0.82, Math.min(1.22, CM[l.who] / f0)) : 1;
   console.log('pitch', l.id, l.who, Math.round(f0), '→ x' + p.toFixed(2));
   ff(['-i', W(`c-${l.id}.wav`), '-af', `asetrate=${Math.round(44100 * p)},aresample=44100,${atempoChain(TEMPO[l.who] / p)},loudnorm=I=-15:TP=-1.5`, '-ac', '1', W(`v-${l.id}.wav`)]);
 }

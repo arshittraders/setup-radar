@@ -81,19 +81,9 @@ async function aiPart(J, CH, S) {
 // ---------- 😂 Golu & Bunty reel: Gemini TTS per line → toon renderer ----------
 const TOON_V = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'toon', 'script.json'), 'utf8')).voices;
 async function toonRender(J, plan) {
+  const { makeTakes } = require(path.join(__dirname, '..', 'toon', 'takes.js'));
   const lines = plan.lines.filter(l => l.who === 'G' || l.who === 'B');
-  for (const l of lines) {
-    const v = TOON_V[l.who]; let j = null;
-    for (let i = 1; i <= 5; i++) {
-      try { j = await sup({ action: 'w_tts', job_id: J.id, text: l.text, voice: v.voice, style: v.style }); if (j.pcm) break; } catch (e) { console.log('tts retry', l.id, String(e.message).slice(0, 120)); }
-      await new Promise(r => setTimeout(r, 12000 * i));
-    }
-    if (!j || !j.pcm) throw new Error('Gemini TTS fail ' + l.id);
-    const raw = path.join(job, l.id + '.pcm'); fs.writeFileSync(raw, Buffer.from(j.pcm, 'base64'));
-    const rate = (/rate=(\d+)/.exec(j.mime || '') || [0, 24000])[1];
-    sh('ffmpeg', ['-y', '-v', 'error', '-f', 's16le', '-ar', String(rate), '-ac', '1', '-i', raw, '-b:a', '128k', path.join(job, `tn-${l.id}.mp3`)]);
-    await new Promise(r => setTimeout(r, 6500));   // stay under Gemini TTS rate limit
-  }
+  await makeTakes(lines, TOON_V, job, async (text, voice, style) => { const j = await sup({ action: 'w_tts', job_id: J.id, text, voice, style }); if (!j.pcm) throw new Error('no audio'); return j; });
   fs.writeFileSync(path.join(job, 'script.json'), JSON.stringify(plan));
   sh('node', [path.join(__dirname, '..', 'toon', 'render.js'), job, path.join(__dirname, '..', 'toon', 'fonts')]);
   const tt = Math.max(1, (lines.find(l => l.laugh) || {}).t || 2);
