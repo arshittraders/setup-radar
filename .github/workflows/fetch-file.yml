@@ -1,0 +1,19 @@
+name: fetch-file
+on:
+  workflow_dispatch:
+    inputs:
+      url: { description: 'public URL', required: true }
+      name: { description: 'asset name', required: true }
+permissions:
+  contents: write
+jobs:
+  f:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          U: ${{ inputs.url }}
+          N: ${{ inputs.name }}
+        run: |
+          curl -sSfL -o "$N" "$U"
+          gh release upload studio-debug "$N" --clobber -R ${{ github.repository }}
