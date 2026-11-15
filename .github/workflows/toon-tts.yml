@@ -17,6 +17,7 @@ jobs:
       - name: Voices
         run: node toon/tts.js tn
       - name: Upload
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
