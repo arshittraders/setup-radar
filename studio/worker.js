@@ -28,7 +28,13 @@ async function api(body, tries = 3) {
 // retry wrapper: long renders leave idle keep-alive sockets that the server closes
 const _fetch = global.fetch;
 global.fetch = async (u, o) => { let e; for (let i = 1; i <= 4; i++) { try { return await _fetch(u, o); } catch (x) { e = x; await new Promise(r => setTimeout(r, 1500 * i)); } } throw e; };
-const sh = (cmd, args) => execFileSync(cmd, args, { stdio: 'inherit' });
+const sh = (cmd, args) => {
+  try { return execFileSync(cmd, args, { stdio: ['ignore', 'inherit', 'pipe'] }); }
+  catch (e) {
+    const err = String(e.stderr || '').trim(); if (err) console.error(err);
+    throw new Error(path.basename(String(args[0] || cmd)) + ' fail: ' + (err.split('\n').slice(-4).join(' | ') || e.message).slice(0, 300));
+  }
+};
 
 // ---------- AI story part: scenes → consistent cartoon images ----------
 const STYLE = 'Polished 2D Indian cartoon animation still (like a high quality Hindi kids/teen animated web series): bold clean outlines, cel shading, rich cinematic colors, expressive big eyes and faces, detailed painted backgrounds, 16:9 widescreen composition. No text, no letters, no captions, no speech bubbles, no watermark, no borders.';
