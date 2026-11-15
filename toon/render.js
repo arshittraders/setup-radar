@@ -8,7 +8,7 @@ const S = JSON.parse(fs.readFileSync(path.join(__dirname, 'script.json'), 'utf8'
 const dur = (f) => +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString().trim();
 
 // ---------- voices: tighten, kid-like lift, loudness ----------
-const PITCH = { G: 1.06, B: 1.04 }, TEMPO = { G: 1.06, B: 1.0 };
+const PITCH = { G: 1.06, B: 1.04 }, TEMPO = { G: 1.17, B: 1.13 };
 const lines = S.lines.filter((l) => l.who === 'G' || l.who === 'B');
 for (const l of lines) {
   const p = PITCH[l.who], tp = TEMPO[l.who];
@@ -29,7 +29,7 @@ for (let i = 0; i < lines.length; i++) {
   const mx = Math.max(...env) || 1;
   T.push({ ...l, t: +t.toFixed(3), d: +d.toFixed(3), env: env.map((x) => +Math.min(1, x / mx * 1.5).toFixed(2)) });
   const next = lines[i + 1];
-  t += d + (l.laugh === 2 ? 1.7 : l.laugh ? 1.15 : 0.22) + (next && next.scene !== l.scene ? 0.35 : 0);
+  t += d + (l.laugh === 2 ? 1.5 : l.laugh ? 1.0 : 0.16) + (next && next.scene !== l.scene ? 0.35 : 0);
 }
 const TOTAL = +(t + 2.4).toFixed(2);
 console.log('total', TOTAL);
