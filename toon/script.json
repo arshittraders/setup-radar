@@ -25,102 +25,222 @@
   {
    "id": "l1",
    "who": "G",
-   "text": "गुड मॉर्निंग बंटी! आज टेस्ट है, तूने पढ़ाई की?"
+   "text": "गुड मॉर्निंग बंटी! आज टेस्ट है, तूने पढ़ाई की?",
+   "scene": "class",
+   "mood": "happy",
+   "lmood": "grumpy",
+   "laugh": 0,
+   "sfx": "",
+   "emoji": ""
   },
   {
    "id": "l2",
    "who": "B",
-   "text": "पढ़ाई? मैंने तो सिलेबस को माफ़ कर दिया।"
+   "text": "पढ़ाई? मैंने तो सिलेबस को माफ़ कर दिया।",
+   "scene": "class",
+   "mood": "smug",
+   "lmood": "shock",
+   "laugh": 0,
+   "sfx": "",
+   "emoji": ""
   },
   {
    "id": "l3",
    "who": "G",
-   "text": "माफ़ कर दिया? मतलब?"
+   "text": "माफ़ कर दिया? मतलब?",
+   "scene": "class",
+   "mood": "shock",
+   "lmood": "smug",
+   "laugh": 0,
+   "sfx": "boing",
+   "emoji": ""
   },
   {
    "id": "l4",
    "who": "B",
-   "text": "उसने मुझे बहुत परेशान किया... तो मैंने उसे छोड़ दिया।"
+   "text": "उसने मुझे बहुत परेशान किया... तो मैंने उसे छोड़ दिया।",
+   "scene": "class",
+   "mood": "smug",
+   "lmood": "shock",
+   "laugh": 1,
+   "sfx": "rimshot",
+   "emoji": "😂"
   },
   {
    "id": "l5",
    "who": "G",
-   "text": "बंटी, मैडम ने कहा था ना... पानी बचाओ!"
+   "text": "बंटी, मैडम ने कहा था ना... पानी बचाओ!",
+   "scene": "class",
+   "mood": "happy",
+   "lmood": "grumpy",
+   "laugh": 0,
+   "sfx": "",
+   "emoji": ""
   },
   {
    "id": "l6",
    "who": "B",
-   "text": "इसीलिए तो मैं तीन दिन से नहाया नहीं।"
+   "text": "इसीलिए तो मैं तीन दिन से नहाया नहीं।",
+   "scene": "class",
+   "mood": "smug",
+   "lmood": "shock",
+   "laugh": 1,
+   "sfx": "boing",
+   "emoji": "🚿"
   },
   {
    "id": "l7",
    "who": "G",
-   "text": "छी छी छी! दूर हट बंटी!"
+   "text": "छी छी छी! दूर हट बंटी!",
+   "scene": "class",
+   "mood": "disgust",
+   "lmood": "grumpy",
+   "laugh": 0,
+   "sfx": "slide",
+   "emoji": "🤢"
   },
   {
    "id": "l8",
    "who": "G",
-   "text": "आज घर पर मौसी आ रही हैं!"
+   "text": "आज घर पर मौसी आ रही हैं!",
+   "scene": "home",
+   "mood": "happy",
+   "lmood": "grumpy",
+   "laugh": 0,
+   "sfx": "whoosh",
+   "emoji": ""
   },
   {
    "id": "l9",
    "who": "B",
-   "text": "फिर वही सवाल... बेटा, कितने नंबर आए?"
+   "text": "फिर वही सवाल... बेटा, कितने नंबर आए?",
+   "scene": "home",
+   "mood": "grumpy",
+   "lmood": "smile",
+   "laugh": 0,
+   "sfx": "",
+   "emoji": ""
   },
   {
    "id": "l10",
    "who": "B",
-   "text": "इस बार मैंने भी पूछ लिया... मौसी, आपकी सैलरी कितनी है?"
+   "text": "इस बार मैंने भी पूछ लिया... मौसी, आपकी सैलरी कितनी है?",
+   "scene": "home",
+   "mood": "smug",
+   "lmood": "shock",
+   "laugh": 0,
+   "sfx": "",
+   "emoji": ""
   },
   {
    "id": "l11",
    "who": "G",
-   "text": "हाय राम! फिर क्या हुआ?"
+   "text": "हाय राम! फिर क्या हुआ?",
+   "scene": "home",
+   "mood": "shock",
+   "lmood": "smug",
+   "laugh": 0,
+   "sfx": "",
+   "emoji": ""
   },
   {
    "id": "l12",
    "who": "B",
-   "text": "फिर मौसी चाय पीकर चुपचाप चली गई।"
+   "text": "फिर मौसी चाय पीकर चुपचाप चली गई।",
+   "scene": "home",
+   "mood": "smug",
+   "lmood": "laugh",
+   "laugh": 1,
+   "sfx": "rimshot",
+   "emoji": "☕"
   },
   {
    "id": "l13",
    "who": "G",
-   "text": "अरे वाह! मेरे टेस्ट में नब्बे नंबर आए!"
+   "text": "अरे वाह! मेरे टेस्ट में नब्बे नंबर आए!",
+   "scene": "class",
+   "mood": "laugh",
+   "lmood": "grumpy",
+   "laugh": 0,
+   "sfx": "whoosh",
+   "emoji": "💯"
   },
   {
    "id": "l14",
    "who": "B",
-   "text": "मेरे भी नब्बे आए..."
+   "text": "मेरे भी नब्बे आए...",
+   "scene": "class",
+   "mood": "smug",
+   "lmood": "happy",
+   "laugh": 0,
+   "sfx": "",
+   "emoji": ""
   },
   {
    "id": "l15",
    "who": "G",
-   "text": "सच में?"
+   "text": "सच में?",
+   "scene": "class",
+   "mood": "shock",
+   "lmood": "smug",
+   "laugh": 0,
+   "sfx": "",
+   "emoji": ""
   },
   {
    "id": "l16",
    "who": "B",
-   "text": "हाँ... तीनों सब्जेक्ट मिलाकर।"
+   "text": "हाँ... तीनों सब्जेक्ट मिलाकर।",
+   "scene": "class",
+   "mood": "smug",
+   "lmood": "shock",
+   "laugh": 2,
+   "sfx": "rimshot",
+   "emoji": "🤣"
   },
   {
    "id": "l17",
    "who": "G",
-   "text": "बंटी!!"
+   "text": "बंटी!!",
+   "scene": "class",
+   "mood": "shock",
+   "lmood": "smug",
+   "laugh": 0,
+   "sfx": "boing",
+   "emoji": ""
   },
   {
    "id": "l18",
    "who": "B",
-   "text": "टीम वर्क है भाई... टीम वर्क।"
+   "text": "टीम वर्क है भाई... टीम वर्क।",
+   "scene": "class",
+   "mood": "smug",
+   "lmood": "disgust",
+   "laugh": 1,
+   "sfx": "",
+   "emoji": ""
   },
   {
    "id": "l19",
    "who": "G",
-   "text": "हँसी आई तो फ़ॉलो करो!"
+   "text": "हँसी आई तो फ़ॉलो करो!",
+   "scene": "end",
+   "mood": "happy",
+   "lmood": "smug",
+   "laugh": 0,
+   "sfx": "ding",
+   "emoji": ""
   },
   {
    "id": "l20",
    "who": "B",
-   "text": "नहीं आई तो भी करो... वरना मेरा होमवर्क तुम्हें दे दूँगा।"
+   "text": "नहीं आई तो भी करो... वरना मेरा होमवर्क तुम्हें दे दूँगा।",
+   "scene": "end",
+   "mood": "smug",
+   "lmood": "laugh",
+   "laugh": 1,
+   "sfx": "",
+   "emoji": ""
   },
   {
    "id": "lg1",
@@ -137,5 +257,6 @@
    "who": "L3",
    "text": "हाहाहा... हाहाहाहाहा... हाहा!"
   }
- ]
+ ],
+ "title": "टेस्ट का दिन 😂"
 }
