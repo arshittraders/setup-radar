@@ -20,11 +20,11 @@ svg{position:absolute;left:0;top:0}
 #cta{position:absolute;left:0;right:0;top:330px;text-align:center}
 #cta div{display:inline-block;margin:12px;font-family:Bangers;font-size:92px;letter-spacing:3px;padding:10px 40px 0;border-radius:26px;border:8px solid #1d1a24;box-shadow:12px 12px 0 #1d1a24}
 </style></head><body>
-<div id="cam"><svg id="bg" width="1080" height="1920" viewBox="0 0 1080 1920"></svg><svg id="chars" width="1080" height="1920" viewBox="0 0 1080 1920"></svg></div>
+<div id="cam"><svg id="bg" width="1080" height="1920" viewBox="0 0 1080 1920"></svg><svg id="chars" width="1080" height="1920" viewBox="0 0 1080 1920"></svg><svg id="fg" width="1080" height="1920" viewBox="0 0 1080 1920"></svg></div>
 <div id="title"></div><div id="who"><span></span></div><div id="cap"></div><div id="stk"></div>
 <div id="cta"><div style="background:#ffe14d">😂 HASI AAYI?</div><div style="background:#4ade80">👍 FOLLOW KARO</div></div>
 <div id="flash"></div>
-<script src="chars.js"></script>
+<script src="chars.js"></script><script src="scenes.js"></script>
 <script>
 const $ = (i) => document.getElementById(i);
 const cl = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), ease = (x) => 1 - Math.pow(1 - cl(x), 3);
@@ -53,7 +53,10 @@ window.setup = (d) => { D = d; };
 window.render = (t) => {
   const L = D.lines; let li = -1; for (let i = 0; i < L.length; i++) if (t >= L[i].t - 0.001) li = i;
   const l = li >= 0 ? L[li] : null, scene = l ? l.scene : L[0].scene;
-  if (scene !== curBg) { $("bg").innerHTML = BG[scene] || BG.class; curBg = scene; }
+  const SC = window.SCENES && SCENES[scene];
+  if (SC) { if (SC.moving || scene !== curBg) { $("bg").innerHTML = SC.bg(t); $("fg").innerHTML = SC.fg(t); } }
+  else if (scene !== curBg) { $("bg").innerHTML = BG[scene] || BG.class; $("fg").innerHTML = ""; }
+  curBg = scene;
   // characters
   const speak = l && t < l.t + l.d ? l.who : null;
   const env = (x) => x.env[Math.min(x.env.length - 1, Math.floor((t - x.t) * 30))] || 0;

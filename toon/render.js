@@ -4,7 +4,7 @@ const fs = require('fs'), path = require('path'), { execFileSync, spawn } = requ
 const { chromium } = require('playwright');
 const dir = path.resolve(process.argv[2] || 'tn'), FONTS = path.resolve(process.argv[3] || path.join(__dirname, 'fonts'));
 const W = (p) => path.join(dir, p), ff = (a) => execFileSync('ffmpeg', ['-y', '-v', 'error', ...a]);
-const S = JSON.parse(fs.readFileSync(path.join(__dirname, 'script.json'), 'utf8')), FPS = 30;
+const S = JSON.parse(fs.readFileSync(fs.existsSync(path.join(dir, 'script.json')) ? path.join(dir, 'script.json') : path.join(__dirname, 'script.json'), 'utf8')), FPS = 30;
 const dur = (f) => +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString().trim();
 
 // ---------- voices: tighten, kid-like lift, loudness ----------
@@ -14,9 +14,10 @@ for (const l of lines) {
   const p = PITCH[l.who], tp = TEMPO[l.who];
   ff(['-i', W(`tn-${l.id}.mp3`), '-af', `silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.3:stop_threshold=-45dB,aresample=44100,asetrate=${Math.round(44100 * p)},aresample=44100,atempo=${(tp / p).toFixed(4)},loudnorm=I=-15:TP=-1.5`, '-ac', '1', W(`v-${l.id}.wav`)]);
 }
-// laugh track: 3 laughs layered, roomy
-ff(['-i', W('tn-lg1.mp3'), '-i', W('tn-lg2.mp3'), '-i', W('tn-lg3.mp3'), '-filter_complex',
+// laugh track: generated per run if laugh clips exist, else the saved asset
+if (fs.existsSync(W('tn-lg1.mp3')) && fs.existsSync(W('tn-lg2.mp3')) && fs.existsSync(W('tn-lg3.mp3'))) ff(['-i', W('tn-lg1.mp3'), '-i', W('tn-lg2.mp3'), '-i', W('tn-lg3.mp3'), '-filter_complex',
   '[0]aresample=44100,volume=1[a];[1]aresample=44100,adelay=180,volume=0.9[b];[2]aresample=44100,adelay=350,volume=0.85[c];[a][b][c]amix=inputs=3:normalize=0,aecho=0.8:0.6:60|110:0.35|0.25,highpass=f=180,loudnorm=I=-18', '-ac', '1', '-t', '3.2', W('laugh.wav')]);
+else ff(['-i', path.join(__dirname, 'assets', 'laugh.mp3'), '-ar', '44100', '-ac', '1', W('laugh.wav')]);
 const LAUGH = Math.min(3.2, dur(W('laugh.wav')));
 
 // ---------- timeline ----------
@@ -56,7 +57,7 @@ const parts = [['music.wav', 0, 1]];
 T.forEach((l) => {
   parts.push([`v-${l.id}.wav`, l.t, 1.15]);
   if (l.sfx) parts.push([l.sfx + '.wav', l.sfx === 'whoosh' ? Math.max(0, l.t - 0.25) : l.t + l.d - (l.sfx === 'rimshot' ? 0.05 : 0.1), 0.6]);
-  if (l.laugh) parts.push(['laugh.wav', l.t + l.d + 0.05, l.laugh === 2 ? 0.9 : 0.6]);
+  if (l.laugh) parts.push(['laugh.wav', l.t + l.d + 0.08, l.laugh === 2 ? 0.7 : 0.42]);
 });
 const inp = [], fl = [];
 parts.forEach(([f, at, v], i) => { inp.push('-i', W(f)); fl.push(`[${i}:a]aresample=44100,aformat=channel_layouts=mono,volume=${v},adelay=${Math.round(at * 1000)}[x${i}]`); });

@@ -78,6 +78,28 @@ async function aiPart(J, CH, S) {
   return plan;
 }
 
+// ---------- 😂 Golu & Bunty reel: Gemini TTS per line → toon renderer ----------
+const TOON_V = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'toon', 'script.json'), 'utf8')).voices;
+async function toonRender(J, plan) {
+  const lines = plan.lines.filter(l => l.who === 'G' || l.who === 'B');
+  for (const l of lines) {
+    const v = TOON_V[l.who]; let j = null;
+    for (let i = 1; i <= 5; i++) {
+      try { j = await sup({ action: 'w_tts', job_id: J.id, text: l.text, voice: v.voice, style: v.style }); if (j.pcm) break; } catch (e) { console.log('tts retry', l.id, String(e.message).slice(0, 120)); }
+      await new Promise(r => setTimeout(r, 12000 * i));
+    }
+    if (!j || !j.pcm) throw new Error('Gemini TTS fail ' + l.id);
+    const raw = path.join(job, l.id + '.pcm'); fs.writeFileSync(raw, Buffer.from(j.pcm, 'base64'));
+    const rate = (/rate=(\d+)/.exec(j.mime || '') || [0, 24000])[1];
+    sh('ffmpeg', ['-y', '-v', 'error', '-f', 's16le', '-ar', String(rate), '-ac', '1', '-i', raw, '-b:a', '128k', path.join(job, `tn-${l.id}.mp3`)]);
+    await new Promise(r => setTimeout(r, 6500));   // stay under Gemini TTS rate limit
+  }
+  fs.writeFileSync(path.join(job, 'script.json'), JSON.stringify(plan));
+  sh('node', [path.join(__dirname, '..', 'toon', 'render.js'), job, path.join(__dirname, '..', 'toon', 'fonts')]);
+  const tt = Math.max(1, (lines.find(l => l.laugh) || {}).t || 2);
+  sh('ffmpeg', ['-y', '-v', 'error', '-ss', '3', '-i', path.join(job, 'out.mp4'), '-frames:v', '1', '-q:v', '3', path.join(job, 'thumb.jpg')]);
+}
+
 async function one() {
   const c = await sup({ action: 'w_claim' });
   if (!c.job) { console.log('no queued job'); return false; }
@@ -87,7 +109,7 @@ async function one() {
   try {
     fs.mkdirSync(path.join(job, 'img'), { recursive: true }); fs.mkdirSync(path.join(job, 'panels'), { recursive: true });
     let plan;
-    if (J.kind === 'ai') { if (!c.series) throw new Error('series missing'); plan = await aiPart(J, CH, c.series); } else {
+    if (J.kind === 'toon') { plan = J.plan; if (!plan || !(plan.lines || []).length) throw new Error('toon script missing'); } else if (J.kind === 'ai') { if (!c.series) throw new Error('series missing'); plan = await aiPart(J, CH, c.series); } else {
     // 1) storyboard -> panels
     const b = await fetch(c.board_url); if (!b.ok) throw new Error('board download ' + b.status);
     fs.writeFileSync(path.join(job, 'board.png'), Buffer.from(await b.arrayBuffer()));
@@ -110,6 +132,7 @@ async function one() {
       if (!ok) execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', src, '-vf', 'scale=iw*4:ih*4:flags=lanczos,unsharp=5:5:0.8', dst]);
     }
     }
+    if (J.kind === 'toon') await toonRender(J, plan); else {
     // 4) voices — young female characters use the fixed free Indic voice (IndicF5), rest OpenAI
     const vOf = g => plan.voices[g.who] || plan.voices.N;
     const f5 = plan.segments.map((g, i) => ({ i, text: g.text, v: vOf(g) })).filter(x => x.v.engine === 'f5' || x.v.style === 'char_f');
@@ -130,6 +153,7 @@ async function one() {
     const cf = path.join(job, 'cost-align.txt'); try { fs.unlinkSync(cf); } catch (_) { }
     process.env.COST_FILE = cf; sh('node', [path.join(__dirname, '..', 'story', 'render.js'), job]);
     try { const a = fs.readFileSync(cf, 'utf8').split('\n').filter(Boolean).reduce((x, y) => x + Number(y), 0); COST.usd += a; COST.steps.align = (COST.steps.align || 0) + a; } catch (_) { }
+    }
     // 6) upload + done
     const u = await sup({ action: 'w_upload', job_id: J.id });
     for (const [k, f, ct] of [['video', 'out.mp4', 'video/mp4'], ['thumb', 'thumb.jpg', 'image/jpeg']]) {
