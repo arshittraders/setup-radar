@@ -39,6 +39,8 @@ def panels(img):
 
 def main(src, outdir):
     img = cv2.imread(src); os.makedirs(outdir, exist_ok=True)
+    if img is None:
+        sys.exit('board image padhi nahi ja saki (file image nahi hai ya format unsupported, JPG/PNG daalo)')
     res = []
     for k, (x, y, w, h) in enumerate(panels(img), 1):
         pid = f'P{k:02d}'
@@ -49,3 +51,4 @@ def main(src, outdir):
 
 if __name__ == '__main__':
     main(sys.argv[1], sys.argv[2])
+    
