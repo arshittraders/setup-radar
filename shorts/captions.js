@@ -37,6 +37,7 @@ async function wordTimes(wav, text) {
       try {
         const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await token() }, body: JSON.stringify({ action: 'align', mp3: fs.readFileSync(mp3).toString('base64') }) });
         const j = await r.json();
+        if (j.cost && j.cost.usd && process.env.COST_FILE) { try { fs.appendFileSync(process.env.COST_FILE, j.cost.usd + '\n'); } catch (_) { } }
         if (j.ok && j.words && j.words.length) return mapOnto(words, j.words.filter(x => x.e > x.s || x.w));
         if (j.ok) break;
       } catch (_) { }

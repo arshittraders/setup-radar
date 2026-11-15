@@ -7,10 +7,12 @@ const day = Number(dayArg) || 1;
 const out = path.resolve(outArg || 'job');
 fs.mkdirSync(out, { recursive: true });
 
+let COST = { usd: 0, steps: {} };
 async function call(body, tries = 3) {
   for (let i = 1; ; i++) {
     const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.OIDC }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({ ok: false, error: 'bad json ' + r.status }));
+    if (j.cost && j.cost.usd) { COST.usd += j.cost.usd; COST.steps[body.action] = (COST.steps[body.action] || 0) + j.cost.usd; }
     if (j.ok) return j;
     if (i >= tries) throw new Error(JSON.stringify(j).slice(0, 400));
     await new Promise(r => setTimeout(r, 4000 * i));
@@ -45,9 +47,11 @@ async function call(body, tries = 3) {
   fs.writeFileSync(path.join(out, 'outro.mp3'), Buffer.from((await call({ action: 'tts', text: S.outroSay, ...V })).mp3, 'base64'));
   fs.writeFileSync(path.join(out, 'script.json'), JSON.stringify(S, null, 1));
   if (sources) fs.writeFileSync(path.join(out, 'sources.json'), JSON.stringify(sources, null, 1));
-  execFileSync('node', [path.join(__dirname, 'render.js'), out], { stdio: 'inherit' });
+  const cf = path.join(out, 'cost-align.txt'); try { fs.unlinkSync(cf); } catch (_) { }
+  execFileSync('node', [path.join(__dirname, 'render.js'), out], { stdio: 'inherit', env: { ...process.env, COST_FILE: cf } });
+  try { const a = fs.readFileSync(cf, 'utf8').split('\n').filter(Boolean).reduce((x, y) => x + Number(y), 0); COST.usd += a; COST.steps.align = (COST.steps.align || 0) + a; } catch (_) { }
   // caption file for posting
   const seo = require('./seo').build(S);
-  fs.writeFileSync(path.join(out, 'meta.json'), JSON.stringify({ kind, day: S.day, ...seo }, null, 1));
+  fs.writeFileSync(path.join(out, 'meta.json'), JSON.stringify({ kind, day: S.day, ...seo, cost: COST }, null, 1));
   console.log('TITLE:', S.title);
 })().catch(e => { console.error(e); process.exit(1); });

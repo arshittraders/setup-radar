@@ -14,10 +14,14 @@ async function sup(body) {
   const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await oidc('studio-worker', process.env.OIDC_S) }, body: JSON.stringify(body) });
   const j = await r.json().catch(() => ({ error: 'bad json ' + r.status })); if (j.error) throw new Error('studio: ' + j.error); return j;
 }
+// 💰 OpenAI cost of the current job (USD), by step
+let COST = { usd: 0, steps: {} };
 async function api(body, tries = 3) {
   for (let i = 1; ; i++) {
     const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await oidc('setup-radar-shorts', process.env.OIDC_V) }, body: JSON.stringify(body) });
-    const j = await r.json().catch(() => ({ ok: false, error: 'bad json ' + r.status })); if (j.ok) return j;
+    const j = await r.json().catch(() => ({ ok: false, error: 'bad json ' + r.status }));
+    if (j.cost && j.cost.usd) { COST.usd += j.cost.usd; COST.steps[body.action] = (COST.steps[body.action] || 0) + j.cost.usd; }
+    if (j.ok) return j;
     if (i >= tries) throw new Error('api: ' + JSON.stringify(j).slice(0, 300)); await new Promise(r => setTimeout(r, 5000 * i));
   }
 }
@@ -77,7 +81,7 @@ async function aiPart(J, CH, S) {
 async function one() {
   const c = await sup({ action: 'w_claim' });
   if (!c.job) { console.log('no queued job'); return false; }
-  const J = c.job, CH = c.channel || {};
+  const J = c.job, CH = c.channel || {}; COST = { usd: 0, steps: {} };
   console.log('job', J.id, J.title, J.kind || 'board');
   fs.rmSync(job, { recursive: true, force: true });
   try {
@@ -123,7 +127,9 @@ async function one() {
     }
     // 5) render
     fs.writeFileSync(path.join(job, 'story.json'), JSON.stringify(plan));
-    sh('node', [path.join(__dirname, '..', 'story', 'render.js'), job]);
+    const cf = path.join(job, 'cost-align.txt'); try { fs.unlinkSync(cf); } catch (_) { }
+    process.env.COST_FILE = cf; sh('node', [path.join(__dirname, '..', 'story', 'render.js'), job]);
+    try { const a = fs.readFileSync(cf, 'utf8').split('\n').filter(Boolean).reduce((x, y) => x + Number(y), 0); COST.usd += a; COST.steps.align = (COST.steps.align || 0) + a; } catch (_) { }
     // 6) upload + done
     const u = await sup({ action: 'w_upload', job_id: J.id });
     for (const [k, f, ct] of [['video', 'out.mp4', 'video/mp4'], ['thumb', 'thumb.jpg', 'image/jpeg']]) {
@@ -140,11 +146,12 @@ async function one() {
       if (!r || !r.ok) throw new Error('upload ' + k + ' ' + last);
     }
     const dur = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path.join(job, 'out.mp4')]).toString().trim());
-    await sup({ action: 'w_done', job_id: J.id, video_path: u.video.path, thumb_path: u.thumb.path, duration: dur });
+    console.log('cost $', COST.usd.toFixed(4), JSON.stringify(COST.steps));
+    await sup({ action: 'w_done', job_id: J.id, video_path: u.video.path, thumb_path: u.thumb.path, duration: dur, cost: COST });
     console.log('done', J.id);
   } catch (e) {
     console.error(e);
-    await sup({ action: 'w_fail', job_id: J.id, error: String(e.message || e).slice(0, 500) }).catch(() => { });
+    await sup({ action: 'w_fail', job_id: J.id, error: String(e.message || e).slice(0, 500), cost: COST }).catch(() => { });
     process.exitCode = 1;
   }
   return true;
