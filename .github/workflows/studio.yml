@@ -26,14 +26,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
       - name: Install
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji mesa-vulkan-drivers libvulkan1 libgomp1 unzip >/dev/null
           pip install -q opencv-python-headless numpy pillow
           npm i --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
           mkdir -p esr && cd esr && curl -sSL -o r.zip https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-ubuntu.zip && unzip -oq r.zip && chmod +x realesrgan-ncnn-vulkan || true
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
       - name: Free Indic female voice (IndicF5)
         continue-on-error: true
         run: |
@@ -66,3 +66,4 @@ jobs:
           f=sorted(glob.glob('img/*.png'))[:9];ims=[Image.open(x).convert('RGB').resize((512,341)) for x in f]+([Image.open('sheet.jpg').convert('RGB').resize((512,341))] if __import__('os').path.exists('sheet.jpg') else [])
           c=Image.new('RGB',(1024,341*((len(ims)+1)//2)));[c.paste(im,((i%2)*512,(i//2)*341)) for i,im in enumerate(ims)];c.save('dbg-grid.jpg',quality=85)" || true)
           gh release upload studio-debug dbg-out.mp4 dbg-grid.jpg --clobber || true
+          
