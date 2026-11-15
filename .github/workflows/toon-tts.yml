@@ -1,6 +1,10 @@
 name: Toon voices
 on:
   workflow_dispatch:
+    inputs:
+      only:
+        description: 'who to regenerate (G,B,L1..) — empty = all'
+        default: ''
 permissions:
   contents: write
   id-token: write
@@ -15,6 +19,8 @@ jobs:
       - name: ffmpeg
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
       - name: Voices
+        env:
+          ONLY: ${{ inputs.only }}
         run: node toon/tts.js tn
       - name: Upload
         if: always()

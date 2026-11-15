@@ -2,11 +2,11 @@
  "voices": {
   "G": {
    "voice": "Leda",
-   "style": "Speak in Hindi as Golu, a cute, soft-spoken, sweet and cheerful 10-year-old Indian school boy. Innocent, happy, a little fast, like a kids cartoon. Say exactly:"
+   "style": "Speak in Hindi as Golu, a cute, soft-spoken, sweet and cheerful 10-year-old Indian school boy. Innocent, happy, a little fast, like a kids cartoon. Keep the same young voice for every line. Say exactly:"
   },
   "B": {
-   "voice": "Fenrir",
-   "style": "Speak in Hindi as Bunty, a grumpy, oversmart, naughty 10-year-old Indian school boy. Bored, sarcastic, eye-rolling tone, a smug little pause before the punchline, like a kids cartoon. Say exactly:"
+   "voice": "Kore",
+   "style": "Speak in Hindi as Bunty, a grumpy, oversmart, naughty 10-year-old Indian school boy with a young child's voice (NOT an adult voice). Keep the same young voice for every line. Bored, sarcastic, eye-rolling tone, a smug little pause before the punchline, like a kids cartoon. Say exactly:"
   },
   "L1": {
    "voice": "Puck",

@@ -5,7 +5,7 @@ const S = JSON.parse(fs.readFileSync(path.join(__dirname, 'script.json'), 'utf8'
 const FN = 'https://ceoehwleopykotddcxxk.supabase.co/functions/v1/studio';
 (async () => {
   const tok = async () => (await (await fetch(process.env.ACTIONS_ID_TOKEN_REQUEST_URL + '&audience=studio-worker', { headers: { Authorization: 'bearer ' + process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN } })).json()).value;
-  for (const l of S.lines) {
+  for (const l of S.lines.filter(x => !process.env.ONLY || process.env.ONLY.split(',').includes(x.who))) {
     const v = S.voices[l.who]; let j;
     for (let i = 1; i <= 5; i++) {
       const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await tok() }, body: JSON.stringify({ action: 'w_tts', text: l.text, voice: v.voice, style: v.style }) });

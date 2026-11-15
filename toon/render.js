@@ -7,12 +7,26 @@ const W = (p) => path.join(dir, p), ff = (a) => execFileSync('ffmpeg', ['-y', '-
 const S = JSON.parse(fs.readFileSync(fs.existsSync(path.join(dir, 'script.json')) ? path.join(dir, 'script.json') : path.join(__dirname, 'script.json'), 'utf8')), FPS = 30;
 const dur = (f) => +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString().trim();
 
-// ---------- voices: tighten, kid-like lift, loudness ----------
-const PITCH = { G: 1.06, B: 1.04 }, TEMPO = { G: 1.17, B: 1.13 };
+// ---------- voices: lock each character to ONE pitch (Gemini voices drift line to line) ----------
+const TARGET = { G: 250, B: 210 }, TEMPO = { G: 1.17, B: 1.13 };
+function medianF0(file) {   // autocorrelation pitch on voiced 40 ms frames
+  const raw = execFileSync('ffmpeg', ['-v', 'error', '-i', file, '-f', 's16le', '-ac', '1', '-ar', '16000', '-'], { maxBuffer: 1 << 28 });
+  const a = new Int16Array(raw.buffer, raw.byteOffset, Math.floor(raw.length / 2)), N = 640, f0 = [];
+  for (let i = 0; i + N < a.length; i += 320) {
+    let e = 0; for (let k = 0; k < N; k++) e += a[i + k] * a[i + k]; if (Math.sqrt(e / N) < 800) continue;
+    let best = 0, bk = 0; const lo = 32, hi = 228;
+    for (let lag = lo; lag < hi; lag++) { let c = 0; for (let k = 0; k < N - lag; k++) c += a[i + k] * a[i + k + lag]; if (c > best) { best = c; bk = lag; } }
+    if (bk && best > 0.3 * e) f0.push(16000 / bk);
+  }
+  f0.sort((x, y) => x - y); return f0.length ? f0[Math.floor(f0.length / 2)] : 0;
+}
+const atempoChain = (x) => { const f = []; while (x > 2) { f.push('atempo=2'); x /= 2; } while (x < 0.5) { f.push('atempo=0.5'); x /= 0.5; } f.push('atempo=' + x.toFixed(4)); return f.join(','); };
 const lines = S.lines.filter((l) => l.who === 'G' || l.who === 'B');
 for (const l of lines) {
-  const p = PITCH[l.who], tp = TEMPO[l.who];
-  ff(['-i', W(`tn-${l.id}.mp3`), '-af', `silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.3:stop_threshold=-45dB,aresample=44100,asetrate=${Math.round(44100 * p)},aresample=44100,atempo=${(tp / p).toFixed(4)},loudnorm=I=-15:TP=-1.5`, '-ac', '1', W(`v-${l.id}.wav`)]);
+  ff(['-i', W(`tn-${l.id}.mp3`), '-af', 'silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.3:stop_threshold=-45dB', '-ar', '44100', '-ac', '1', W(`c-${l.id}.wav`)]);
+  const f0 = medianF0(W(`c-${l.id}.wav`)), p = f0 ? Math.max(0.7, Math.min(1.9, TARGET[l.who] / f0)) : 1.05;
+  console.log('pitch', l.id, l.who, Math.round(f0), '→ x' + p.toFixed(2));
+  ff(['-i', W(`c-${l.id}.wav`), '-af', `asetrate=${Math.round(44100 * p)},aresample=44100,${atempoChain(TEMPO[l.who] / p)},loudnorm=I=-15:TP=-1.5`, '-ac', '1', W(`v-${l.id}.wav`)]);
 }
 // laugh track: generated per run if laugh clips exist, else the saved asset
 if (fs.existsSync(W('tn-lg1.mp3')) && fs.existsSync(W('tn-lg2.mp3')) && fs.existsSync(W('tn-lg3.mp3'))) ff(['-i', W('tn-lg1.mp3'), '-i', W('tn-lg2.mp3'), '-i', W('tn-lg3.mp3'), '-filter_complex',
