@@ -1,16 +1,20 @@
-// voice lines for toon/script.json via /api/shorts (OIDC). usage: node toon/tts.js <outdir>
-const fs = require('fs'), path = require('path');
+// voice lines for toon/script.json via Gemini TTS (studio function, OIDC). usage: node toon/tts.js <outdir>
+const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
 const out = process.argv[2] || 'tn'; fs.mkdirSync(out, { recursive: true });
 const S = JSON.parse(fs.readFileSync(path.join(__dirname, 'script.json'), 'utf8'));
+const FN = 'https://ceoehwleopykotddcxxk.supabase.co/functions/v1/studio';
 (async () => {
-  const tk = await (await fetch(process.env.ACTIONS_ID_TOKEN_REQUEST_URL + '&audience=setup-radar-shorts', { headers: { Authorization: 'bearer ' + process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN } })).json();
-  let usd = 0;
+  const tok = async () => (await (await fetch(process.env.ACTIONS_ID_TOKEN_REQUEST_URL + '&audience=studio-worker', { headers: { Authorization: 'bearer ' + process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN } })).json()).value;
   for (const l of S.lines) {
-    const v = S.voices[l.who];
-    const r = await fetch('https://setup-radar.vercel.app/api/shorts', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tk.value }, body: JSON.stringify({ action: 'tts', text: l.text, voice: v.voice, style: v.style }) });
-    const j = await r.json(); if (!j.mp3) throw new Error(JSON.stringify(j).slice(0, 300));
-    usd += (j.cost && j.cost.usd) || 0;
-    fs.writeFileSync(path.join(out, `tn-${l.id}.mp3`), Buffer.from(j.mp3, 'base64')); console.log('line', l.id);
+    const v = S.voices[l.who]; let j;
+    for (let i = 1; i <= 3; i++) {
+      const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await tok() }, body: JSON.stringify({ action: 'w_tts', text: l.text, voice: v.voice, style: v.style }) });
+      j = await r.json().catch(() => ({ error: 'bad json ' + r.status })); if (j.pcm) break; console.log('retry', l.id, JSON.stringify(j).slice(0, 200)); await new Promise(r => setTimeout(r, 4000 * i));
+    }
+    if (!j.pcm) throw new Error(JSON.stringify(j).slice(0, 300));
+    const raw = path.join(out, `${l.id}.pcm`); fs.writeFileSync(raw, Buffer.from(j.pcm, 'base64'));
+    const rate = /rate=(\d+)/.exec(j.mime || '') ? +/rate=(\d+)/.exec(j.mime)[1] : 24000;
+    execFileSync('ffmpeg', ['-y', '-v', 'error', '-f', 's16le', '-ar', String(rate), '-ac', '1', '-i', raw, '-b:a', '128k', path.join(out, `tn-${l.id}.mp3`)]);
+    console.log('line', l.id, j.model);
   }
-  console.log('cost usd', usd.toFixed(4));
 })().catch(e => { console.error(e); process.exit(1); });
