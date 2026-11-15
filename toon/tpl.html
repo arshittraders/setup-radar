@@ -93,7 +93,7 @@ window.render = (t) => {
   for (const x of L) {
     const k = t - (x.t + x.d * 0.8); if (k < 0 || k > 1.7) continue;
     const a = back(k / 0.3), o = k > 1.4 ? 1 - (k - 1.4) / 0.3 : 1;
-    if (x.emoji) st += `<div class="st" style="left:${x.who === "G" ? 640 : 120}px;top:700px;opacity:${o};transform:scale(${a}) rotate(${Math.sin(k * 10) * 8}deg)">${x.emoji}</div>`;
+    if (x.emoji) st += `<div class="st" style="left:${x.who === "G" ? 700 : 110}px;top:300px;opacity:${o};transform:scale(${a}) rotate(${Math.sin(k * 10) * 8}deg)">${x.emoji}</div>`;
     if (x.laugh) st += `<div class="haha" style="left:${x.laugh > 1 ? 250 : 330}px;top:${1000 - k * 40}px;opacity:${o};transform:scale(${a * (x.laugh > 1 ? 1.3 : 1)}) rotate(-8deg)">HA HA HA!</div>`;
   }
   $("stk").innerHTML = st;
