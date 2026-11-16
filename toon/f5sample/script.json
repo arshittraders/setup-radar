@@ -1,0 +1,15 @@
+{"title":"होमवर्क का कुत्ता 🐶","scene":"class","voices":{},
+"lines":[
+{"id":"l1","who":"G","text":"बंटी! मैडम आ रही हैं, तेरा होमवर्क कहाँ है?","mood":"shock","lmood":"smug","laugh":0,"sfx":"","emoji":"","scene":"class"},
+{"id":"l2","who":"B","text":"होमवर्क? वो तो मेरे कुत्ते ने खा लिया।","mood":"smug","lmood":"shock","laugh":0,"sfx":"","emoji":"","scene":"class"},
+{"id":"l3","who":"G","text":"पर तेरे घर में तो कोई कुत्ता है ही नहीं!","mood":"shock","lmood":"smug","laugh":0,"sfx":"whoosh","emoji":"","scene":"class"},
+{"id":"l4","who":"B","text":"इसीलिए तो कल रात कॉपी मैंने खुद खाई।","mood":"smug","lmood":"shock","laugh":1,"sfx":"boing","emoji":"🐶","scene":"class"},
+{"id":"l5","who":"G","text":"छी! कॉपी खा गया? कैसी लगी?","mood":"disgust","lmood":"smug","laugh":0,"sfx":"","emoji":"","scene":"class"},
+{"id":"l6","who":"B","text":"मैथ्स थोड़ी कड़वी थी, पर हिंदी एकदम मीठी।","mood":"smug","lmood":"smile","laugh":0,"sfx":"","emoji":"","scene":"class"},
+{"id":"l7","who":"G","text":"और साइंस?","mood":"smile","lmood":"smug","laugh":0,"sfx":"","emoji":"","scene":"class"},
+{"id":"l8","who":"B","text":"साइंस से पेट में केमिकल रिएक्शन हो गया!","mood":"grumpy","lmood":"laugh","laugh":1,"sfx":"rimshot","emoji":"🧪","scene":"class"},
+{"id":"l9","who":"G","text":"बंटी... मैडम ठीक तेरे पीछे खड़ी हैं।","mood":"shock","lmood":"shock","laugh":0,"sfx":"whoosh","emoji":"","scene":"class"},
+{"id":"l10","who":"B","text":"मैडम, आपके लिए भी एक पन्ना बचाया है... खाओगी?","mood":"smile","lmood":"shock","laugh":2,"sfx":"slide","emoji":"😂","scene":"class"},
+{"id":"l11","who":"G","text":"कल गोलू-बंटी फिर आएँगे, नई मस्ती के साथ!","mood":"happy","lmood":"smug","laugh":0,"sfx":"ding","emoji":"","scene":"end"},
+{"id":"l12","who":"B","text":"और फ़ॉलो नहीं किया, तो मैं रूठ जाऊँगा! हुंह!","mood":"grumpy","lmood":"happy","laugh":0,"sfx":"boing","emoji":"😤","scene":"end"}
+]}
