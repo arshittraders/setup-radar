@@ -1,0 +1,147 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script src="flags.js"></script>
+<script>
+// "Which country survives?" — deterministic ball battle in a circle. Original design.
+const C = document.getElementById('c'), X = C.getContext('2d');
+const W = 1080, H = 1920, CX = 540, CY = 1010, R0 = 470; let R = R0; const FPS = 30, SUB = 8, DT = 1 / (FPS * SUB);
+let S, rnd, EV = [];
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; };
+const ease = x => 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
+const back = x => { x = Math.max(0, Math.min(1, x)); const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+
+window.init = (cfg) => {
+  rnd = mulberry(cfg.seed || 7);
+  const pool = Object.keys(FLAGS).filter(k => k !== 'India');
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const names = ['India', ...pool.slice(0, (cfg.n || 7) - 1)];
+  for (let i = names.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [names[i], names[j]] = [names[j], names[i]]; }
+  const speed = 560;
+  S = { t: 0, f: 0, phase: 'intro', winner: null, endT: null, parts: [], pops: [], floats: [], banner: null, shake: 0,
+    balls: names.map((n, i) => { const a = i / names.length * Math.PI * 2 - Math.PI / 2, d = rnd() * Math.PI * 2;
+      return { n, col: FLAGS[n].col, x: CX + Math.cos(a) * 230, y: CY + Math.sin(a) * 230, vx: Math.cos(d) * speed, vy: Math.sin(d) * speed, sp: speed, r: 48, hp: 100, hits: [], alive: true, dead: 0, flash: 0 }; }) };
+  S.intro = 1.6;
+};
+
+function step() {
+  const B = S.balls.filter(b => b.alive);
+  const mult = S.t > 46 ? 3 : S.t > 36 ? 2 : 1;
+  R = S.t < 30 ? R0 : Math.max(260, R0 - (S.t - 30) * 11);   // ring closes in after 30 s
+  for (const b of B) {
+    b.x += b.vx * DT; b.y += b.vy * DT;
+    const dx = b.x - CX, dy = b.y - CY, d = Math.hypot(dx, dy);
+    if (d > R - b.r) {   // wall: reflect, keep speed, leave a string point
+      const nx = dx / d, ny = dy / d, vn = b.vx * nx + b.vy * ny;
+      if (vn > 0) { b.vx -= 2 * vn * nx; b.vy -= 2 * vn * ny;
+        const j = (rnd() - 0.5) * 0.18, c = Math.cos(j), s = Math.sin(j); [b.vx, b.vy] = [b.vx * c - b.vy * s, b.vx * s + b.vy * c];
+        b.hits.push([CX + nx * R, CY + ny * R]); if (b.hits.length > 90) b.hits.shift();
+        EV.push({ t: S.t, k: 'tick', p: 0.7 + (S.balls.indexOf(b) % 7) * 0.08 }); }
+      b.x = CX + nx * (R - b.r); b.y = CY + ny * (R - b.r);
+    }
+  }
+  for (let i = 0; i < B.length; i++) for (let j = i + 1; j < B.length; j++) {
+    const a = B[i], b = B[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), m = a.r + b.r;
+    if (d < m && d > 0) {
+      const nx = dx / d, ny = dy / d, rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+      const ov = (m - d) / 2; a.x -= nx * ov; a.y -= ny * ov; b.x += nx * ov; b.y += ny * ov;
+      if (rv < 0) {
+        a.vx += rv * nx; a.vy += rv * ny; b.vx -= rv * nx; b.vy -= rv * ny;
+        for (const q of [a, b]) { const s = Math.hypot(q.vx, q.vy) || 1; q.vx *= q.sp / s; q.vy *= q.sp / s; }
+        const lo = S.t < 12 ? 2 : S.t < 24 ? 3 : 4, hi = S.t < 12 ? 4 : S.t < 24 ? 6 : 8;
+        const da = Math.round((lo + rnd() * (hi - lo)) * mult), db = Math.round((lo + rnd() * (hi - lo)) * mult);
+        a.hp -= da; b.hp -= db; a.flash = b.flash = 0.18;
+        S.floats.push({ x: a.x, y: a.y - 70, s: '-' + da, t: S.t, col: '#ff5a5a' }, { x: b.x, y: b.y - 70, s: '-' + db, t: S.t, col: '#ff5a5a' });
+        EV.push({ t: S.t, k: 'hit' }); S.shake = Math.max(S.shake, 6);
+        for (const q of [a, b]) if (q.hp <= 0 && q.alive) kill(q);
+      }
+    }
+  }
+  for (const b of S.balls) b.flash = Math.max(0, b.flash - DT);
+}
+function kill(b) {
+  b.alive = false; b.hp = 0; b.dead = S.t;
+  for (let k = 0; k < 46; k++) { const a = rnd() * 7, v = 200 + rnd() * 600; S.parts.push({ x: b.x, y: b.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: S.t, col: k % 3 ? b.col : '#ffffff' }); }
+  S.pops.push({ x: b.x, y: b.y, t: S.t, col: b.col });
+  S.banner = { s: b.n.toUpperCase() + ' OUT!', t: S.t, col: b.col }; S.shake = 18;
+  EV.push({ t: S.t, k: 'pop' });
+  const left = S.balls.filter(q => q.alive);
+  if (left.length === 1) { S.winner = left[0]; S.endT = S.t; EV.push({ t: S.t + 0.4, k: 'win' }); }
+}
+
+function flagBall(b, x, y, r, a = 1) {
+  X.save(); X.globalAlpha = a; X.translate(x, y);
+  X.shadowColor = b.col; X.shadowBlur = 30; X.beginPath(); X.arc(0, 0, r + 5, 0, 7); X.fillStyle = '#fff'; X.fill(); X.shadowBlur = 0;
+  X.beginPath(); X.arc(0, 0, r, 0, 7); X.clip(); FLAGS[b.n].d(X, r);
+  const g = X.createRadialGradient(-r * 0.4, -r * 0.5, r * 0.1, 0, 0, r); g.addColorStop(0, 'rgba(255,255,255,.45)'); g.addColorStop(0.5, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(0,0,0,.35)'); X.fillStyle = g; X.fillRect(-r, -r, 2 * r, 2 * r);
+  if (b.flash > 0) { X.fillStyle = `rgba(255,255,255,${b.flash * 4})`; X.fillRect(-r, -r, 2 * r, 2 * r); }
+  X.restore();
+}
+
+function draw() {
+  const t = S.t;
+  // background
+  const g = X.createRadialGradient(CX, CY, 100, CX, CY, 1200); g.addColorStop(0, '#141a3a'); g.addColorStop(1, '#05060f'); X.fillStyle = g; X.fillRect(0, 0, W, H);
+  X.save();
+  const sh = S.shake; X.translate((Math.random() - 0.5) * sh, (Math.random() - 0.5) * sh); S.shake *= 0.85;
+  // arena glow ring (pulses)
+  const pul = 0.5 + 0.5 * Math.sin(t * 3);
+  X.lineWidth = 10; X.strokeStyle = `rgba(160,180,255,${0.55 + 0.3 * pul})`; X.shadowColor = '#8fa2ff'; X.shadowBlur = 40 + 20 * pul; X.beginPath(); X.arc(CX, CY, R + 6, 0, 7); X.stroke(); X.shadowBlur = 0;
+  X.fillStyle = 'rgba(10,14,40,.85)'; X.beginPath(); X.arc(CX, CY, R, 0, 7); X.fill();
+  // strings (fan from each ball to its wall hits)
+  for (const b of S.balls) {
+    const a = b.alive ? 1 : Math.max(0, 1 - (t - b.dead) / 0.6); if (a <= 0 || !b.hits.length) continue;
+    X.strokeStyle = hexA(b.col === '#ffffff' ? '#dddddd' : b.col, 0.6 * a); X.lineWidth = 2.6; X.shadowColor = b.col; X.shadowBlur = 8;
+    X.beginPath(); for (const [hx, hy] of b.hits) { if (Math.hypot(hx - CX, hy - CY) > R + 8) continue; X.moveTo(b.x, b.y); X.lineTo(hx, hy); } X.stroke(); X.shadowBlur = 0;
+    X.fillStyle = hexA(b.col, 0.9 * a); for (const [hx, hy] of b.hits.slice(-12)) { if (Math.hypot(hx - CX, hy - CY) > R + 8) continue; X.beginPath(); X.arc(hx, hy, 4, 0, 7); X.fill(); }
+  }
+  // particles + shock rings
+  for (const p of S.parts) { const k = t - p.t; if (k > 1.2) continue; X.globalAlpha = 1 - k / 1.2; X.fillStyle = p.col; X.beginPath(); X.arc(p.x + p.vx * k, p.y + p.vy * k + 300 * k * k, 7 * (1 - k / 1.4), 0, 7); X.fill(); }
+  X.globalAlpha = 1;
+  for (const p of S.pops) { const k = t - p.t; if (k > 0.6) continue; X.strokeStyle = hexA(p.col, 1 - k / 0.6); X.lineWidth = 10 * (1 - k / 0.6); X.beginPath(); X.arc(p.x, p.y, 40 + k * 400, 0, 7); X.stroke(); }
+  // balls + HP
+  for (const b of S.balls) {
+    if (!b.alive) continue;
+    flagBall(b, b.x, b.y, b.r);
+    X.font = '800 30px Poppins, Arial'; X.textAlign = 'center'; X.lineWidth = 6; X.strokeStyle = '#000'; X.fillStyle = b.hp > 50 ? '#ffffff' : b.hp > 25 ? '#ffd23f' : '#ff4d4d';
+    X.strokeText(Math.max(0, b.hp), b.x, b.y + b.r + 34); X.fillText(Math.max(0, b.hp), b.x, b.y + b.r + 34);
+  }
+  for (const f of S.floats) { const k = t - f.t; if (k > 0.7) continue; X.globalAlpha = 1 - k / 0.7; X.font = '900 34px Poppins, Arial'; X.fillStyle = f.col; X.strokeStyle = '#000'; X.lineWidth = 5; X.strokeText(f.s, f.x, f.y - k * 60); X.fillText(f.s, f.x, f.y - k * 60); }
+  X.globalAlpha = 1;
+  X.restore();
+  // header
+  const left = S.balls.filter(b => b.alive).length;
+  X.textAlign = 'center'; X.fillStyle = '#fff'; X.font = '900 76px Poppins, Arial'; X.shadowColor = '#5b6cff'; X.shadowBlur = 30;
+  X.fillText('WHICH COUNTRY', W / 2, 200); X.fillText('SURVIVES?', W / 2, 285); X.shadowBlur = 0;
+  X.font = '800 44px Poppins, Arial'; X.fillStyle = '#ffd23f'; X.fillText(`${left} LEFT`, W / 2, 365);
+  if (S.t > 30 && !S.winner && R < R0) { X.font = '900 38px Poppins, Arial'; X.fillStyle = 'rgba(143,162,255,.9)'; X.fillText('RING IS CLOSING…', W / 2, 1500); }
+  if (S.t > 36 && !S.winner) { X.font = '900 40px Poppins, Arial'; X.fillStyle = `rgba(255,77,77,${0.6 + 0.4 * Math.sin(t * 8)})`; X.fillText(S.t > 46 ? '⚡ DAMAGE x3 ⚡' : '⚡ DAMAGE x2 ⚡', W / 2, 1560); }
+  // country list (alive / out) at bottom
+  const alive = S.balls; const cw = 128, sx = W / 2 - (alive.length - 1) * cw / 2;
+  alive.forEach((b, i) => { const x = sx + i * cw, y = 1680; flagBall(b, x, y, 34, b.alive ? 1 : 0.25); if (!b.alive) { X.strokeStyle = '#ff4d4d'; X.lineWidth = 7; X.beginPath(); X.moveTo(x - 28, y - 28); X.lineTo(x + 28, y + 28); X.moveTo(x + 28, y - 28); X.lineTo(x - 28, y + 28); X.stroke(); } });
+  X.font = '700 34px Poppins, Arial'; X.fillStyle = 'rgba(255,255,255,.75)'; X.fillText('Comment your country 👇', W / 2, 1800);
+  // intro
+  if (S.phase === 'intro') { const k = S.f / FPS; X.fillStyle = 'rgba(0,0,0,.45)'; X.fillRect(0, 0, W, H); X.font = '900 150px Poppins, Arial'; X.fillStyle = '#ffd23f'; const n = k < 0.5 ? 'READY?' : k < 1.0 ? '3 2 1' : 'GO!'; X.save(); X.translate(W / 2, CY); X.scale(back((k % 0.5) / 0.3), back((k % 0.5) / 0.3)); X.fillText(n, 0, 50); X.restore(); }
+  // banner
+  if (S.banner && t - S.banner.t < 1.1 && !S.winner) { const k = t - S.banner.t; X.save(); X.translate(W / 2, 470); X.scale(back(k / 0.25), back(k / 0.25)); X.fillStyle = S.banner.col; X.beginPath(); X.roundRect(-330, -55, 660, 100, 24); X.fill(); X.fillStyle = '#fff'; X.font = '900 60px Poppins, Arial'; X.strokeStyle = '#000'; X.lineWidth = 6; X.strokeText(S.banner.s, 0, 20); X.fillText(S.banner.s, 0, 20); X.restore(); }
+  // winner
+  if (S.winner) { const k = t - S.endT; X.fillStyle = `rgba(0,0,0,${Math.min(0.7, k)})`; X.fillRect(0, 0, W, H);
+    const b = S.winner, r = 44 + 120 * ease(k / 0.8); flagBall(b, W / 2, CY - 60, r);
+    X.save(); X.translate(W / 2, CY + 190); X.scale(back((k - 0.3) / 0.4), back((k - 0.3) / 0.4)); X.font = '900 96px Poppins, Arial'; X.fillStyle = '#ffd23f'; X.strokeStyle = '#000'; X.lineWidth = 10;
+    X.strokeText('🏆 ' + b.n.toUpperCase(), 0, 0); X.fillText('🏆 ' + b.n.toUpperCase(), 0, 0); X.font = '900 70px Poppins, Arial'; X.fillStyle = '#fff'; X.strokeText('WINS!', 0, 90); X.fillText('WINS!', 0, 90); X.restore();
+    X.font = '800 46px Poppins, Arial'; X.fillStyle = `rgba(255,255,255,${ease((k - 1) / 0.5)})`; X.fillText('Did your country win? 👇', W / 2, CY + 400);
+    for (let i = 0; i < 70; i++) { const a = (i * 137.5) % 360 * Math.PI / 180, v = 300 + (i * 53) % 500, kk = Math.min(k, 2.5); X.fillStyle = ['#ffd23f', '#fff', b.col, '#ff5ab4'][i % 4]; X.fillRect(W / 2 + Math.cos(a) * v * kk, CY - 60 + Math.sin(a) * v * kk + 200 * kk * kk, 14, 22); }
+  }
+}
+
+window.frame = (fast) => {
+  if (S.phase === 'intro') { if (S.f / FPS >= S.intro) S.phase = 'play'; }
+  else if (!S.winner) { for (let i = 0; i < SUB; i++) { step(); S.t += DT; if (S.winner) break; } }
+  else S.t += 1 / FPS;
+  if (!fast) draw(); S.f++;
+  const done = S.winner && S.t - S.endT > 4.2;
+  const ev = EV; EV = [];
+  return { done, ev: fast ? [] : ev.map(e => ({ ...e, f: S.f })), img: fast ? '' : C.toDataURL('image/jpeg', 0.9), t: S.t };
+};
+</script></body></html>

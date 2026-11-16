@@ -1,0 +1,52 @@
+// Render one "Which country survives?" video. usage: node ballsim/render.js <out.mp4> [seed]
+const { chromium } = require('playwright');
+const { spawn, execFileSync } = require('child_process');
+const fs = require('fs'), path = require('path');
+const OUT = path.resolve(process.argv[2] || 'ball.mp4'), FPS = 30, SR = 44100; let SEED = Number(process.argv[3]) || 0;
+
+function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, win fanfare, soft pad
+  const N = Math.ceil(dur * SR), a = new Float32Array(N);
+  const add = (t0, len, fn) => { const s = Math.floor(t0 * SR); for (let i = 0; i < len * SR && s + i < N; i++) a[s + i] += fn(i / SR); };
+  let seed = 1; const rn = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
+  // soft ambient pad (two detuned sines, very quiet)
+  for (let i = 0; i < N; i++) { const t = i / SR; a[i] += 0.025 * Math.sin(2 * Math.PI * 110 * t) * (0.6 + 0.4 * Math.sin(t * 0.5)) + 0.02 * Math.sin(2 * Math.PI * 164.8 * t); }
+  let lastTick = -1;
+  for (const e of events) {
+    const t = e.f / FPS;
+    if (e.k === 'tick') { if (t - lastTick < 0.035) continue; lastTick = t; const f = 900 * (e.p || 1); add(t, 0.06, (x) => 0.16 * Math.sin(2 * Math.PI * f * x) * Math.exp(-x * 70)); }
+    else if (e.k === 'hit') add(t, 0.14, (x) => 0.35 * (Math.sin(2 * Math.PI * (140 - 300 * x) * x) * Math.exp(-x * 25) + 0.4 * rn() * Math.exp(-x * 60)));
+    else if (e.k === 'pop') add(t, 0.5, (x) => 0.5 * (rn() * Math.exp(-x * 12) * 0.6 + Math.sin(2 * Math.PI * (300 + 500 * Math.exp(-x * 8)) * x) * Math.exp(-x * 9)));
+    else if (e.k === 'win') [523.3, 659.3, 784, 1046.5].forEach((f, i) => add(t + 0.4 + i * 0.14, 0.9, (x) => 0.22 * Math.sin(2 * Math.PI * f * x) * Math.exp(-x * 3) * (1 + 0.3 * Math.sin(2 * Math.PI * 6 * x))));
+  }
+  let mx = 0; for (const v of a) mx = Math.max(mx, Math.abs(v)); const g = mx > 0.95 ? 0.95 / mx : 1;
+  const buf = Buffer.alloc(44 + N * 2);
+  buf.write('RIFF', 0); buf.writeUInt32LE(36 + N * 2, 4); buf.write('WAVEfmt ', 8); buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20); buf.writeUInt16LE(1, 22);
+  buf.writeUInt32LE(SR, 24); buf.writeUInt32LE(SR * 2, 28); buf.writeUInt16LE(2, 32); buf.writeUInt16LE(16, 34); buf.write('data', 36); buf.writeUInt32LE(N * 2, 40);
+  for (let i = 0; i < N; i++) buf.writeInt16LE(Math.max(-32767, Math.min(32767, Math.round(a[i] * g * 32767))), 44 + i * 2);
+  return buf;
+}
+
+(async () => {
+  const br = await chromium.launch(); const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } });
+  await pg.goto('file://' + path.join(__dirname, 'sim.html'));
+  if (!SEED) for (let k = 0; k < 40; k++) {   // pick a seed whose battle lasts 35-55 s (dry run, no drawing)
+    const sd = 1 + Math.floor(Math.random() * 1e6); await pg.evaluate((s) => window.init({ seed: s, n: 7 }), sd);
+    let f = 0; for (; f < FPS * 80; f++) { if ((await pg.evaluate(() => window.frame(true))).done) break; }
+    if (f / FPS >= 35 && f / FPS <= 55) { SEED = sd; break; } SEED = sd;
+  }
+  await pg.evaluate((s) => window.init({ seed: s, n: 7 }), SEED);
+  const vid = OUT.replace(/\.mp4$/, '.v.mp4');
+  const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', vid], { stdio: ['pipe', 'inherit', 'inherit'] });
+  const events = []; let f = 0;
+  for (; f < FPS * 80; f++) {
+    const r = await pg.evaluate(() => window.frame());
+    events.push(...r.ev);
+    const ok = enc.stdin.write(Buffer.from(r.img.split(',')[1], 'base64')); if (!ok) await new Promise((x) => enc.stdin.once('drain', x));
+    if (r.done) break;
+  }
+  enc.stdin.end(); await new Promise((r) => enc.on('close', r)); await br.close();
+  const dur = (f + 1) / FPS, wav = OUT.replace(/\.mp4$/, '.wav'); fs.writeFileSync(wav, synth(events, dur));
+  execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', vid, '-i', wav, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', OUT]);
+  fs.unlinkSync(vid); fs.unlinkSync(wav);
+  console.log('done', OUT, 'seed', SEED, 'sec', dur.toFixed(1), 'events', events.length);
+})().catch((e) => { console.error(e); process.exit(1); });
