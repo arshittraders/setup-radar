@@ -33,11 +33,11 @@ const back = (x) => { x = cl(x); const c = 1.9; return 1 + (c + 1) * Math.pow(x 
 const BG = {
   class: `<rect width="1080" height="1920" fill="#fdf1d6"/><rect y="1290" width="1080" height="630" fill="#c98f5a"/><rect y="1290" width="1080" height="16" fill="#a8703f"/>
     <g opacity=".25">${Array.from({ length: 9 }, (_, i) => `<rect x="${i * 130}" y="1306" width="4" height="614" fill="#7a4a22"/>`).join("")}</g>
-    <rect x="110" y="470" width="860" height="440" rx="18" fill="#2f6b4f" stroke="#7a4a22" stroke-width="22"/>
-    <text x="540" y="640" text-anchor="middle" font-family="Baloo 2" font-weight="800" font-size="92" fill="#f5f5e8" opacity=".9">आज टेस्ट है!</text>
-    <text x="540" y="760" text-anchor="middle" font-family="Bangers" font-size="70" fill="#f5f5e8" opacity=".75">2 + 2 = ?   ✏️</text>
-    <rect x="300" y="905" width="480" height="18" rx="6" fill="#a8703f"/><rect x="380" y="896" width="60" height="12" rx="4" fill="#fff"/>
-    <rect x="40" y="250" width="150" height="180" rx="10" fill="#bfe3ff" stroke="#fff" stroke-width="12"/><circle cx="930" cy="330" r="70" fill="#fff" stroke="#7a4a22" stroke-width="10"/><path d="M930,330 L930,285 M930,330 L965,345" stroke="#1d1a24" stroke-width="8" stroke-linecap="round"/>
+    <rect x="210" y="390" width="660" height="420" rx="18" fill="#2f6b4f" stroke="#7a4a22" stroke-width="22"/>
+    <text x="540" y="500" text-anchor="middle" font-family="Baloo 2" font-weight="800" font-size="76" fill="#f5f5e8" opacity=".92">@@BOARD@@</text>
+    <text x="540" y="585" text-anchor="middle" font-family="Bangers" font-size="54" fill="#f5f5e8" opacity=".7">2 + 2 = ?   ✏️</text>
+    <rect x="330" y="805" width="420" height="16" rx="6" fill="#a8703f"/><rect x="400" y="796" width="60" height="12" rx="4" fill="#fff"/>
+    <g><rect x="36" y="380" width="56" height="300" rx="8" fill="#e0544e"/><rect x="40" y="250" width="150" height="190" rx="10" fill="#8fd3ff" stroke="#fff" stroke-width="12"/><circle cx="150" cy="300" r="22" fill="#fff59d"/><ellipse cx="95" cy="350" rx="34" ry="14" fill="#fff"/><path d="M115,256 V434 M46,345 H184" stroke="#fff" stroke-width="8"/></g><circle cx="930" cy="330" r="70" fill="#fff" stroke="#7a4a22" stroke-width="10"/><path d="M930,330 L930,285 M930,330 L965,345" stroke="#1d1a24" stroke-width="8" stroke-linecap="round"/>
     <rect x="-40" y="1500" width="300" height="40" rx="10" fill="#8a5a2e"/><rect x="820" y="1500" width="300" height="40" rx="10" fill="#8a5a2e"/>`,
   home: `<rect width="1080" height="1920" fill="#ffe3cf"/><rect y="1290" width="1080" height="630" fill="#e8b27c"/>
     <g opacity=".18">${Array.from({ length: 12 }, (_, i) => `<rect x="0" y="${1310 + i * 52}" width="1080" height="4" fill="#7a4a22"/>`).join("")}</g>
@@ -55,7 +55,7 @@ window.render = (t) => {
   const l = li >= 0 ? L[li] : null, scene = l ? l.scene : L[0].scene;
   const SC = window.SCENES && SCENES[scene];
   if (SC) { if (SC.moving || scene !== curBg) { $("bg").innerHTML = SC.bg(t); $("fg").innerHTML = SC.fg(t); } }
-  else if (scene !== curBg) { $("bg").innerHTML = BG[scene] || BG.class; $("fg").innerHTML = ""; }
+  else if (scene !== curBg) { $("bg").innerHTML = (BG[scene] || BG.class).replace("@@BOARD@@", D.board || "आज टेस्ट है!"); $("fg").innerHTML = ""; }
   curBg = scene;
   // characters
   const speak = l && t < l.t + l.d ? l.who : null;
@@ -67,18 +67,28 @@ window.render = (t) => {
   for (const w of ["G", "B"]) {
     const act = speak === w, m = act ? env(l) : 0, sc = act ? 1.0 + 0.03 * Math.abs(Math.sin(t * 8)) : 0.96;
     const hop = l && l.laugh && l.who !== w && t > l.t + l.d && t < l.t + l.d + 1 ? Math.abs(Math.sin((t - l.t - l.d) * 14)) * 18 : 0;
-    html += `<g transform="translate(${pos[w]},${1470 - hop}) scale(${sc * 1.28})">${TOON.draw(w, { m, mood: moodOf(w), blink: blinkOf(w), wave: scene === "end" ? 1 : 0, t })}</g>`;
+    const md = moodOf(w), dir = w === "G" ? 1 : -1;
+    const laughNow = L.some((x) => x.laugh && x.who !== w && t > x.t + x.d && t < x.t + x.d + 1.3) || L.some((x) => x.laugh && x.who === w && t > x.t + x.d && t < x.t + x.d + 0.9 && w === "G");
+    let pose = scene === "end" ? "wave" : act ? ({ angry: "point", shock: "shock", laugh: "laugh", smug: "shrug", confused: "shrug" }[md] || "talk")
+      : ({ laugh: "laugh", shock: "shock", angry: "cross", grumpy: w === "B" ? "cross" : "idle", smug: w === "B" ? "cross" : "idle", confused: "idle" }[md] || "idle");
+    if (laughNow && scene !== "end") pose = "laugh";
+    html += `<g transform="translate(${pos[w]},${1470 - hop}) scale(${sc * 1.28})">${TOON.draw(w, { m, mood: pose === "laugh" && !act ? "laugh" : md, blink: blinkOf(w), wave: scene === "end" ? 1 : 0, pose, dir, t })}</g>`;
   }
   $("chars").innerHTML = html;
-  // camera: punch-in on punchlines, shake on rimshot
-  let z = 1, cx = 540, sx = 0, sy = 0, fl = 0;
+  // camera: gentle push toward the speaker; punchline = close-up on speaker, then a reaction cut to the listener
+  let z = 1, cx = 540, cy = 1000, sx = 0, sy = 0, fl = 0;
+  if (speak && scene !== "end") { const k = ease((t - l.t) / 0.6); z = 1 + 0.06 * k; cx = 540 + (pos[speak] - 540) * 0.6 * k; }
   for (const x of L) {
-    const k = t - (x.t + x.d * 0.75);
-    if (x.laugh && k > 0 && k < 1.6) { const e = k < 0.15 ? ease(k / 0.15) : 1 - ease((k - 1.1) / 0.5); z = Math.max(z, 1 + 0.18 * e * x.laugh); cx = pos[x.who]; }
+    const other = x.who === "G" ? "B" : "G";
+    if (x.laugh && x.scene !== "end") {
+      const a = x.t + x.d * 0.55, b = x.t + x.d + 0.15, c = b + 1.0;
+      if (t >= a && t < b) { z = 1.34 + 0.02 * (t - a); cx = pos[x.who]; cy = 820; if (t - a < 0.12) fl = Math.max(fl, 0.35 * (1 - (t - a) / 0.12)); }
+      else if (t >= b && t < c) { z = 1.34; cx = pos[other]; cy = 820; if (t - b < 0.12) fl = Math.max(fl, 0.35 * (1 - (t - b) / 0.12)); }
+    }
     if (x.sfx === "rimshot") { const q = t - (x.t + x.d); if (q > 0 && q < 0.5) { sx = Math.sin(t * 90) * 14 * (1 - q / 0.5); sy = Math.cos(t * 70) * 10 * (1 - q / 0.5); } }
     const sct = x.t - 0.05; if (L.indexOf(x) > 0 && L[L.indexOf(x) - 1].scene !== x.scene && t > sct && t < sct + 0.18) fl = 0.8 * (1 - (t - sct) / 0.18);
   }
-  $("cam").style.transformOrigin = `${cx}px 1000px`; $("cam").style.transform = `translate(${sx}px,${sy}px) scale(${z})`;
+  $("cam").style.transformOrigin = `${cx}px ${cy}px`; $("cam").style.transform = `translate(${sx}px,${sy}px) scale(${z})`;
   $("flash").style.opacity = fl;
   // title hook
   const tt = t; $("title").innerHTML = D.title + "<small>GOLU vs BUNTY</small>";

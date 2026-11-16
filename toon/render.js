@@ -51,7 +51,7 @@ for (let i = 0; i < lines.length; i++) {
   const mx = Math.max(...env) || 1;
   T.push({ ...l, t: +t.toFixed(3), d: +d.toFixed(3), env: env.map((x) => +Math.min(1, x / mx * 1.5).toFixed(2)) });
   const next = lines[i + 1];
-  t += d + (l.laugh === 2 ? 1.5 : l.laugh ? 1.0 : 0.16) + (next && next.scene !== l.scene ? 0.35 : 0);
+  t += d + (l.laugh === 2 ? 1.5 : l.laugh ? 1.0 : 0.16) + (next && next.scene !== l.scene ? 0.35 : 0) + (next && next.laugh ? 0.45 : 0);   // comic pause before a punchline
 }
 const TOTAL = +(t + 2.4).toFixed(2);
 console.log('total', TOTAL);
@@ -92,7 +92,7 @@ console.log('audio ok');
   fs.writeFileSync(path.join(__dirname, '_page.html'), tpl);
   const br = await chromium.launch(); const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } });
   await pg.goto('file://' + path.join(__dirname, '_page.html')); await pg.evaluate(() => document.fonts.ready);
-  await pg.evaluate((d) => window.setup(d), { lines: T, total: TOTAL, hook: 0.7, title: S.title });
+  await pg.evaluate((d) => window.setup(d), { lines: T, total: TOTAL, hook: 0.7, title: S.title, board: S.board || String(S.title || "").replace(/[^\u0900-\u097F\s!?]/g, "").trim() });
   const only = process.argv[4] ? process.argv[4].split(',').map(Number) : null;
   const enc = only ? null : spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-i', W('audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', W('out.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
   const N = Math.round(TOTAL * FPS);

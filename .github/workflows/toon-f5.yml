@@ -34,5 +34,5 @@ jobs:
         env: { GH_TOKEN: '${{ github.token }}' }
         run: |
           ls toon/f5sample | head -50
-          f=$(ls toon/f5sample/*.mp4 2>/dev/null | head -1); [ -n "$f" ] && cp "$f" gb-f5-sample.mp4 && gh release upload studio-debug gb-f5-sample.mp4 --clobber
+          f=$(ls toon/f5sample/*.mp4 2>/dev/null | head -1); [ -n "$f" ] && cp "$f" gb-padhai-bhoot.mp4 && gh release upload studio-debug gb-padhai-bhoot.mp4 --clobber
           cd toon/f5sample && zip -q ../../f5wav.zip tn-*.mp3 2>/dev/null; cd ../..; [ -f f5wav.zip ] && gh release upload studio-debug f5wav.zip --clobber || true

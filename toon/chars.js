@@ -2,21 +2,22 @@
 // o: { m: mouth 0..1, blink: bool, mood: 'happy'|'smile'|'shock'|'grumpy'|'smug'|'angry'|'laugh'|'disgust', wave: 0..1, t: seconds }
 (function (root) {
   const SKIN = '#e9a97a', SKIN_D = '#c98557', HAIR = '#1d1a24', SHIRT = '#fbfbff', SHIRT_D = '#d9dbea', SHORTS = '#27346b', TIE = '#9b1c31', TIE_S = '#f2c94c';
-  function eyes(x, y, mood, blink, who) {
+  function eyes(x, y, mood, blink, who, dir = 0) {
+    const lx = dir * 5;
     if (blink || mood === 'laugh') return `<path d="M${x - 46},${y} q14,-14 28,0 M${x + 18},${y} q14,-14 28,0" stroke="#1d1a24" stroke-width="7" fill="none" stroke-linecap="round"/>`;
     if (who === 'B' && ['grumpy', 'smug', 'angry'].includes(mood)) {   // heavy half-lidded eyes
       return `<g><ellipse cx="${x - 32}" cy="${y}" rx="17" ry="15" fill="#fff"/><ellipse cx="${x + 32}" cy="${y}" rx="17" ry="15" fill="#fff"/>
-        <circle cx="${x - 28}" cy="${y + 4}" r="9" fill="#2a1a12"/><circle cx="${x + 36}" cy="${y + 4}" r="9" fill="#2a1a12"/>
+        <circle cx="${x - 28 + lx}" cy="${y + 4}" r="9" fill="#2a1a12"/><circle cx="${x + 36 + lx}" cy="${y + 4}" r="9" fill="#2a1a12"/>
         <path d="M${x - 52},${y - 2} L${x - 12},${y - 4} L${x - 12},${y - 16} L${x - 52},${y - 16}Z M${x + 12},${y - 4} L${x + 52},${y - 2} L${x + 52},${y - 16} L${x + 12},${y - 16}Z" fill="${SKIN}"/>
         <path d="M${x - 52},${y - 2} L${x - 12},${y - 4} M${x + 12},${y - 4} L${x + 52},${y - 2}" stroke="#1d1a24" stroke-width="5" stroke-linecap="round"/></g>`;
     }
     const big = (mood === 'shock' ? 1.25 : 1) * (who === 'G' ? 1.15 : 1);
     return `<g><ellipse cx="${x - 32}" cy="${y}" rx="${19 * big}" ry="${22 * big}" fill="#fff" stroke="#1d1a24" stroke-width="3"/><ellipse cx="${x + 32}" cy="${y}" rx="${19 * big}" ry="${22 * big}" fill="#fff" stroke="#1d1a24" stroke-width="3"/>
-      <circle cx="${x - 29}" cy="${y + 3}" r="${12 * (mood === 'shock' ? 0.7 : 1)}" fill="#3b2314"/><circle cx="${x + 35}" cy="${y + 3}" r="${12 * (mood === 'shock' ? 0.7 : 1)}" fill="#3b2314"/>
-      <circle cx="${x - 25}" cy="${y - 3}" r="4.5" fill="#fff"/><circle cx="${x + 39}" cy="${y - 3}" r="4.5" fill="#fff"/></g>`;
+      <circle cx="${x - 29 + lx}" cy="${y + 3}" r="${12 * (mood === 'shock' ? 0.7 : 1)}" fill="#3b2314"/><circle cx="${x + 35 + lx}" cy="${y + 3}" r="${12 * (mood === 'shock' ? 0.7 : 1)}" fill="#3b2314"/>
+      <circle cx="${x - 25 + lx}" cy="${y - 3}" r="4.5" fill="#fff"/><circle cx="${x + 39 + lx}" cy="${y - 3}" r="4.5" fill="#fff"/></g>`;
   }
   function brows(x, y, mood, who) {
-    const A = { happy: [-6, -6], smile: [-4, -4], shock: [-16, -16], grumpy: [8, 8], angry: [12, 12], smug: [10, -10], laugh: [-6, -6], disgust: [6, -8] }[mood] || [0, 0];
+    const A = { happy: [-6, -6], smile: [-4, -4], shock: [-16, -16], grumpy: [8, 8], angry: [12, 12], smug: [10, -10], laugh: [-6, -6], disgust: [6, -8], confused: [-16, 10] }[mood] || [0, 0];
     const d = who === 'B' ? 1 : 0.7;
     return `<path d="M${x - 54},${y - 30 - A[0] * 0.3} L${x - 14},${y - 30 + A[0] * d}" stroke="${HAIR}" stroke-width="${who === 'B' ? 11 : 8}" stroke-linecap="round"/>
       <path d="M${x + 14},${y - 30 + A[1] * d} L${x + 54},${y - 30 - A[1] * 0.3}" stroke="${HAIR}" stroke-width="${who === 'B' ? 11 : 8}" stroke-linecap="round"/>`;
@@ -31,14 +32,34 @@
     }
     if (mood === 'grumpy' || mood === 'angry') return `<path d="M${x - 24},${y + 8} Q${x},${y - 6} ${x + 24},${y + 8}" stroke="#1d1a24" stroke-width="6" fill="none" stroke-linecap="round"/>`;
     if (mood === 'smug') return `<path d="M${x - 22},${y + 2} Q${x + 2},${y + 10} ${x + 26},${y - 8}" stroke="#1d1a24" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+    if (mood === 'confused') return `<path d="M${x - 24},${y + 6} q12,-10 24,0 q12,10 24,-2" stroke="#1d1a24" stroke-width="6" fill="none" stroke-linecap="round"/>`;
     if (mood === 'disgust') return `<path d="M${x - 22},${y + 4} L${x - 8},${y - 2} L${x + 6},${y + 6} L${x + 22},${y}" stroke="#1d1a24" stroke-width="6" fill="none" stroke-linecap="round"/>`;
     return `<path d="M${x - 30},${y - 2} Q${x},${y + 26} ${x + 30},${y - 2}" fill="#6b1b22" stroke="#1d1a24" stroke-width="5"/><path d="M${x - 22},${y + 1} Q${x},${y + 8} ${x + 22},${y + 1}" fill="#fff"/>`;
+  }
+  // one arm: shoulder at (sx,60), rotated `a` degrees (0 = hanging down; + = swings toward -x side for right arm... we use SVG rotate)
+  function arm(sx, a, sleeve, hand = 'fist') {
+    const h = hand === 'point' ? `<rect x="-6" y="118" width="12" height="40" rx="6" fill="${SKIN}" stroke="${SKIN_D}" stroke-width="2"/>` : hand === 'open' ? `<ellipse cx="0" cy="128" rx="22" ry="16" fill="${SKIN}" stroke="${SKIN_D}" stroke-width="2"/>` : '';
+    return `<g transform="translate(${sx},60) rotate(${a})"><rect x="-22" y="0" width="44" height="64" rx="18" fill="${sleeve}" stroke="#b9bdd3" stroke-width="3"/><rect x="-16" y="56" width="32" height="70" rx="16" fill="${SKIN}"/><circle cx="0" cy="124" r="20" fill="${SKIN}" stroke="${SKIN_D}" stroke-width="3"/>${h}</g>`;
+  }
+  function armsSvg(who, o, crossed) {
+    const t = o.t || 0, neat = who === 'G', dir = o.dir || (neat ? 1 : -1), pose = o.pose || (o.wave ? 'wave' : 'idle');
+    if (crossed) return `<path d="M-108,70 Q-130,150 -40,150 L60,138" stroke="${SHIRT}" stroke-width="44" fill="none" stroke-linecap="round"/><path d="M108,70 Q130,150 40,160 L-56,150" stroke="${SHIRT_D}" stroke-width="44" fill="none" stroke-linecap="round"/><circle cx="66" cy="136" r="22" fill="${SKIN}"/><circle cx="-62" cy="150" r="22" fill="${SKIN}"/>`;
+    let L = neat ? 14 : 18, R = neat ? -14 : -18, hl = 'fist', hr = 'fist';
+    const sw = Math.sin(t * 1.7) * 3;
+    if (pose === 'idle') { L += sw; R -= sw; }
+    else if (pose === 'talk') { const g = Math.abs(Math.sin(t * 4.2)), g2 = Math.abs(Math.sin(t * 3.1 + 1)); if (dir > 0) { R = -40 - 55 * g; L = 18 + 10 * g2; hr = 'open'; } else { L = 40 + 55 * g; R = -18 - 10 * g2; hl = 'open'; } }
+    else if (pose === 'point') { const j = Math.sin(t * 14) * 6; if (dir > 0) { R = -100 + j; hr = 'point'; } else { L = 100 + j; hl = 'point'; } }
+    else if (pose === 'laugh') { L = -38 + Math.sin(t * 22) * 5; R = 38 - Math.sin(t * 22) * 5; }
+    else if (pose === 'shock') { const j = Math.sin(t * 30) * 4; L = 140 + j; R = -140 - j; hl = hr = 'open'; }
+    else if (pose === 'shrug') { L = 62; R = -62; hl = hr = 'open'; }
+    else if (pose === 'wave') { if (neat || dir > 0) R = -150 + Math.sin(t * 10) * 16; else L = 150 + Math.sin(t * 10) * 16; hr = hl = 'open'; }
+    return arm(-112, L, SHIRT, hl) + arm(112, R, neat ? SHIRT : SHIRT_D, hr);
   }
   function body(who, o) {
     const wav = o.wave || 0, t = o.t || 0;
     const neat = who === 'G';
     const armR = neat ? (wav ? -150 + Math.sin(t * 10) * 16 : 14) : 0;
-    const crossed = !neat && ['grumpy', 'smug', 'angry'].includes(o.mood) && !o.wave;
+    const crossed = o.pose ? o.pose === 'cross' : (!neat && ['grumpy', 'smug', 'angry'].includes(o.mood) && !o.wave);
     return `
     <g>
       <!-- legs -->
@@ -58,11 +79,8 @@
         <path d="M-12,40 L14,30 M-16,70 L16,58 M-14,100 L12,90" stroke="${TIE_S}" stroke-width="5"/></g>
       <!-- school badge -->
       <path d="M-86,92 h32 v26 q-16,12 -32,0z" fill="#27346b"/><path d="M-78,100 h16" stroke="#f2c94c" stroke-width="4"/>
-      <!-- arms -->
-      ${crossed ? `<path d="M-108,70 Q-130,150 -40,150 L60,138" stroke="${SHIRT}" stroke-width="44" fill="none" stroke-linecap="round"/><path d="M108,70 Q130,150 40,160 L-56,150" stroke="${SHIRT_D}" stroke-width="44" fill="none" stroke-linecap="round"/>
-        <circle cx="66" cy="136" r="22" fill="${SKIN}"/><circle cx="-62" cy="150" r="22" fill="${SKIN}"/>`
-      : `<g transform="translate(-112,60) rotate(${neat ? 14 : 18})"><rect x="-22" y="0" width="44" height="64" rx="18" fill="${SHIRT}" stroke="#b9bdd3" stroke-width="3"/><rect x="-16" y="56" width="32" height="70" rx="16" fill="${SKIN}"/><circle cx="0" cy="130" r="20" fill="${SKIN}"/></g>
-         <g transform="translate(112,60) rotate(${neat ? armR : -18})"><rect x="-22" y="0" width="44" height="64" rx="18" fill="${SHIRT}" stroke="#b9bdd3" stroke-width="3"/><rect x="-16" y="56" width="32" height="70" rx="16" fill="${SKIN}"/><circle cx="0" cy="130" r="20" fill="${SKIN}"/></g>`}
+      <!-- arms (pose) -->
+      ${armsSvg(who, o, crossed)}
     </g>`;
   }
   function head(who, o) {
@@ -77,7 +95,7 @@
       <ellipse cx="0" cy="0" rx="130" ry="134" fill="${SKIN}" stroke="${SKIN_D}" stroke-width="4"/>
       ${hair}
       ${who === 'G' ? `<circle cx="-78" cy="44" r="22" fill="#ff8f8f" opacity=".45"/><circle cx="78" cy="44" r="22" fill="#ff8f8f" opacity=".45"/>` : `<rect x="54" y="44" width="40" height="16" rx="6" fill="#f4d7b3" stroke="#c9a37a" stroke-width="2" transform="rotate(-20 74 52)"/><path d="M66,48 l14,4 M66,54 l14,4" stroke="#c9a37a" stroke-width="2" transform="rotate(-20 74 52)"/>`}
-      ${brows(0, -10, mood, who)}${eyes(0, 0, mood, o.blink, who)}
+      ${brows(0, -10, mood, who)}${eyes(0, 0, mood, o.blink, who, o.dir || 0)}
       <path d="M-4,26 q8,14 0,22" stroke="${SKIN_D}" stroke-width="5" fill="none" stroke-linecap="round"/>
       ${mouth(0, 68, mood, o.m || 0, who)}
       ${mood === 'angry' || (who === 'B' && mood === 'grumpy' && (o.t || 0) % 3 < 0.8) ? '' : ''}
@@ -86,7 +104,14 @@
   function draw(who, o = {}) {   // origin = feet center; total height ≈ 760
     const t = o.t || 0, talk = (o.m || 0) > 0.1, bob = Math.sin(t * (talk ? 9 : 2.2)) * (talk ? 5 : 3);
     const tilt = who === 'G' ? Math.sin(t * 1.6) * 3 + (talk ? Math.sin(t * 7) * 2 : 0) : Math.sin(t * 1.1) * 2 + (o.mood === 'smug' ? 6 : 0);
-    return `<g transform="translate(0,-384)">${body(who, o)}<g transform="translate(0,${-120 + bob}) rotate(${tilt})">${head(who, o)}</g></g>`;
+    const dir = o.dir || (who === 'G' ? 1 : -1), pose = o.pose || '';
+    let lean = 0, jump = 0, htilt = 0;
+    if (pose === 'shock') { lean = -9 * dir; jump = -14; htilt = -6 * dir; }
+    else if (pose === 'laugh') { lean = Math.sin(t * 24) * 3; jump = -Math.abs(Math.sin(t * 12)) * 16; htilt = Math.sin(t * 12) * 6; }
+    else if (pose === 'point') { lean = 5 * dir; htilt = 4 * dir; }
+    else if (pose === 'shrug') { htilt = 8 * dir; }
+    else if (pose === 'talk') { htilt = Math.sin(t * 5.5) * 4 + 3 * dir; }
+    return `<g transform="translate(0,${jump}) rotate(${lean})"><g transform="translate(0,-384)">${body(who, o)}<g transform="translate(0,${-120 + bob}) rotate(${tilt + htilt})">${head(who, o)}</g></g></g>`;
   }
   root.TOON = { draw };
 })(typeof window !== 'undefined' ? window : module.exports);
