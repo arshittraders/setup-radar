@@ -89,8 +89,13 @@ const TOON_V = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'toon', 'sc
 async function toonRender(J, plan) {
   const { makeTakes } = require(path.join(__dirname, '..', 'toon', 'takes.js'));
   const lines = plan.lines.filter(l => l.who === 'G' || l.who === 'B');
-  await makeTakes(lines, TOON_V, job, async (text, voice, style) => { const j = await sup({ action: 'w_tts', job_id: J.id, text, voice, style }); if (!j.pcm) throw new Error('no audio'); return j; });
-  fs.writeFileSync(path.join(job, 'script.json'), JSON.stringify(plan));
+  let engine = 'gemini';
+  if (process.env.F5_PY) {   // final voices: IndicF5 clone of the approved Golu/Bunty lines (same voice every line, free)
+    try { require(path.join(__dirname, '..', 'toon', 'f5.js')).f5Takes(lines, job, process.env.F5_PY); engine = 'f5'; }
+    catch (e) { console.log('f5 voices failed, Gemini fallback:', String(e.message || e).slice(0, 200)); }
+  }
+  if (engine !== 'f5') await makeTakes(lines, TOON_V, job, async (text, voice, style) => { const j = await sup({ action: 'w_tts', job_id: J.id, text, voice, style }); if (!j.pcm) throw new Error('no audio'); return j; });
+  fs.writeFileSync(path.join(job, 'script.json'), JSON.stringify({ ...plan, engine, board: plan.board || String(plan.title || '').replace(/[^\u0900-\u097F\s!?]/g, '').trim() }));
   sh('node', [path.join(__dirname, '..', 'toon', 'render.js'), job, path.join(__dirname, '..', 'toon', 'fonts')]);
   const tt = Math.max(1, (lines.find(l => l.laugh) || {}).t || 2);
   sh('ffmpeg', ['-y', '-v', 'error', '-ss', '3', '-i', path.join(job, 'out.mp4'), '-frames:v', '1', '-q:v', '3', path.join(job, 'thumb.jpg')]);
