@@ -16,6 +16,7 @@ except Exception: pass
 for it in items:
     t0 = time.time()
     ref, ref_text = refs(it.get('voice') or 'female')
+    torch.manual_seed(int(os.environ.get('F5_SEED', '7'))); np.random.seed(7)   # same start noise every line → steadier voice
     a = np.array(M(it['text'], ref_audio_path=ref, ref_text=ref_text, **kw))
     a = a.astype(np.float32) / 32768.0 if a.dtype == np.int16 else a.astype(np.float32)
     sf.write(os.path.join(out, it.get('out') or f"a{it['i']}.wav"), a, 24000)

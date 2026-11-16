@@ -31,7 +31,7 @@ const med = (w) => { const v = lines.filter((l) => l.who === w && F0[l.id]).map(
 const first = (w) => { const l = lines.find((x) => x.who === w && F0[x.id]); return l ? F0[l.id] : med(w); };
 const CM = { G: first('G'), B: first('B') };   // every line matches the character's FIRST line (the reference voice)
 for (const l of lines) {   // lock every line to the character's first-line pitch
-  const f0 = F0[l.id], p = f0 && CM[l.who] ? Math.max(0.82, Math.min(1.22, CM[l.who] / f0)) : 1;
+  const f0 = F0[l.id], p = S.engine === 'f5' ? 1 : (f0 && CM[l.who] ? Math.max(0.82, Math.min(1.22, CM[l.who] / f0)) : 1);   // f5 clone = same voice already; never stretch it
   console.log('pitch', l.id, l.who, Math.round(f0), '→ x' + p.toFixed(2));
   ff(['-i', W(`c-${l.id}.wav`), '-af', `asetrate=${Math.round(44100 * p)},aresample=44100,${atempoChain(TEMPO[l.who] / p)},loudnorm=I=-15:TP=-1.5`, '-ac', '1', W(`v-${l.id}.wav`)]);
 }

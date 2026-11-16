@@ -1,4 +1,4 @@
-{"title":"होमवर्क का कुत्ता 🐶","scene":"class","voices":{},
+{"title":"होमवर्क का कुत्ता 🐶","scene":"class","engine":"f5","voices":{},
 "lines":[
 {"id":"l1","who":"G","text":"बंटी! मैडम आ रही हैं, तेरा होमवर्क कहाँ है?","mood":"shock","lmood":"smug","laugh":0,"sfx":"","emoji":"","scene":"class"},
 {"id":"l2","who":"B","text":"होमवर्क? वो तो मेरे कुत्ते ने खा लिया।","mood":"smug","lmood":"shock","laugh":0,"sfx":"","emoji":"","scene":"class"},
