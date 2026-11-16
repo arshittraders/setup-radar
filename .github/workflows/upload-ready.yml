@@ -1,0 +1,21 @@
+name: upload-ready
+on:
+  workflow_dispatch:
+    inputs:
+      job_id: { description: 'studio job id', required: true }
+      asset: { description: 'studio-debug release asset (mp4)', required: true }
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  u:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          mkdir -p up && gh release download studio-debug -p "${{ inputs.asset }}" -D up -R ${{ github.repository }}
+          node studio/upload-ready.js "${{ inputs.job_id }}" "up/${{ inputs.asset }}"
