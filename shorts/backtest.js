@@ -76,7 +76,7 @@ const SIG = {
       m += 1; }
     return null;
   },
-  firstcandle(day) {
+  firstcandle(day, p) {
     const cs = day.c, R = cs.slice(0, 3), o = R[0].o, c = R[2].c, hi = Math.max(...R.map(x => x.h)), lo = Math.min(...R.map(x => x.l));
     if (Math.abs(c - o) < 5) return null; const dir = c > o ? 1 : -1;
     const sl = dir > 0 ? lo : hi; return { dir, i: 2, entry: c, sl, tgt: p.rr ? c + dir * Math.abs(c - sl) * p.rr : null, zone: { i0: 0, i1: 2, hi, lo } };
