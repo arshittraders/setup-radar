@@ -1,0 +1,15 @@
+name: setup-test
+on:
+  workflow_dispatch:
+    inputs:
+      idx: { description: 'setup index', required: false, default: '1' }
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - env:
+          UPSTOX_TOKEN: ${{ secrets.UPSTOX_TOKEN }}
+        run: node shorts/backtest.js ${{ inputs.idx }} bt.json

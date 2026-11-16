@@ -1,0 +1,5 @@
+[
+ {"id":"orb15","type":"orb","name":"15-Min Opening Range Breakout","short":"15-Min ORB","p":{"minutes":15,"rr":2,"last":"11:00"},
+  "rules":["9:15–9:30 ka High/Low = Range","Range ke upar 5-min close → BUY, neeche → SELL","SL = Range ka beech (mid)","Target = risk ka 2 guna (1:2)","11 baje tak breakout nahi → us din trade nahi"],
+  "rulesSay":"नियम आसान है। सुबह 9:15 से 9:30 तक का high और low, यही हमारी range है। Range के ऊपर 5 मिनट की candle close हो तो buy, नीचे close हो तो sell। Stop loss range के बीच में, और target risk का दो गुना।"}
+]
