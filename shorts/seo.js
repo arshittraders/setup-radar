@@ -8,7 +8,7 @@ const NEWS_TAG = { GOLD: '#goldprice', CRUDE: '#crudeoil', NIFTY: '#nifty50', SE
 
 function build(S) {
   const kind = S.kind, d = Number(S.day) || 0, topic = String(S.topic || '').trim();
-  const pts = (S.scenes || []).slice(1, 4).map(s => '✅ ' + String(s.show || '').trim()).filter(x => x.length > 3);
+  const pts = kind === 'setup' ? [`📊 ${S.bt.n} trade · ${S.bt.winPct}% jeet · Net ${S.bt.net > 0 ? '+' : ''}${S.bt.net} pts`, `🧪 Purana data: ${S.bt.from} – ${S.bt.to} (Nifty 5-min)`, `🎯 Natija: ${String(S.verdict || '').trim()}`] : (S.scenes || []).slice(1, 4).map(s => '✅ ' + String(s.show || '').trim()).filter(x => x.length > 3);
   let seo, ask, tagsIg, tagsYt, ytTitle;
   if (kind === 'lesson') {
     seo = `${topic} | F&O Course Hindi 📈 Lesson ${d}/90`;
@@ -23,6 +23,13 @@ function build(S) {
     tagsIg = ['#candlestickpatterns', '#priceaction', '#stockmarketindia', t.length > 3 ? t : '#technicalanalysis', '#setupradar'];
     tagsYt = ['#shorts', '#candlestickpatterns', '#priceaction'];
     ytTitle = `${topic} Candlestick Pattern | Candle ${d}/90 | Hindi`;
+  } else if (kind === 'setup') {
+    const b = S.bt || {}, nm = S.short || topic;
+    seo = `${nm} Strategy Backtest 📊 ${b.n} trades, ${b.winPct}% win | Nifty Hindi`;
+    ask = `Aap ye setup use karte ho? Kaunsa setup test karein agla? Comment karo 👇`;
+    tagsIg = ['#tradingstrategy', '#backtesting', '#nifty50', '#intradaytrading', '#setupradar'];
+    tagsYt = ['#shorts', '#tradingstrategy', '#backtest'];
+    ytTitle = `${nm} Backtest: ${b.n} trades ka sach | Nifty Strategy Hindi`;
   } else {
     const date = String(S.badge || '').split('·').pop().trim();
     const tg = [...new Set((S.scenes || []).map(s => NEWS_TAG[String(s.tag || '').toUpperCase()]).filter(Boolean))];
@@ -33,7 +40,7 @@ function build(S) {
     tagsYt = ['#shorts', '#stockmarketnews', '#nifty50'];
     ytTitle = `Share Market News ${date} | Nifty, Gold, Crude | Hindi`;
   }
-  const follow = kind === 'news' ? `🔔 Roz subah market news ke liye Follow karo ${IG_HANDLE}` : `📌 Save karo, kaam aayega! Follow karo: 90 din ka FREE course, roz 1 baje lesson + 7 baje candle`;
+  const follow = kind === 'setup' ? `🔔 Roz dopahar 12 baje ek naye setup ka report card. Follow karo ${IG_HANDLE}` : kind === 'news' ? `🔔 Roz subah market news ke liye Follow karo ${IG_HANDLE}` : `📌 Save karo, kaam aayega! Follow karo: 90 din ka FREE course, roz 1 baje lesson + 7 baje candle`;
   const body = [seo, '', ...pts, '', ask, follow, '📲 Free app: Setup Radar (link in bio)', '⚠️ Sirf shiksha ke liye. Investment advice nahi.'].join('\n');
   const caption_ig = body + '\n\n' + tagsIg.join(' ');
   const caption_fb = body + '\n\n' + tagsIg.join(' ');

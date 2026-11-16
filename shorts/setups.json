@@ -1,5 +1,216 @@
 [
- {"id":"orb15","type":"orb","name":"15-Min Opening Range Breakout","short":"15-Min ORB","p":{"minutes":15,"rr":2,"last":"11:00"},
-  "rules":["9:15–9:30 ka High/Low = Range","Range ke upar 5-min close → BUY, neeche → SELL","SL = Range ka beech (mid)","Target = risk ka 2 guna (1:2)","11 baje tak breakout nahi → us din trade nahi"],
-  "rulesSay":"नियम आसान है। सुबह 9:15 से 9:30 तक का high और low, यही हमारी range है। Range के ऊपर 5 मिनट की candle close हो तो buy, नीचे close हो तो sell। Stop loss range के बीच में, और target risk का दो गुना।"}
+ {
+  "id": "orb15",
+  "type": "orb",
+  "name": "15-Min Opening Range Breakout",
+  "short": "15-Min ORB",
+  "p": {
+   "minutes": 15,
+   "last": "11:00"
+  },
+  "vary": {
+   "rr": [
+    0.5,
+    0.75,
+    1,
+    1.5
+   ]
+  },
+  "rules": [
+   "9:15–9:30 ka High/Low = Range",
+   "Range ke upar close → BUY, neeche → SELL",
+   "SL = Range ka beech",
+   "Target = risk × {rr}",
+   "11 baje ke baad no trade"
+  ],
+  "rulesSay": "सुबह 9:15 से 9:30 तक का high और low, यही range है। Range के ऊपर 5 मिनट की candle close हो तो buy, नीचे close हो तो sell। Stop loss range के बीच में, और target risk का {rrSay}।"
+ },
+ {
+  "id": "orb30",
+  "type": "orb",
+  "name": "30-Min Opening Range Breakout",
+  "short": "30-Min ORB",
+  "p": {
+   "minutes": 30,
+   "last": "12:00"
+  },
+  "vary": {
+   "rr": [
+    0.5,
+    0.75,
+    1,
+    1.5
+   ]
+  },
+  "rules": [
+   "9:15–9:45 ka High/Low = Range",
+   "Range ke upar close → BUY, neeche → SELL",
+   "SL = Range ka beech",
+   "Target = risk × {rr}",
+   "12 baje ke baad no trade"
+  ],
+  "rulesSay": "9:15 से 9:45 तक का high और low, यही range है। उसके ऊपर 5 मिनट की candle close हो तो buy, नीचे हो तो sell। Stop loss range के बीच में, target risk का {rrSay}।"
+ },
+ {
+  "id": "fhb",
+  "type": "orb",
+  "name": "First Hour High/Low Breakout",
+  "short": "First Hour Break",
+  "p": {
+   "minutes": 60,
+   "last": "13:30"
+  },
+  "vary": {
+   "rr": [
+    0.5,
+    0.75,
+    1,
+    1.5
+   ]
+  },
+  "rules": [
+   "9:15–10:15 ka High/Low mark karo",
+   "Uske upar close → BUY, neeche → SELL",
+   "SL = Range ka beech",
+   "Target = risk × {rr}",
+   "1:30 ke baad no trade"
+  ],
+  "rulesSay": "पहले एक घंटे का high और low mark करो, 9:15 से 10:15। उसके बाद जिस तरफ 5 मिनट की candle close हो, उसी तरफ trade। Stop loss range के बीच में, target risk का {rrSay}।"
+ },
+ {
+  "id": "pdhl",
+  "type": "pdhl",
+  "name": "Previous Day High/Low Breakout",
+  "short": "PDH / PDL Break",
+  "p": {
+   "first": "09:30",
+   "last": "13:00"
+  },
+  "vary": {
+   "sl": [
+    20,
+    30,
+    40
+   ],
+   "rr": [
+    0.5,
+    0.75,
+    1,
+    1.5
+   ]
+  },
+  "rules": [
+   "Kal ka High (PDH), Low (PDL) mark karo",
+   "9:30 ke baad PDH ke upar close → BUY",
+   "PDL ke neeche close → SELL",
+   "SL = {sl} points",
+   "Target = {tgt} points"
+  ],
+  "rulesSay": "कल का high और कल का low chart पर mark करो। साढ़े नौ के बाद 5 मिनट की candle कल के high के ऊपर close हो तो buy, कल के low के नीचे close हो तो sell। Stop loss {sl} points, target {tgt} points।"
+ },
+ {
+  "id": "ema921",
+  "type": "ema",
+  "name": "9/21 EMA Crossover",
+  "short": "9/21 EMA Cross",
+  "p": {
+   "f": 9,
+   "s": 21,
+   "first": "09:45",
+   "last": "14:30"
+  },
+  "vary": {
+   "sl": [
+    20,
+    30,
+    40
+   ],
+   "rr": [
+    0.5,
+    0.75,
+    1,
+    1.5
+   ]
+  },
+  "rules": [
+   "5-min chart pe 9 aur 21 EMA",
+   "9 EMA, 21 ke upar cross → BUY",
+   "Neeche cross → SELL",
+   "SL = {sl} points",
+   "Target = {tgt} points"
+  ],
+  "rulesSay": "5 मिनट के chart पर 9 और 21 की EMA लगाओ। 9 वाली EMA, 21 के ऊपर cross करे तो buy, नीचे cross करे तो sell। Stop loss {sl} points, target {tgt} points।"
+ },
+ {
+  "id": "inside",
+  "type": "inside",
+  "name": "Inside Bar Breakout",
+  "short": "Inside Bar",
+  "p": {
+   "first": "09:30",
+   "last": "14:00",
+   "minR": 12
+  },
+  "vary": {
+   "rr": [
+    0.5,
+    0.75,
+    1,
+    1.5
+   ]
+  },
+  "rules": [
+   "Badi candle ke andar choti candle bane",
+   "Badi ke High ke upar close → BUY",
+   "Badi ke Low ke neeche close → SELL",
+   "SL = badi candle ka dusra end",
+   "Target = risk × {rr}"
+  ],
+  "rulesSay": "जब एक बड़ी candle के अंदर ही अगली छोटी candle बने, उसे inside bar कहते हैं। बड़ी candle के high के ऊपर close हो तो buy, low के नीचे close हो तो sell। Stop loss बड़ी candle का दूसरा सिरा, target risk का {rrSay}।"
+ },
+ {
+  "id": "gapfill",
+  "type": "gapfill",
+  "name": "Gap Fill Setup",
+  "short": "Gap Fill",
+  "p": {},
+  "vary": {
+   "gap": [
+    0.2,
+    0.3,
+    0.5
+   ]
+  },
+  "rules": [
+   "Market {gap}% se zyada gap mein khule",
+   "9:20 candle gap ki ulti disha mein",
+   "Entry 9:20 close, gap bharne ki taraf",
+   "SL = pehle 10 min ka high/low",
+   "Target = kal ka close"
+  ],
+  "rulesSay": "जब market {gap} प्रतिशत से ज़्यादा gap में खुले, और 9:20 की candle gap की उल्टी दिशा में बने, तो gap भरने की तरफ trade। Stop loss पहले 10 मिनट का high या low, target कल का close।"
+ },
+ {
+  "id": "firstcandle",
+  "type": "firstcandle",
+  "name": "First 15-Min Candle Direction",
+  "short": "Pehli Candle ki Disha",
+  "p": {},
+  "vary": {
+   "rr": [
+    0.5,
+    0.75,
+    1,
+    null
+   ]
+  },
+  "rules": [
+   "9:15–9:30 candle hari → BUY",
+   "Laal → SELL, 9:30 close pe entry",
+   "SL = us candle ka Low/High",
+   "Target = risk × {rr}",
+   "Warna 3:15 pe exit"
+  ],
+  "rulesSay": "9:15 से 9:30 की candle हरी हो तो buy, लाल हो तो sell, 9:30 पर ही entry। Stop loss उस candle का low या high, target risk का {rrSay}, नहीं तो सवा तीन बजे exit।"
+ }
 ]

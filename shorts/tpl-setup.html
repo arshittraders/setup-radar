@@ -1,0 +1,257 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&family=Mukta:wght@800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#121735;--mut:#5b6283;--bg:#f6f7fc;--a:#5b5bf7;--b:#ec4899;--o:#f97316;--g:#10b981;--r:#ef4444;--y:#ffe14d}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-family:Poppins,sans-serif;color:var(--ink)}
+#st{position:absolute;inset:0;overflow:hidden;transform-origin:50% 45%}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.6}
+#b1{width:760px;height:760px;background:#c7c9ff;left:-260px;top:-180px}
+#b2{width:700px;height:700px;background:#ffc6e2;right:-260px;top:620px}
+#b3{width:620px;height:620px;background:#c9f2e3;left:-120px;bottom:-260px}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(18,23,53,.04) 2px,transparent 2px),linear-gradient(90deg,rgba(18,23,53,.04) 2px,transparent 2px);background-size:72px 72px}
+#parts{position:absolute;inset:0}
+#parts b{position:absolute;font-weight:900;font-size:44px;opacity:.16}
+#hookbg{position:absolute;inset:0;background:linear-gradient(150deg,#0f172a 0%,#4f46e5 45%,#c026d3 75%,#f97316 100%);overflow:hidden}
+#rays{position:absolute;left:50%;top:44%;width:2600px;height:2600px;margin:-1300px 0 0 -1300px;background:repeating-conic-gradient(rgba(255,255,255,.10) 0 9deg,transparent 9deg 18deg);border-radius:50%}
+#hookbig{position:absolute;left:0;right:0;top:420px;text-align:center;color:#fff;font-weight:900}
+#hookbig .n{font-size:300px;line-height:1;letter-spacing:-8px;text-shadow:0 20px 60px rgba(0,0,0,.35)}
+#hookbig .l{font-size:54px;opacity:.9;margin-top:-6px}
+#hookq{position:absolute;right:90px;top:360px;font-size:200px;color:var(--y);font-weight:900;text-shadow:0 10px 30px rgba(0,0,0,.3)}
+#topbar{position:absolute;left:0;top:0;height:14px;background:linear-gradient(90deg,var(--y),var(--o),var(--b));z-index:5}
+#hdr{position:absolute;left:56px;right:56px;top:70px;display:flex;align-items:center;justify-content:space-between;z-index:4}
+.logo{display:flex;align-items:center;gap:14px;background:#fff;border-radius:999px;padding:10px 28px 10px 10px;box-shadow:0 10px 30px rgba(40,40,120,.15);font-weight:800;font-size:34px}
+.logo img{width:58px;height:58px;border-radius:16px}
+.badge{background:linear-gradient(90deg,var(--a),var(--b));color:#fff;font-weight:800;font-size:30px;letter-spacing:2px;padding:16px 28px;border-radius:999px;box-shadow:0 10px 30px rgba(236,72,153,.35)}
+#topic{position:absolute;left:56px;right:56px;top:190px;text-align:center;z-index:3}
+#topic small{display:inline-block;font-size:26px;font-weight:800;letter-spacing:3px;color:#fff;background:var(--ink);padding:8px 22px;border-radius:12px;text-transform:uppercase}
+#topic h1{font-size:64px;line-height:1.08;font-weight:900;margin-top:12px}
+#vis{position:absolute;left:50px;top:370px;width:980px;height:800px;background:#fff;border-radius:44px;box-shadow:0 26px 70px rgba(40,40,120,.16);z-index:2;overflow:hidden}
+#vis svg{position:absolute;inset:0}
+#card{position:absolute;left:52px;right:52px;top:1210px;background:#fff;border-radius:40px;box-shadow:0 26px 70px rgba(40,40,120,.18);padding:56px 40px 36px;text-align:center;z-index:3}
+#card .tag{position:absolute;left:40px;top:-32px;font-weight:900;font-size:32px;letter-spacing:2px;padding:12px 28px;border-radius:16px;color:#fff;box-shadow:0 10px 26px rgba(0,0,0,.18)}
+#card .show{font-size:76px;line-height:1.1;font-weight:900;letter-spacing:-1px}
+#card .show span{display:inline-block;margin:0 .12em;position:relative;transform-origin:50% 70%}
+#card .show span.hl:before{content:'';position:absolute;left:-10px;right:-10px;bottom:6px;height:42%;background:var(--y);border-radius:10px;z-index:-1;transform-origin:left;transform:scaleX(var(--hl,0))}
+#card .sub{font-size:36px;line-height:1.3;font-weight:700;color:var(--mut);margin-top:14px}
+#cap{position:absolute;left:40px;right:40px;top:1545px;text-align:center;font-family:'Mukta','Poppins',sans-serif;font-weight:800;font-size:56px;line-height:1.25;z-index:4;text-shadow:0 3px 0 rgba(0,0,0,.2)}
+#cap span{padding:0 6px;border-radius:12px}
+#flash{position:absolute;inset:0;background:#fff;pointer-events:none;z-index:8}
+#dots{position:absolute;left:0;right:0;top:1730px;display:flex;justify-content:center;gap:16px;z-index:3}
+#dots i{width:18px;height:18px;border-radius:9px;background:#d6d9ec}
+#dots i.on{width:60px;background:linear-gradient(90deg,var(--a),var(--b))}
+#disc{position:absolute;left:0;right:0;bottom:56px;text-align:center;font-size:26px;font-weight:600;color:#8a90ad;z-index:3}
+#outro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(150deg,#4f46e5 0%,#c026d3 55%,#f97316 100%);color:#fff;z-index:9;overflow:hidden}
+#outro img{width:260px;height:260px;border-radius:66px;box-shadow:0 30px 80px rgba(0,0,0,.3);border:8px solid #fff}
+#outro h2{font-size:100px;font-weight:900;margin-top:40px}
+#outro p{font-size:46px;font-weight:700;opacity:.92;margin-top:10px}
+#outro .cta{margin-top:56px;background:#fff;color:#c026d3;font-size:56px;font-weight:900;padding:32px 70px;border-radius:999px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+#outro .arr{font-size:104px;margin-top:26px}
+#outro .nx{margin-top:22px;font-size:44px;font-weight:800;background:rgba(255,255,255,.18);padding:16px 40px;border-radius:999px}
+#conf{position:absolute;inset:0}
+#conf i{position:absolute;width:22px;height:34px;border-radius:5px}
+</style></head>
+<body><div id="st">
+  <div class="blob" id="b1"></div><div class="blob" id="b2"></div><div class="blob" id="b3"></div><div class="grid"></div>
+  <div id="parts"></div>
+  <div id="hookbg"><div id="rays"></div><div id="hookq">?</div><div id="hookbig"><div class="n" id="hn">0</div><div class="l" id="hl">baar bana</div></div></div>
+  <div id="hdr"><div class="logo"><img src="icon.png">Setup Radar</div><div class="badge" id="badge"></div></div>
+  <div id="topic"><small>Setup ka Report Card</small><h1 id="tt"></h1></div>
+  <div id="vis"><svg id="svg" viewBox="0 0 980 800"></svg></div>
+  <div id="card"><div class="tag" id="ctag"></div><div class="show" id="cshow"></div><div class="sub" id="csub"></div></div>
+  <div id="cap"></div>
+  <div id="dots"></div>
+  <div id="disc">Sirf shiksha ke liye · Investment advice nahi · Purana data (30+ din)</div>
+</div>
+<div id="topbar"></div>
+<div id="flash"></div>
+<div id="outro"><div id="conf"></div><img src="icon.png"><h2>Setup Radar</h2><p>Har din ek setup ka sach</p><div class="cta">FREE App Download</div><div class="arr">👇</div><div class="nx" id="onx"></div></div>
+<script>
+let D=null;
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const ease=x=>1-Math.pow(1-clamp(x),3);
+const back=x=>{x=clamp(x);const c=2.2;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const elastic=x=>{x=clamp(x);return x===0||x===1?x:Math.pow(2,-10*x)*Math.sin((x*10-.75)*(2*Math.PI/3))+1};
+const rnd=s=>{const x=Math.sin(s*9301+49297)*233280;return x-Math.floor(x)};
+const SYM=['₹','▲','●','★','%','▼','◆','+'];
+const COLS=['#5b5bf7','#ec4899','#f97316','#10b981','#f59e0b'];
+const G='#10b981',R='#ef4444',INK='#121735';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const fmt=n=>Math.round(n).toLocaleString('en-IN');
+
+window.setup=function(d){
+  D=d; D.beat=60/(d.bpm||124);
+  $('badge').textContent=d.badge; $('tt').textContent=d.short;
+  $('dots').innerHTML=d.scenes.map(()=>'<i></i>').join('');
+  $('onx').textContent=d.next||'';
+  let ph='';for(let i=0;i<22;i++){ph+=`<b style="left:${rnd(i)*1000}px;color:${COLS[i%5]};font-size:${30+rnd(i+7)*40}px">${SYM[i%SYM.length]}</b>`;}
+  $('parts').innerHTML=ph;
+  let cf='';for(let i=0;i<46;i++){cf+=`<i style="left:${rnd(i+3)*1080}px;background:${['#ffe14d','#fff','#10b981','#5b5bf7','#ff8fc8'][i%5]}"></i>`;}
+  $('conf').innerHTML=cf;
+  d.scenes.forEach(s=>{const w=(s.show||'').split(/\s+/);let k=0;w.forEach((x,i)=>{if(x.replace(/[^\w₹%+−]/g,'').length>w[k].replace(/[^\w₹%+−]/g,'').length)k=i});s._hl=k;});
+  ['exWin','exLoss'].forEach(k=>{const e=d[k];if(!e)return;prepChart(e);});
+};
+
+// ---------- chart prep: crop window, scale
+function prepChart(e){
+  const n=e.candles.length;
+  let s=Math.max(0,Math.min(e.zone?e.zone.i0:e.entryI,e.entryI)-8), en=Math.min(n-1,e.exitI+3);
+  if(en-s>78) s=Math.max(0,en-78);
+  e._s=s; e._e=en;
+  const cs=e.candles.slice(s,en+1);
+  const ys=[];cs.forEach(c=>{ys.push(c[1],c[2])});[e.entry,e.sl,e.tgt,e.exit].forEach(v=>{if(v!=null)ys.push(v)});
+  if(e.zone){ys.push(e.zone.hi,e.zone.lo)} if(e.levels)e.levels.forEach(l=>ys.push(l.y));
+  let lo=Math.min(...ys),hi=Math.max(...ys);const pad=(hi-lo)*.08;lo-=pad;hi+=pad;
+  const L=40,Rr=150,T=90,B=60,W=980,H=800,step=(W-L-Rr)/cs.length;
+  e._x=i=>L+step*(i-s+.5); e._y=v=>T+(hi-v)/(hi-lo)*(H-T-B); e._cw=Math.max(3,step*.62); e._cs=cs;
+}
+
+function svgChart(e,p,dur,win){
+  const reveal=clamp(p/(dur*0.55)), nShow=Math.ceil(reveal*e._cs.length);
+  let s='';
+  // header
+  s+=`<text x="40" y="58" font-size="34" font-weight="800" fill="${INK}">NIFTY · 5 min · ${esc(e.times?e.d:'')}</text>`;
+  // zone
+  if(e.zone&&e.zone.i0>=e._s){const x1=e._x(e.zone.i0)-e._cw,x2=e._x(e.zone.i1)+e._cw,y1=e._y(e.zone.hi),y2=e._y(e.zone.lo);const k=ease((p-0.4)/0.5);
+    s+=`<rect x="${x1}" y="${y1}" width="${(x2-x1)}" height="${y2-y1}" fill="rgba(91,91,247,${0.12*k})" stroke="#5b5bf7" stroke-width="4" stroke-dasharray="14 8" opacity="${k}" rx="8"/>`;
+    s+=`<line x1="${x2}" x2="${e._x(e._e)}" y1="${y1}" y2="${y1}" stroke="#5b5bf7" stroke-width="3" stroke-dasharray="6 8" opacity="${0.6*k}"/>`;
+    s+=`<line x1="${x2}" x2="${e._x(e._e)}" y1="${y2}" y2="${y2}" stroke="#5b5bf7" stroke-width="3" stroke-dasharray="6 8" opacity="${0.6*k}"/>`;}
+  if(e.levels)e.levels.forEach((l,i)=>{const y=e._y(l.y),k=ease((p-0.3-i*0.2)/0.5);s+=`<line x1="40" x2="${40+(830)*k}" y1="${y}" y2="${y}" stroke="#f59e0b" stroke-width="4" stroke-dasharray="12 8"/><text x="${40+830*k-4}" y="${y-10}" text-anchor="end" font-size="26" font-weight="800" fill="#b45309" opacity="${k}">${esc(l.label)}</text>`;});
+  // candles
+  e._cs.forEach((c,j)=>{ if(j>=nShow) return; const i=e._s+j, x=e._x(i), [o,h,l,cl]=c, up=cl>=o, col=up?G:R;
+    const age=clamp((reveal*e._cs.length-j)/2.5), top=e._y(Math.max(o,cl)), bot=e._y(Math.min(o,cl));
+    s+=`<g opacity="${age}"><line x1="${x}" x2="${x}" y1="${e._y(h)}" y2="${e._y(l)}" stroke="${col}" stroke-width="${Math.max(2,e._cw/4)}"/><rect x="${x-e._cw/2}" y="${top}" width="${e._cw}" height="${Math.max(3,bot-top)}" fill="${col}" rx="2"/></g>`;});
+  // ema
+  if(e.ema){[0,1].forEach(k=>{let d='';e._cs.forEach((c,j)=>{if(j>=nShow)return;const v=e.ema[e._s+j]&&e.ema[e._s+j][k];if(v==null)return;d+=(d?'L':'M')+e._x(e._s+j).toFixed(1)+' '+e._y(v).toFixed(1)});s+=`<path d="${d}" fill="none" stroke="${k?'#f97316':'#5b5bf7'}" stroke-width="5" stroke-linejoin="round"/>`;});}
+  // entry & levels once entry candle shown
+  const xe=e._x(e.entryI);
+  if(nShow>e.entryI-e._s){
+    const k=back((reveal*e._cs.length-(e.entryI-e._s))/3);
+    const xr=860, line=(v,col,lab)=>{const y=e._y(v);return `<line x1="${xe}" x2="${xe+(xr-xe)*clamp(k)}" y1="${y}" y2="${y}" stroke="${col}" stroke-width="4" stroke-dasharray="${col===INK?'0':'12 8'}"/><rect x="${xr+6}" y="${y-22}" width="108" height="44" rx="10" fill="${col}" opacity="${clamp(k)}"/><text x="${xr+60}" y="${y+10}" text-anchor="middle" font-size="26" font-weight="800" fill="#fff" opacity="${clamp(k)}">${lab}</text>`;};
+    s+=line(e.sl,R,'SL');
+    if(e.tgt!=null) s+=line(e.tgt,G,'TGT');
+    s+=line(e.entry,INK,e.dir>0?'BUY':'SELL');
+    const ye=e._y(e.entry), ar=e.dir>0?1:-1;
+    s+=`<g transform="translate(${xe} ${ye+ar*70}) scale(${clamp(k)})"><path d="M0 ${-ar*40} L-26 ${ar*6} L26 ${ar*6} Z" fill="${e.dir>0?G:R}" stroke="#fff" stroke-width="4"/></g>`;
+  }
+  // exit marker + P&L badge
+  if(nShow>e.exitI-e._s){
+    const k=elastic((reveal*e._cs.length-(e.exitI-e._s))/4), xx=e._x(e.exitI), yy=e._y(e.exit), good=e.pts>0;
+    s+=`<circle cx="${xx}" cy="${yy}" r="${16*clamp(k)}" fill="${good?G:R}" stroke="#fff" stroke-width="5"/>`;
+    const bx=Math.min(700,Math.max(60,xx-150)), by=good===(e.dir>0)?Math.max(110,yy-150):Math.min(640,yy+60);
+    s+=`<g transform="translate(${bx+150} ${by+40}) scale(${k}) rotate(${-4+Math.sin(p*5)*2})"><rect x="-150" y="-44" width="300" height="88" rx="22" fill="${good?G:R}" filter="drop-shadow(0 10px 18px rgba(0,0,0,.25))"/><text y="18" text-anchor="middle" font-size="46" font-weight="900" fill="#fff">${good?'+':''}${Math.round(e.pts)} pts</text></g>`;
+    const res=e.res==='TGT'?'🎯 Target hit':e.res==='SL'?'🛑 SL hit':'⏰ 3:15 exit';
+    s+=`<text x="40" y="770" font-size="32" font-weight="800" fill="${good?G:R}" opacity="${clamp(k)}">${res}</text>`;
+  }
+  return s;
+}
+
+function svgRules(sc,p,dur){
+  let s=''; const rs=sc.rules||[]; const per=Math.max(0.6,(dur-0.6)/rs.length);
+  rs.forEach((r,i)=>{const k=back((p-0.25-i*per)/0.45), y=110+i*138;
+    if(k<=0) return;
+    const now=p>=0.25+i*per&&p<0.25+(i+1)*per;
+    s+=`<g transform="translate(${(1-clamp(k))*-500} 0)" opacity="${clamp(k*1.5)}">`+
+      `<rect x="36" y="${y-58}" width="908" height="112" rx="28" fill="${now?'#eef0ff':'#f7f8fd'}" stroke="${now?'#5b5bf7':'#e3e6f3'}" stroke-width="${now?5:3}"/>`+
+      `<circle cx="104" cy="${y-2}" r="38" fill="url(#rg)"/><text x="104" y="${y+13}" text-anchor="middle" font-size="40" font-weight="900" fill="#fff">${i+1}</text>`+
+      (()=>{const w=r.split(' ');let a='',b='';w.forEach(x=>{if(!b&&(a+' '+x).trim().length<=30)a=(a+' '+x).trim();else b=(b+' '+x).trim();});
+        return b?`<text x="166" y="${y-6}" font-size="34" font-weight="800" fill="${INK}">${esc(a)}</text><text x="166" y="${y+36}" font-size="34" font-weight="800" fill="${INK}">${esc(b)}</text>`:`<text x="166" y="${y+14}" font-size="40" font-weight="800" fill="${INK}">${esc(a)}</text>`;})()+`</g>`;});
+  return `<defs><linearGradient id="rg" x1="0" x2="1"><stop offset="0" stop-color="#5b5bf7"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>`+s;
+}
+
+function svgStats(p){
+  const b=D.bt, k=ease((p-0.2)/1.6), cx=300, cy=360, r=210, C=2*Math.PI*r, wp=b.winPct/100*k;
+  let s=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#fde2e2" stroke-width="70"/>`+
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${R}" stroke-width="70" stroke-dasharray="${C*(1-wp)*clamp(k*1.3)} ${C}" stroke-dashoffset="${-C*wp}" transform="rotate(-90 ${cx} ${cy})"/>`+
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${G}" stroke-width="70" stroke-dasharray="${C*wp} ${C}" transform="rotate(-90 ${cx} ${cy})" stroke-linecap="butt"/>`+
+    `<text x="${cx}" y="${cy+30}" text-anchor="middle" font-size="120" font-weight="900" fill="${INK}">${Math.round(b.winPct*k)}%</text>`+
+    `<text x="${cx}" y="${cy+84}" text-anchor="middle" font-size="34" font-weight="800" fill="#5b6283">JEET</text>`;
+  const rows=[['✅ Jeete',b.wins,G],['❌ Haare',b.losses,R],['🎯 Target',b.tgtHits,'#5b5bf7'],['🛑 Stop loss',b.slHits,'#f97316'],['⏰ 3:15 exit',b.timeExits,'#64748b']];
+  rows.forEach((x,i)=>{const kk=back((p-0.3-i*0.35)/0.4);if(kk<=0)return;const y=160+i*110;
+    s+=`<g transform="translate(${(1-clamp(kk))*300} 0)" opacity="${clamp(kk)}"><rect x="580" y="${y-50}" width="370" height="90" rx="24" fill="#f7f8fd" stroke="${x[2]}" stroke-width="4"/><text x="606" y="${y+8}" font-size="32" font-weight="800" fill="${INK}">${x[0]}</text><text x="926" y="${y+12}" text-anchor="end" font-size="48" font-weight="900" fill="${x[2]}">${Math.round(x[1]*clamp(k*1.2))}</text></g>`;});
+  s+=`<text x="490" y="760" text-anchor="middle" font-size="30" font-weight="700" fill="#8a90ad">Total ${b.n} trade · ${esc(b.from)} – ${esc(b.to)}</text>`;
+  return s;
+}
+
+function svgMoney(p,dur){
+  const b=D.bt, mx=Math.max(b.avgWin,Math.abs(b.avgLoss),1), k1=ease((p-0.2)/0.8), k2=ease((p-0.8)/0.8);
+  let s=`<text x="60" y="110" font-size="36" font-weight="800" fill="#5b6283">Average JEET</text>`+
+    `<rect x="60" y="135" width="${760*b.avgWin/mx*k1}" height="90" rx="22" fill="${G}"/><text x="${80+760*b.avgWin/mx*k1}" y="198" font-size="50" font-weight="900" fill="${G}">+${Math.round(b.avgWin*k1)}</text>`+
+    `<text x="60" y="300" font-size="36" font-weight="800" fill="#5b6283">Average HAAR</text>`+
+    `<rect x="60" y="325" width="${760*Math.abs(b.avgLoss)/mx*k2}" height="90" rx="22" fill="${R}"/><text x="${80+760*Math.abs(b.avgLoss)/mx*k2}" y="388" font-size="50" font-weight="900" fill="${R}">−${Math.round(Math.abs(b.avgLoss)*k2)}</text>`;
+  const k3=elastic((p-dur*0.45)/0.9), net=b.net, col=net>0?G:R;
+  if(k3>0) s+=`<g transform="translate(490 590) scale(${k3})"><rect x="-400" y="-110" width="800" height="200" rx="40" fill="${col}" opacity=".1" stroke="${col}" stroke-width="6"/><text y="-36" text-anchor="middle" font-size="36" font-weight="800" fill="${col}">KUL (kharcha jodkar)</text><text y="60" text-anchor="middle" font-size="110" font-weight="900" fill="${col}">${net>0?'+':'−'}${fmt(Math.abs(net)*clamp(k3))} pts</text></g>`;
+  const k4=ease((p-dur*0.75)/0.5); if(k4>0) s+=`<text x="490" y="760" text-anchor="middle" font-size="34" font-weight="800" fill="#f97316" opacity="${k4}">⚠️ Lagatar ${b.maxL} haar bhi aayi</text>`;
+  return s;
+}
+
+function svgVerdict(sc,p){
+  const k=elastic(p/0.9), ok=sc.ok, col=ok>0?G:ok<0?R:'#f59e0b', ic=ok>0?'✅':ok<0?'❌':'⚖️';
+  return `<circle cx="490" cy="330" r="${230*clamp(k)}" fill="${col}" opacity=".12"/><circle cx="490" cy="330" r="${180*clamp(k)}" fill="none" stroke="${col}" stroke-width="12" stroke-dasharray="30 16" transform="rotate(${p*40} 490 330)"/>`+
+    `<text x="490" y="${330+70}" text-anchor="middle" font-size="${200*k}" >${ic}</text>`+
+    `<g transform="translate(490 650) rotate(-5) scale(${back((p-0.4)/0.5)})"><rect x="-380" y="-70" width="760" height="130" rx="26" fill="${col}"/><text y="22" text-anchor="middle" font-size="56" font-weight="900" fill="#fff">${esc(D.verdict.replace(/[✅❌⚖️]/g,'').trim())}</text></g>`;
+}
+
+function words(el,txt,p,hl){
+  if(el._t!==txt){el._t=txt;el.innerHTML=txt.split(/\s+/).map((w,i)=>'<span'+(i===hl?' class="hl"':'')+'>'+w.replace(/</g,'&lt;')+'</span>').join(' ');}
+  [...el.children].forEach((s,i)=>{const k=(p-i*0.06)/0.26;const e=back(k);
+    s.style.opacity=clamp(k*2); s.style.transform=`scale(${2.1-1.1*e}) rotate(${(1-clamp(k))*(i%2?8:-8)}deg)`;
+    s.style.setProperty('--hl',ease((p-0.35-i*0.06)/0.3));});
+}
+
+window.render=function(t){
+  const d=D, bt=t/d.beat, bp=bt-Math.floor(bt), pulse=Math.exp(-bp*6);
+  let si=d.scenes.findIndex(s=>t>=s.start&&t<s.end); if(si<0) si=t<d.scenes[0].start?0:d.scenes.length-1;
+  const sc=d.scenes[si], p=t-sc.start, dur=sc.end-sc.start, last=si===d.scenes.length-1;
+  $('topbar').style.width=(clamp(t/d.outro.start)*100)+'%';
+  $('st').style.transform=`scale(${1+0.025*clamp(p/Math.max(1,dur))+0.005*pulse})`;
+  $('b1').style.transform=`translate(${Math.sin(t*.5)*80}px,${Math.cos(t*.4)*60}px)`;
+  $('b2').style.transform=`translate(${Math.cos(t*.45)*90}px,${Math.sin(t*.5)*70}px)`;
+  $('b3').style.transform=`translate(${Math.sin(t*.35)*60}px,${Math.cos(t*.3)*50}px)`;
+  [...$('parts').children].forEach((b,i)=>{const sp=60+rnd(i+1)*90;const y=1920-((t*sp+rnd(i+2)*1920)%2100);b.style.top=y+'px';b.style.transform=`rotate(${t*40*(i%2?1:-1)}deg) scale(${1+0.25*pulse})`;});
+  // hook
+  const hookA=si===0?1-ease((t-(d.scenes[0].end-0.25))/0.25):0;
+  $('hookbg').style.opacity=hookA; $('hookbg').style.display=hookA>0?'block':'none';
+  $('rays').style.transform=`rotate(${t*25}deg) scale(${1+0.04*pulse})`;
+  if(si===0){ const k=ease(p/1.4); $('hn').textContent=Math.round(d.bt.n*k); $('hn').style.transform=`scale(${1+0.08*pulse}) rotate(${Math.sin(p*20)*(1-clamp(p/0.6))*6}deg)`;
+    $('hookq').style.transform=`rotate(${Math.sin(t*4)*12}deg) scale(${back((p-1.2)/0.5)})`; $('hl').textContent='baar bana NIFTY pe… kitni baar jeeta?'; }
+  // header/topic
+  const ik=back(t/0.45); $('hdr').style.transform=`translateY(${(1-ik)*-140}px)`;
+  $('badge').style.transform=`scale(${1+0.07*pulse}) rotate(${Math.sin(t*3)*2}deg)`;
+  $('topic').style.opacity=si===0?0:1;
+  $('flash').style.opacity=si>0?0.5*clamp(1-p/0.14):clamp(0.9-t/0.2);
+  // visual panel
+  const vis=$('vis'), vk=back((p-0.02)/0.4);
+  vis.style.opacity=si===0?0:1;
+  vis.style.transform=si===0?'':`scale(${0.86+0.14*vk}) rotate(${(1-clamp(vk))*-3}deg)`;
+  let s='';
+  if(sc.vis==='rules') s=svgRules(sc,p,dur);
+  else if(sc.vis==='stats') s=svgStats(p);
+  else if(sc.vis==='money') s=svgMoney(p,dur);
+  else if(sc.vis==='chart') { const e=sc.ex==='win'?d.exWin:d.exLoss; s=svgChart(e,p,dur); }
+  else if(sc.vis==='verdict') s=svgVerdict(sc,p);
+  $('svg').innerHTML=s;
+  // card
+  const card=$('card');
+  if(si===0){ card.style.opacity=0; }
+  else { const inK=back(p/0.32), outK=last?0:ease((t-(sc.end-0.16))/0.16);
+    card.style.opacity=1-outK; card.style.transform=`translateX(${(1-inK)*760-outK*900}px) skewX(${(1-clamp(p/0.32))*-12+outK*12}deg)`; }
+  const tg=$('ctag'); const col=sc.vis==='chart'?(sc.ex==='win'?G:R):sc.vis==='money'?(d.bt.net>0?G:R):sc.vis==='verdict'?(sc.ok>0?G:sc.ok<0?R:'#f59e0b'):'';
+  tg.textContent=sc.tag||''; tg.style.background=col||'linear-gradient(90deg,#5b5bf7,#ec4899)'; tg.style.display=sc.tag?'block':'none';
+  tg.style.transform=`scale(${elastic((p-0.1)/0.6)}) rotate(${-4+Math.sin(t*4)*2}deg)`;
+  words($('cshow'),sc.show||'',p-0.05,sc._hl);
+  const sb=$('csub'); sb.textContent=sc.sub||''; sb.style.opacity=clamp((p-0.45)/0.25);
+  [...$('dots').children].forEach((e,i)=>e.className=i===si?'on':''); $('dots').style.opacity=si===0?0:1;
+  if(window.karaoke){ const cp=$('cap'); window.karaoke(cp,d.scenes,t,{max:4,on:si===0?'#ffe14d':'#ec4899',done:si===0?'#ffffff':'#121735',off:si===0?'rgba(255,255,255,.7)':'rgba(18,23,53,.45)'}); if(t>=d.outro.start) cp.style.opacity=0; }
+  // outro
+  const op=t-d.outro.start, ok=ease(op/0.25); const o=$('outro'); o.style.display=ok>0?'flex':'none'; o.style.opacity=ok;
+  if(ok>0){
+    o.querySelector('img').style.transform=`scale(${elastic(op/0.8)+0.05*pulse}) rotate(${Math.sin(t*3)*4}deg)`;
+    o.querySelector('.cta').style.transform=`scale(${back((op-0.3)/0.4)*(1+0.06*pulse)})`;
+    o.querySelector('.arr').style.transform=`translateY(${Math.abs(Math.sin(t*5))*30}px)`;
+    [...$('conf').children].forEach((c,i)=>{const sp=500+rnd(i)*500;c.style.top=(-60+((op*sp+rnd(i+9)*300)%2100))+'px';c.style.transform=`rotate(${op*300*(i%2?1:-1)+i*20}deg)`;});
+  }
+};
+</script></body></html>

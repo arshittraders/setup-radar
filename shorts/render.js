@@ -46,7 +46,7 @@ execFileSync('ffmpeg', ['-y', '-v', 'error', ...inputs, '-filter_complex', filt.
   fs.copyFileSync(path.join(__dirname, '..', 'icon-512.png'), path.join(__dirname, 'icon.png'));
   const br = await chromium.launch();
   const pg = await br.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
-  await pg.goto('file://' + path.join(__dirname, 'tpl.html'));
+  await pg.goto('file://' + path.join(__dirname, S.kind === 'setup' ? 'tpl-setup.html' : 'tpl.html'));
   await pg.evaluate(() => document.fonts.ready);
   await pg.addScriptTag({ content: CAP.CLIENT });
   await pg.evaluate(d => window.setup(d), S);

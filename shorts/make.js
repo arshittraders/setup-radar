@@ -22,6 +22,10 @@ async function call(body, tries = 3) {
 (async () => {
   let S, sources;
   if (kind === 'news') { const j = await call({ action: 'news' }); S = j.script; sources = j.sources; }
+  else if (kind === 'setup') {
+    execFileSync('node', [path.join(__dirname, 'backtest.js'), String(day), path.join(out, 'bt.json')], { stdio: 'inherit' });
+    S = require('./setupscript').build(JSON.parse(fs.readFileSync(path.join(out, 'bt.json'), 'utf8')), day);
+  }
   else {
     const fixed = path.join(__dirname, 'scripts', `${kind}-${String(day).padStart(2, '0')}.json`);
     if (fs.existsSync(fixed)) {
@@ -36,6 +40,7 @@ async function call(body, tries = 3) {
   const fixedOutro = S.outroSay;
   if (kind === 'lesson') { S.next = day < 90 ? `Kal: Lesson ${nx}/90 🔥` : '90 din poore! 🎉'; S.outroSay = day < 90 ? `रोज़ एक नया lesson। Follow करो और Setup Radar app free में download करो, link bio में है। कल मिलते हैं Lesson ${nx} में!` : `बधाई हो, आपने 90 दिन पूरे किए! Setup Radar app पर practice जारी रखो, link bio में है।`; }
   else if (kind === 'candle') { S.next = day < 90 ? `Kal: Candle ${nx}/90 🕯️` : '90 candles poori! 🎉'; S.outroSay = day < 90 ? `ऐसे ही रोज़ एक नई candle सीखो। Follow करो, और Setup Radar app free में, link bio में। कल मिलते हैं Candle ${nx} में!` : `90 candles पूरी! Setup Radar app पर chart practice जारी रखो, link bio में है।`; }
+  else if (kind === 'setup') { S.next = 'Kal 12 baje: naya setup 📊'; S.outroSay = `ऐसे ही रोज़ दोपहर 12 बजे एक नए setup का सच, असली data के साथ। Follow करो, और Setup Radar app free में, link bio में है।`; }
   else { S.next = 'Roz subah 8:30 baje 📰'; S.outroSay = `ऐसी ही रोज़ की market news के लिए follow करो। F&O सीखना है तो Setup Radar app free में, link bio में है।`; }
 
   if (fixedOutro) S.outroSay = fixedOutro;
