@@ -121,7 +121,10 @@ function report(st, p, trades, days, src) {
   const sum = a => a.reduce((x, t) => x + t.pts, 0);
   const pick = (arr, f) => arr.slice().sort(f)[0];
   const tg = W.filter(t => t.res === 'TGT');
-  const exWin = pick(tg.length ? tg : W, (a, b) => b.pts - a.pts);
+  const dur = t => t._r.exitIdx - t._s.i, med = a => { const x = a.map(t => t.pts).sort((p, q) => p - q); return x[Math.floor(x.length / 2)] || 0; };
+  const pool = (tg.length ? tg : W), mw = med(pool);
+  // clear example: target hit within ~5-25 candles, pts near typical win (not a freak day)
+  const exWin = pick(pool, (a, b) => (Math.abs(dur(a) - 12) + Math.abs(a.pts - mw) / 5) - (Math.abs(dur(b) - 12) + Math.abs(b.pts - mw) / 5));
   const lsl = Ls.filter(t => t.res === 'SL');
   const exLoss = pick(lsl.length ? lsl : Ls, (a, b) => Math.abs(a._r.exitIdx - a._s.i - 6) - Math.abs(b._r.exitIdx - b._s.i - 6));
   const ex = t => { if (!t) return null; const cs = t._day.c, e = Math.min(cs.length - 1, Math.max(t._r.exitIdx + 4, t._s.i + 10)); const s0 = 0, win = cs.slice(s0, e + 1).map(c => [c.o, c.h, c.l, c.c].map(v => +v.toFixed(1))); return { d: t.d, dir: t.dir, entry: t.entry, sl: t.sl, tgt: t.tgt, exit: t.exit, res: t.res, pts: t.pts, entryI: t._s.i - s0, exitI: t._r.exitIdx - s0, zone: t._s.zone || null, levels: t._s.levels || null, ema: t._s.ema ? cs.slice(s0, e + 1).map(c => [c.e1 ? +c.e1.toFixed(1) : null, c.e2 ? +c.e2.toFixed(1) : null]) : null, candles: win, times: [cs[s0].hm, cs[e].hm] }; };
