@@ -9,6 +9,8 @@ const dur = (f) => +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'fo
 
 // ---------- voices: lock each character to ONE pitch (Gemini voices drift line to line) ----------
 const TARGET = { G: 250, B: 210 }, TEMPO = { G: 1.17, B: 1.13 };
+// popular meme SFX (toon/assets/sfx/<name>.mp3) — played right after the line as a reaction; seconds = how long they need
+const MEME = { huh: 0.65, faaah: 1.9, maatari: 2.6, chicken: 1.5, yay: 3.0, punch: 1.0, fart: 1.2, meme1: 2.6 };
 function medianF0(file) {   // autocorrelation pitch on voiced 40 ms frames
   const raw = execFileSync('ffmpeg', ['-v', 'error', '-i', file, '-f', 's16le', '-ac', '1', '-ar', '16000', '-'], { maxBuffer: 1 << 28 });
   const a = new Int16Array(raw.buffer, raw.byteOffset, Math.floor(raw.length / 2)), N = 640, f0 = [];
@@ -51,7 +53,7 @@ for (let i = 0; i < lines.length; i++) {
   const mx = Math.max(...env) || 1;
   T.push({ ...l, t: +t.toFixed(3), d: +d.toFixed(3), env: env.map((x) => +Math.min(1, x / mx * 1.5).toFixed(2)) });
   const next = lines[i + 1];
-  t += d + (l.laugh === 2 ? 1.5 : l.laugh ? 1.0 : 0.16) + (next && next.scene !== l.scene ? 0.35 : 0) + (next && next.laugh ? 0.45 : 0);   // comic pause before a punchline
+  t += d + (MEME[l.sfx] ? MEME[l.sfx] * 0.75 : 0) + (l.laugh === 2 ? 1.5 : l.laugh ? 1.0 : 0.16) + (next && next.scene !== l.scene ? 0.35 : 0) + (next && next.laugh ? 0.45 : 0);   // comic pause before a punchline
 }
 const TOTAL = +(t + 2.4).toFixed(2);
 console.log('total', TOTAL);
@@ -74,11 +76,14 @@ ff(['-i', W('tom1.wav'), '-i', W('tom2.wav'), '-i', W('cym.wav'), '-filter_compl
 src('0.4*sin(2*PI*(400*t+900*t*t-600*t*t*t))', 0.9, 'sl_r.wav'); ff(['-i', W('sl_r.wav'), '-af', 'afade=t=out:st=0.6:d=0.3,volume=1.2', W('slide.wav')]);
 src('0.4*(2*random(0)-1)*sin(PI*t/0.4)', 0.4, 'wh_r.wav'); ff(['-i', W('wh_r.wav'), '-af', 'bandpass=f=1400:w=1800,volume=3', W('whoosh.wav')]);
 src('0.4*sin(2*PI*1568*t)*exp(-4*t)+0.25*sin(2*PI*2093*t)*exp(-5*t)', 1.0, 'ding.wav');
+for (const n of Object.keys(MEME)) { const f = path.join(__dirname, 'assets', 'sfx', n + '.mp3'); if (fs.existsSync(f)) ff(['-i', f, '-ar', '44100', '-ac', '1', W(n + '.wav')]); }
 const parts = [['music.wav', 0, 1]];
 T.forEach((l) => {
   parts.push([`v-${l.id}.wav`, l.t, 1.15]);
-  if (l.sfx) parts.push([l.sfx + '.wav', l.sfx === 'whoosh' ? Math.max(0, l.t - 0.25) : l.t + l.d - (l.sfx === 'rimshot' ? 0.05 : 0.1), 0.6]);
-  if (l.laugh) parts.push(['laugh.wav', l.t + l.d + 0.08, l.laugh === 2 ? 0.7 : 0.42]);
+  const meme = MEME[l.sfx] && fs.existsSync(W(l.sfx + '.wav'));
+  if (meme) parts.push([l.sfx + '.wav', l.t + l.d + 0.05, 0.55]);
+  else if (l.sfx && fs.existsSync(W(l.sfx + '.wav'))) parts.push([l.sfx + '.wav', l.sfx === 'whoosh' ? Math.max(0, l.t - 0.25) : l.t + l.d - (l.sfx === 'rimshot' ? 0.05 : 0.1), 0.6]);
+  if (l.laugh) parts.push(['laugh.wav', l.t + l.d + 0.08 + (meme ? MEME[l.sfx] * 0.6 : 0), l.laugh === 2 ? 0.7 : 0.42]);
 });
 const inp = [], fl = [];
 parts.forEach(([f, at, v], i) => { inp.push('-i', W(f)); fl.push(`[${i}:a]aresample=44100,aformat=channel_layouts=mono,volume=${v},adelay=${Math.round(at * 1000)}[x${i}]`); });
