@@ -57,6 +57,6 @@ async function call(body, tries = 3) {
   try { const a = fs.readFileSync(cf, 'utf8').split('\n').filter(Boolean).reduce((x, y) => x + Number(y), 0); COST.usd += a; COST.steps.align = (COST.steps.align || 0) + a; } catch (_) { }
   // caption file for posting
   const seo = require('./seo').build(S);
-  fs.writeFileSync(path.join(out, 'meta.json'), JSON.stringify({ kind, day: S.day, ...seo, cost: COST }, null, 1));
+  fs.writeFileSync(path.join(out, 'meta.json'), JSON.stringify({ kind, day: S.day, ...(kind === 'setup' ? { setup_id: S.setup_id } : {}), ...seo, cost: COST }, null, 1));
   console.log('TITLE:', S.title);
 })().catch(e => { console.error(e); process.exit(1); });

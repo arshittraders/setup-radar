@@ -155,7 +155,10 @@ const MIN_WIN = 60, MIN_TRADES = 25;
   }
   console.log('PASS:', pass.map(x => x.setup.id + ' ' + x.winPct + '% net ' + x.net).join(' | ') || 'none');
   if (!pass.length) { console.error('NO_SETUP: koi setup 60% jeet + plus net pe paas nahi hua'); process.exit(3); }
-  const out = pass[(idx - 1) % pass.length];
+  const used = new Set(String(process.env.USED_SETUPS || '').split(/[\s,]+/).filter(Boolean));
+  const fresh = pass.filter(x => !used.has(x.setup.id)).sort((a, b) => b.net - a.net);
+  if (!fresh.length) { console.error('NO_SETUP: saare paas hue setup pehle dikh chuke (' + [...used].join(',') + ')'); process.exit(3); }
+  const out = fresh[0];
   fs.writeFileSync(outF, JSON.stringify(out, null, 1));
   console.log('CHOSEN', out.setup.id, out.winPct + '%', 'net', out.net, 'n', out.n);
 })().catch(e => { console.error(e); process.exit(1); });

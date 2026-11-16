@@ -48,6 +48,13 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji >/dev/null
           npm i --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+      - name: Already shown setups
+        if: steps.p.outputs.kind == 'setup'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p used && gh release download shorts -p 'setup-*.json' -D used 2>/dev/null || true
+          echo "USED_SETUPS=$(cat used/setup-*[0-9].json 2>/dev/null | jq -r '.setup_id // empty' | grep -v "^$" | tr '\n' ',')" >> $GITHUB_ENV
       - name: Build short
         run: |
           export OIDC=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=setup-radar-shorts" | jq -r .value)

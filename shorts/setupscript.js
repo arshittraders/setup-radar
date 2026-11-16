@@ -29,7 +29,7 @@ function build(B, day) {
   scenes.push({ vis: 'verdict', tag: 'SEEKH', show: verdict, sub: 'Sirf shiksha ke liye · Tip nahi', ok: plus && pf >= 1.3 ? 1 : plus ? 0 : -1,
     say: vsay + ' ये सिर्फ़ सीखने के लिए है, कोई tip नहीं।' });
   return {
-    kind: 'setup', day, topic: st.name, short: st.short, badge: 'SETUP ' + String(day).padStart(2, '0'), title: `${st.short} ka Report Card`,
+    kind: 'setup', day, setup_id: st.id, topic: st.name, short: st.short, badge: 'SETUP ' + String(day).padStart(2, '0'), title: `${st.short} ka Report Card`,
     bt: { n: B.n, wins: B.wins, losses: B.losses, winPct: B.winPct, tgtHits: B.tgtHits, slHits: B.slHits, timeExits: B.timeExits, avgWin: B.avgWin, avgLoss: B.avgLoss, net: B.net, maxL: B.maxLossStreak, from: rd(B.from), to: rd(B.to), cost: B.costPts },
     exWin: B.exWin, exLoss: B.exLoss, verdict, scenes,
   };
