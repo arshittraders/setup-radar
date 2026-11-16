@@ -54,6 +54,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p used && gh release download shorts -p 'setup-*.json' -D used 2>/dev/null || true
+          rm -f "used/$TAG.json"   # re-making the same day: don't count its own setup
           echo "USED_SETUPS=$(cat used/setup-*[0-9].json 2>/dev/null | jq -r '.setup_id // empty' | grep -v "^$" | tr '\n' ',')" >> $GITHUB_ENV
       - name: Build short
         run: |
