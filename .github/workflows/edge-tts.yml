@@ -1,0 +1,21 @@
+name: edge-tts
+on:
+  workflow_dispatch:
+    inputs:
+      dir: { description: "folder with lines.json + tts.py", required: true }
+      voice: { description: "voice", default: "hi-IN-MadhurNeural" }
+      tag: { description: "release asset name prefix", required: true }
+permissions:
+  contents: write
+jobs:
+  tts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q edge-tts
+      - run: mkdir -p out && python ${{ inputs.dir }}/tts.py ${{ inputs.dir }}/lines.json "${{ inputs.voice }}" out && ls -la out
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          cd out && zip -q ../${{ inputs.tag }}.zip *.mp3 && cd ..
+          gh release view studio-debug >/dev/null 2>&1 || gh release create studio-debug -t studio-debug -n debug --prerelease
+          gh release upload studio-debug ${{ inputs.tag }}.zip --clobber
