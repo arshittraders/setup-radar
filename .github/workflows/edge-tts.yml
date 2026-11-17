@@ -14,8 +14,10 @@ jobs:
       - uses: actions/checkout@v4
       - run: pip install -q edge-tts
       - run: mkdir -p out && python ${{ inputs.dir }}/tts.py ${{ inputs.dir }}/lines.json "${{ inputs.voice }}" out && ls -la out
+      - name: Whisper check (does the voice say exactly the script?)
+        run: pip install -q faster-whisper && python ${{ inputs.dir }}/check.py ${{ inputs.dir }}/lines.json && cat out/check.json
       - env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          cd out && zip -q ../${{ inputs.tag }}.zip *.mp3 && cd ..
+          cd out && zip -q ../${{ inputs.tag }}.zip *.mp3 check.json && cd ..
           gh release view studio-debug >/dev/null 2>&1 || gh release create studio-debug -t studio-debug -n debug --prerelease
           gh release upload studio-debug ${{ inputs.tag }}.zip --clobber
