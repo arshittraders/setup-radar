@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Baloo+2:wght@800&display=swap" rel="stylesheet">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{width:2560px;height:1440px;overflow:hidden;font-family:Poppins,sans-serif}
+.b{position:absolute;inset:0;overflow:hidden}.safe{position:absolute;left:507px;top:508px;width:1546px;height:423px;display:flex;align-items:center;justify-content:center;gap:60px}
+</style></head><body><div class="b" id="b"></div>
+<script src="../toon/chars.js"></script>
+<script>
+const K=location.search.slice(1), B=document.getElementById('b');
+const rnd=(i)=>{const x=Math.sin(i*9301+49297)*233280;return x-Math.floor(x)};
+if(K==='physics'){
+  let fans='';[[300,300,'#ff9933'],[2250,260,'#22c55e'],[1280,1180,'#3b82f6'],[2300,1150,'#ef4444'],[260,1120,'#eab308']].forEach(([x,y,c],k)=>{for(let i=0;i<40;i++){const a=k*1.3+i*0.025;fans+=`<line x1="${x}" y1="${y}" x2="${1280+Math.cos(a)*1300}" y2="${720+Math.sin(a)*1300}" stroke="${c}" stroke-opacity=".25" stroke-width="3"/>`}});
+  B.style.background='radial-gradient(ellipse at 50% 50%,#1d2558,#05060f 70%)';
+  B.innerHTML=`<svg width="2560" height="1440" style="position:absolute">${fans}${[[300,300,'#ff9933'],[2250,260,'#22c55e'],[1280,1180,'#3b82f6'],[2300,1150,'#ef4444'],[260,1120,'#eab308']].map(([x,y,c])=>`<circle cx="${x}" cy="${y}" r="58" fill="${c}" stroke="#fff" stroke-width="8" style="filter:drop-shadow(0 0 30px ${c})"/>`).join('')}</svg>
+  <div class="safe" style="flex-direction:column;gap:6px"><div style="font-size:150px;font-weight:900;color:#fff;letter-spacing:4px;text-shadow:0 0 50px #5b6cff">PHYSICS ROYALE</div><div style="font-size:52px;white-space:nowrap;font-weight:800;background:linear-gradient(90deg,#ffd23f,#ff5ab4,#60a5fa);-webkit-background-clip:text;color:transparent">WHICH COUNTRY SURVIVES? ⚡ NEW BATTLES DAILY</div></div>`;
+}
+if(K==='golubunty'){
+  B.style.background='linear-gradient(135deg,#ffe76b 0%,#ffb86b 45%,#ff7eb6 100%)';
+  let dots='';for(let i=0;i<70;i++)dots+=`<circle cx="${rnd(i)*2560}" cy="${rnd(i+5)*1440}" r="${10+rnd(i+9)*26}" fill="#fff" fill-opacity=".25"/>`;
+  B.innerHTML=`<svg width="2560" height="1440" style="position:absolute">${dots}
+   <g transform="translate(740,1140) scale(1.15)">${TOON.draw('G',{mood:'happy',wave:1,pose:'wave',dir:1,t:0.3})}</g>
+   <g transform="translate(1820,1140) scale(1.15)">${TOON.draw('B',{mood:'smug',pose:'shrug',dir:-1,t:0.3})}</g></svg>
+   <div class="safe" style="flex-direction:column;gap:0"><div style="font-family:'Baloo 2';font-size:170px;font-weight:800;color:#fff;text-shadow:0 10px 0 #c2410c,0 0 40px rgba(0,0,0,.25);line-height:1">गोलू बंटी शो</div><div style="font-size:60px;font-weight:900;color:#7c2d12;background:#fff;padding:6px 40px;border-radius:999px;margin-top:20px">😂 ROZ NAYI MASTI</div></div>`;
+}
+if(K==='bhoot'){
+  B.style.background='radial-gradient(ellipse at 70% 30%,#3b1d5c,#0a0612 70%)';
+  let stars='';for(let i=0;i<120;i++)stars+=`<circle cx="${rnd(i)*2560}" cy="${rnd(i+3)*900}" r="${1+rnd(i+7)*3}" fill="#fff" fill-opacity="${.3+rnd(i+11)*.6}"/>`;
+  B.innerHTML=`<svg width="2560" height="1440" style="position:absolute">${stars}<circle cx="1990" cy="420" r="150" fill="#fdf6d8" style="filter:drop-shadow(0 0 80px #fdf6d8)"/>
+   <path d="M0,1440 L0,1160 L260,1160 L260,1020 L330,960 L400,1020 L400,1160 L620,1160 L700,1100 L780,1160 L2560,1160 L2560,1440Z" fill="#050208"/>
+   <path d="M2080,1160 L2080,940 L2180,860 L2280,940 L2280,1160Z M2140,1000 h40 v60 h-40Z" fill="#050208"/>
+   <path d="M1180,1180 q-60,-260 100,-300 q160,40 100,300 q-30,-40 -50,0 q-25,-40 -50,0 q-25,-40 -50,0 q-25,-40 -50,0Z" fill="#e9e3ff" fill-opacity=".14"/></svg>
+   <div class="safe" style="flex-direction:column;gap:10px"><div style="font-family:'Baloo 2';font-size:180px;font-weight:800;color:#ffcf3a;text-shadow:0 0 60px rgba(255,90,0,.7),6px 6px 0 #3a0000;line-height:1">भूत होते हैं 👻</div><div style="font-size:56px;font-weight:800;color:#fff;opacity:.9">रोज़ नई डरावनी कहानी · Part 1 & 2</div></div>`;
+}
+if(K==='setupradar'){
+  B.style.background='linear-gradient(120deg,#ffffff 0%,#eef2ff 50%,#fdf2ff 100%)';
+  let candles='';for(let i=0;i<48;i++){const x=40+i*53,o=700+Math.sin(i*.5)*180+rnd(i)*60,c=o+(rnd(i+2)-.45)*140,up=c<o;candles+=`<line x1="${x}" x2="${x}" y1="${Math.min(o,c)-40}" y2="${Math.max(o,c)+40}" stroke="${up?'#10b981':'#ef4444'}" stroke-opacity=".35" stroke-width="5"/><rect x="${x-14}" y="${Math.min(o,c)}" width="28" height="${Math.abs(c-o)+6}" rx="4" fill="${up?'#10b981':'#ef4444'}" fill-opacity=".35"/>`;}
+  B.innerHTML=`<svg width="2560" height="1440" style="position:absolute">${candles}</svg>
+   <div class="safe" style="flex-direction:column;gap:8px"><div style="font-size:150px;font-weight:900;background:linear-gradient(90deg,#5b5bf7,#ec4899);-webkit-background-clip:text;color:transparent;line-height:1.05">SETUP RADAR</div><div style="font-size:54px;font-weight:800;color:#121735">Trading ko aasaan Hindi mein seekho 📈 Roz 4 shorts</div></div>`;
+}
+</script></body></html>
