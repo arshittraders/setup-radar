@@ -18,10 +18,10 @@ window.init = (cfg) => {
   for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
   const names = ['India', ...pool.slice(0, (cfg.n || 7) - 1)];
   for (let i = names.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [names[i], names[j]] = [names[j], names[i]]; }
-  const speed = 560;
+  const speed = 480;
   S = { t: 0, f: 0, phase: 'intro', winner: null, endT: null, parts: [], pops: [], floats: [], banner: null, shake: 0,
     balls: names.map((n, i) => { const a = i / names.length * Math.PI * 2 - Math.PI / 2, d = rnd() * Math.PI * 2;
-      return { n, col: FLAGS[n].col, x: CX + Math.cos(a) * 230, y: CY + Math.sin(a) * 230, vx: Math.cos(d) * speed, vy: Math.sin(d) * speed, sp: speed, r: 48, hp: 100, hits: [], alive: true, dead: 0, flash: 0 }; }) };
+      return { n, col: FLAGS[n].col, x: CX + Math.cos(a) * 230, y: CY + Math.sin(a) * 230, vx: Math.cos(d) * speed, vy: Math.sin(d) * speed, sp: speed, r: 58, hp: 100, hits: [], alive: true, dead: 0, flash: 0 }; }) };
   S.intro = 1.6;
 };
 

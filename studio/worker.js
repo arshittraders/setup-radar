@@ -110,7 +110,7 @@ async function one() {
   try {
     fs.mkdirSync(path.join(job, 'img'), { recursive: true }); fs.mkdirSync(path.join(job, 'panels'), { recursive: true });
     let plan;
-    if (J.kind === 'toon') { plan = J.plan; if (!plan || !(plan.lines || []).length) throw new Error('toon script missing'); } else if (J.kind === 'ai') { if (!c.series) throw new Error('series missing'); plan = await aiPart(J, CH, c.series); } else {
+    if (J.kind === 'sim') { plan = J.plan || {}; } else if (J.kind === 'toon') { plan = J.plan; if (!plan || !(plan.lines || []).length) throw new Error('toon script missing'); } else if (J.kind === 'ai') { if (!c.series) throw new Error('series missing'); plan = await aiPart(J, CH, c.series); } else {
     // 1) storyboard -> panels
     const b = await fetch(c.board_url); if (!b.ok) throw new Error('board download ' + b.status);
     fs.writeFileSync(path.join(job, 'board.png'), Buffer.from(await b.arrayBuffer()));
@@ -133,7 +133,10 @@ async function one() {
       if (!ok) execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', src, '-vf', 'scale=iw*4:ih*4:flags=lanczos,unsharp=5:5:0.8', dst]);
     }
     }
-    if (J.kind === 'toon') await toonRender(J, plan); else {
+    if (J.kind === 'sim') {   // Physics Royale: pure code video (free) — a fresh battle every time
+      sh('node', [path.join(__dirname, '..', 'ballsim', 'render.js'), path.join(job, 'out.mp4')]);
+      sh('ffmpeg', ['-y', '-v', 'error', '-ss', '6', '-i', path.join(job, 'out.mp4'), '-frames:v', '1', '-q:v', '3', path.join(job, 'thumb.jpg')]);
+    } else if (J.kind === 'toon') await toonRender(J, plan); else {
     // 4) voices — young female characters use the fixed free Indic voice (IndicF5), rest OpenAI
     const vOf = g => plan.voices[g.who] || plan.voices.N;
     const f5 = plan.segments.map((g, i) => ({ i, text: g.text, v: vOf(g) })).filter(x => x.v.engine === 'f5' || x.v.style === 'char_f');
