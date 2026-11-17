@@ -1,0 +1,70 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// "1 escape = 2 new balls" — spinning polygon with one open side; every ball that escapes spawns two in the centre.
+const C = document.getElementById('c'), X = C.getContext('2d');
+const W = 1080, H = 1920, CX = 540, CY = 1080, FPS = 30, SUB = 4, DT = 1 / (FPS * SUB);
+window.DUR = [25, 55];
+let S, rnd, EV = [];
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const back = x => { x = Math.max(0, Math.min(1, x)); const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const THEMES = [{ bg: ['#173049', '#08131f'], line: '#e8f6ff', ball: '#4fe3c1', txt: '#4fb3ff' }, { bg: ['#2a1640', '#0b0614'], line: '#ffe3ff', ball: '#ff7ad9', txt: '#c58cff' }, { bg: ['#123622', '#04120a'], line: '#eaffea', ball: '#ffd23f', txt: '#6dff9a' }];
+window.init = (cfg) => {
+  rnd = mulberry(cfg.seed || 7);
+  const sides = [5, 6, 6, 7, 8][Math.floor(rnd() * 5)], target = [100, 150, 200, 256][Math.floor(rnd() * 4)];
+  S = { t: 0, f: 0, sides, R: 400, rot: rnd() * 6.28, w: (0.45 + rnd() * 0.5) * (rnd() < 0.5 ? 1 : -1), balls: [], out: [], target, endT: null, lastTick: 0, th: THEMES[Math.floor(rnd() * THEMES.length)], g: 900 + rnd() * 400, intro: 1, bump: 0, gapK: 0 };
+  add(CX, CY - 60);
+};
+function add(x, y) { const a = rnd() * 6.28, v = 300 + rnd() * 300; S.balls.push({ x: x + (rnd() - 0.5) * 20, y: y + (rnd() - 0.5) * 20, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 15, born: S.t }); }
+function verts() { const v = []; for (let i = 0; i < S.sides; i++) { const a = S.rot + i * 2 * Math.PI / S.sides; v.push([CX + Math.cos(a) * S.R, CY + Math.sin(a) * S.R]); } return v; }
+function step() {
+  S.rot += S.w * DT; const V = verts(), n = S.sides, B = S.balls;
+  for (const b of B) { b.vy += S.g * DT; b.x += b.vx * DT; b.y += b.vy * DT; }
+  // ball-ball (spatial hash)
+  const cell = 32, grid = new Map();
+  B.forEach((b, i) => { const k = (Math.floor(b.x / cell) << 16) | Math.floor(b.y / cell); (grid.get(k) || grid.set(k, []).get(k)).push(i); });
+  for (let i = 0; i < B.length; i++) { const a = B[i], gx = Math.floor(a.x / cell), gy = Math.floor(a.y / cell);
+    for (let ox = -1; ox <= 1; ox++) for (let oy = -1; oy <= 1; oy++) { const l = grid.get(((gx + ox) << 16) | (gy + oy)); if (!l) continue;
+      for (const j of l) { if (j <= i) continue; const b = B[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), m = a.r + b.r;
+        if (d < m && d > 0.01) { const nx = dx / d, ny = dy / d, ov = (m - d) / 2; a.x -= nx * ov; a.y -= ny * ov; b.x += nx * ov; b.y += ny * ov;
+          const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny; if (rv < 0) { const j2 = -rv * 0.95; a.vx -= j2 * nx; a.vy -= j2 * ny; b.vx += j2 * nx; b.vy += j2 * ny; } } } } }
+  // walls (side 0 is the open one)
+  for (const b of B) for (let i = 1; i < n; i++) {
+    const [x0, y0] = V[i], [x1, y1] = V[(i + 1) % n], ex = x1 - x0, ey = y1 - y0, L2 = ex * ex + ey * ey;
+    const u = Math.max(0, Math.min(1, ((b.x - x0) * ex + (b.y - y0) * ey) / L2)), qx = x0 + ex * u, qy = y0 + ey * u, dx = b.x - qx, dy = b.y - qy, d = Math.hypot(dx, dy);
+    if (d < b.r && d > 0.001) { let nx = dx / d, ny = dy / d; if ((CX - qx) * nx + (CY - qy) * ny < 0 && Math.hypot(b.x - CX, b.y - CY) < S.R) { nx = -nx; ny = -ny; }
+      b.x = qx + nx * b.r; b.y = qy + ny * b.r; const vn = b.vx * nx + b.vy * ny;
+      if (vn < 0) { b.vx -= 1.9 * vn * nx; b.vy -= 1.9 * vn * ny; const tx = -(qy - CY) * S.w, ty = (qx - CX) * S.w; b.vx += tx * 0.15; b.vy += ty * 0.15; if (S.t - S.lastTick > 0.04 && -vn > 200) { S.lastTick = S.t; EV.push({ t: S.t, k: 'tick', p: 0.8 + Math.min(0.8, -vn / 1500) }); } } }
+  }
+  // escapes
+  for (let i = B.length - 1; i >= 0; i--) { const b = B[i]; if (Math.hypot(b.x - CX, b.y - CY) > S.R + 40) { B.splice(i, 1); S.out.push({ ...b, t: S.t }); add(CX, CY); add(CX, CY); S.bump = 1; EV.push({ t: S.t, k: 'note', n: Math.min(23, Math.floor(Math.log2(B.length + 1) * 3)) }); } }
+  if (B.length >= S.target && S.endT === null) { S.endT = S.t; EV.push({ t: S.t + 0.2, k: 'win' }); }
+}
+function draw() {
+  const t = S.t, th = S.th;
+  const g = X.createRadialGradient(CX, CY, 100, CX, CY, 1300); g.addColorStop(0, th.bg[0]); g.addColorStop(1, th.bg[1]); X.fillStyle = g; X.fillRect(0, 0, W, H);
+  X.fillStyle = 'rgba(255,255,255,.25)'; for (let i = 0; i < 40; i++) X.fillRect((i * 263) % W, (i * 547) % H, 2, 2);
+  X.textAlign = 'center'; X.font = '800 64px Arial'; X.fillStyle = '#dfe8f0'; X.fillText('1 escape = 2 new balls', W / 2, 240);
+  X.save(); X.translate(W / 2, 420); const s = 1 + S.bump * 0.15; X.scale(s, s); X.font = '900 170px Arial'; X.fillStyle = '#fff'; X.fillText(S.balls.length, 0, 0); X.restore(); S.bump *= 0.85;
+  X.font = '800 50px Arial'; X.fillStyle = th.txt; X.fillText('balls inside', W / 2, 500);
+  X.font = '800 36px Arial'; X.fillStyle = 'rgba(255,255,255,.6)'; X.fillText(`Can it reach ${S.target}?`, W / 2, 560);
+  const V = verts(); X.strokeStyle = th.line; X.lineWidth = 9; X.lineJoin = 'round'; X.shadowColor = th.line; X.shadowBlur = 25;
+  X.beginPath(); X.moveTo(...V[1]); for (let i = 2; i <= S.sides; i++) X.lineTo(...V[i % S.sides]); X.stroke(); X.shadowBlur = 0;
+  for (const o of S.out) { const k = t - o.t; if (k > 1.5) continue; X.globalAlpha = 1 - k / 1.5; X.fillStyle = th.ball; X.beginPath(); X.arc(o.x + o.vx * k, o.y + o.vy * k + 0.5 * S.g * k * k, o.r, 0, 7); X.fill(); }
+  X.globalAlpha = 1; if (S.out.length > 600) S.out.splice(0, 300);
+  X.fillStyle = th.ball; X.shadowColor = th.ball; X.shadowBlur = 14; for (const b of S.balls) { X.beginPath(); X.arc(b.x, b.y, b.r, 0, 7); X.fill(); } X.shadowBlur = 0;
+  X.font = '800 34px Arial'; X.fillStyle = 'rgba(255,255,255,.7)'; X.fillText(S.endT !== null ? '' : 'Guess the final count 👇', W / 2, 1640);
+  X.font = '800 24px Arial'; X.fillStyle = 'rgba(255,255,255,.4)'; X.fillText('FOLLOW  PHYSICS ROYALE ARENA', W / 2, 1720);
+  if (S.endT !== null) { const k = t - S.endT, ok = S.balls.length >= S.target; X.fillStyle = `rgba(0,0,0,${Math.min(0.55, k)})`; X.fillRect(0, 0, W, H); X.save(); X.translate(W / 2, CY); X.scale(back((k - 0.1) / 0.4), back((k - 0.1) / 0.4));
+    X.font = '900 120px Arial'; X.fillStyle = ok ? '#7dff9a' : '#ffd23f'; X.shadowColor = X.fillStyle; X.shadowBlur = 40; X.fillText(ok ? `${S.target}! 🎉` : `${S.balls.length} BALLS`, 0, 0); X.shadowBlur = 0;
+    X.font = '800 48px Arial'; X.fillStyle = '#fff'; X.fillText('Was your guess close? 👇', 0, 100); X.restore(); }
+}
+window.frame = (fast) => {
+  if (S.f / FPS >= S.intro && S.endT === null) { for (let i = 0; i < SUB; i++) { step(); S.t += DT; if (S.endT !== null) break; } if (S.t > 57 && S.endT === null) S.endT = S.t; } else S.t += 1 / FPS;
+  if (!fast) draw(); S.f++;
+  const done = S.endT !== null && S.t - S.endT > 3.5;
+  const ev = EV; EV = [];
+  return { done, ev: fast ? [] : ev.map(e => ({ ...e, f: S.f })), img: fast ? '' : C.toDataURL('image/jpeg', 0.9), t: S.t, ok: S.balls.length >= S.target };
+};
+</script></body></html>

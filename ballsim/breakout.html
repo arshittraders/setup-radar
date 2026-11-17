@@ -1,0 +1,80 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// "Wait for it…" — self-playing brick breaker, tiny bricks, ball splits every few % cleared.
+const C = document.getElementById('c'), X = C.getContext('2d');
+const W = 1080, H = 1920, FPS = 30, SUB = 6, DT = 1 / (FPS * SUB);
+const L = 70, R = 1010, T = 440, PY = 1640, GX0 = 110, GX1 = 970, GY0 = 490;
+window.DUR = [28, 55];
+let S, rnd, EV = [];
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const PAL = [['#e0782a', '#f39a4a'], ['#c0443f', '#e06a64'], ['#2aa9a0', '#4fd1c7'], ['#7b4fe0', '#9d7bff'], ['#d4a017', '#f0c53c']];
+window.init = (cfg) => {
+  rnd = mulberry(cfg.seed || 7);
+  const cols = 34 + Math.floor(rnd() * 12), cs = (GX1 - GX0) / cols, rows = Math.floor((440 + rnd() * 200) / cs);
+  const split = [0.04, 0.05, 0.06][Math.floor(rnd() * 3)];
+  S = { t: 0, f: 0, cols, rows, cs, alive: new Uint8Array(cols * rows).fill(1), left: cols * rows, total: cols * rows, pal: PAL[Math.floor(rnd() * PAL.length)], split, nextSplit: split,
+    balls: [], px: W / 2, pw: 200, lastTick: 0, endT: null, parts: [], intro: 1 };
+  // a crooked tunnel already cut through the wall — the ball slips inside and clears from the top
+  let c = Math.floor(S.cols * (0.3 + rnd() * 0.4));
+  for (let r = S.rows - 1; r >= 0; r--) { for (let k = 0; k < 2; k++) if (S.alive[r * S.cols + c + k]) { S.alive[r * S.cols + c + k] = 0; S.left--; } if (r % 3 === 0) c = Math.max(1, Math.min(S.cols - 3, c + (rnd() < 0.5 ? -1 : 1))); }
+  S.total = S.left; const tx = GX0 + (c + 1) * S.cs;
+  addBall(tx, PY - 30, 0); S.balls[0].x = tx; S.balls[0].y = GY0 + S.rows * S.cs * 0.5; S.balls[0].vx = 520; S.balls[0].vy = -920;
+};
+function addBall(x, y, ang) { const sp = 1050; S.balls.push({ x, y, vx: Math.sin(ang) * sp, vy: -Math.cos(ang) * sp, r: 8, tr: [] }); }
+function cell(x, y) { const c = Math.floor((x - GX0) / S.cs), r = Math.floor((y - GY0) / S.cs); return c >= 0 && c < S.cols && r >= 0 && r < S.rows ? r * S.cols + c : -1; }
+function step() {
+  for (const b of S.balls) {
+    const ox = b.x, oy = b.y; b.x += b.vx * DT; b.y += b.vy * DT;
+    if (b.x < L + b.r) { b.x = L + b.r; b.vx = Math.abs(b.vx); } if (b.x > R - b.r) { b.x = R - b.r; b.vx = -Math.abs(b.vx); }
+    if (b.y < T + b.r) { b.y = T + b.r; b.vy = Math.abs(b.vy); }
+    const i = cell(b.x, b.y);
+    if (i >= 0 && S.alive[i]) {
+      S.alive[i] = 0; S.left--; const c0 = cell(ox, b.y), r0 = cell(b.x, oy);
+      if (c0 >= 0 && !S.alive[c0] || c0 < 0) b.vy = -b.vy; else if (r0 < 0 || !S.alive[r0]) b.vx = -b.vx; else { b.vx = -b.vx; b.vy = -b.vy; }
+      b.x = ox; b.y = oy; { const sp = Math.hypot(b.vx, b.vy), mn = sp * 0.38; if (Math.abs(b.vx) < mn) { b.vx = Math.sign(b.vx || 1) * mn; b.vy = Math.sign(b.vy) * Math.sqrt(sp * sp - mn * mn); } }
+      const row = Math.floor(i / S.cols); S.parts.push({ x: GX0 + (i % S.cols + 0.5) * S.cs, y: GY0 + (row + 0.5) * S.cs, t: S.t, vx: (Math.random() - 0.5) * 200, vy: -100 - Math.random() * 200 });
+      if (S.t - S.lastTick > 0.03) { S.lastTick = S.t; EV.push({ t: S.t, k: 'tick', p: 0.7 + (1 - row / S.rows) * 0.8 }); }
+      const done = 1 - S.left / S.total;
+      if (done >= S.nextSplit && S.balls.length < 24) { S.nextSplit += S.split; addBall(S.px, PY - 30, -0.5 + rnd()); EV.push({ t: S.t, k: 'note', n: S.balls.length % 12 }); }
+      if (!S.left) { S.endT = S.t; EV.push({ t: S.t + 0.2, k: 'win' }); return; }
+    }
+    if (b.vy > 0 && b.y > PY - b.r && b.y < PY + 20 && Math.abs(b.x - S.px) < S.pw / 2 + b.r) {
+      const off = (b.x - S.px) / (S.pw / 2), sp = Math.hypot(b.vx, b.vy), a = off * 1.0 + (rnd() - 0.5) * 0.25;
+      b.vx = Math.sin(a) * sp; b.vy = -Math.abs(Math.cos(a) * sp); b.y = PY - b.r; EV.push({ t: S.t, k: 'hit', soft: 1 });
+    }
+    if (b.y > H) { b.x = S.px; b.y = PY - 30; b.vy = -Math.abs(b.vy); }
+  }
+  // paddle chases the lowest falling ball
+  let tg = null; for (const b of S.balls) if (b.vy > 0 && (!tg || b.y > tg.y)) tg = b;
+  if (tg) { const d = tg.x - S.px, mv = 2600 * DT; S.px += Math.max(-mv, Math.min(mv, d)); S.px = Math.max(L + S.pw / 2, Math.min(R - S.pw / 2, S.px)); }
+}
+function draw() {
+  const t = S.t, cs = S.cs;
+  X.fillStyle = '#232427'; X.fillRect(0, 0, W, H);
+  X.fillStyle = '#2c2d31'; X.fillRect(L - 20, T - 20, R - L + 40, PY - T + 120);
+  X.textAlign = 'center'; X.font = '900 70px Arial'; X.fillStyle = '#f2f2f2'; X.fillText('Wait for it…', W / 2, 250);
+  const pct = Math.floor((1 - S.left / S.total) * 100);
+  X.font = '900 54px Arial'; X.textAlign = 'left'; X.fillStyle = '#ddd'; X.fillText('● ' + S.balls.length, L, 380); X.textAlign = 'right'; X.fillText(pct + '%', R, 380); X.textAlign = 'center';
+  // bricks
+  X.fillStyle = 'rgba(200,200,200,.55)'; X.fillRect(GX0 - 6, GY0 - 6, GX1 - GX0 + 12, S.rows * cs + 12);
+  X.fillStyle = '#2c2d31'; X.fillRect(GX0 - 2, GY0 - 2, GX1 - GX0 + 4, S.rows * cs + 4);
+  for (let r = 0; r < S.rows; r++) for (let c = 0; c < S.cols; c++) if (S.alive[r * S.cols + c]) { X.fillStyle = (r + c) % 2 ? S.pal[0] : S.pal[1]; X.fillRect(GX0 + c * cs + 0.6, GY0 + r * cs + 0.6, cs - 1.2, cs - 1.2); }
+  for (const p of S.parts) { const k = t - p.t; if (k > 0.6) continue; X.globalAlpha = 1 - k / 0.6; X.fillStyle = S.pal[1]; X.fillRect(p.x + p.vx * k, p.y + p.vy * k + 900 * k * k, cs * 0.8, cs * 0.8); }
+  X.globalAlpha = 1; if (S.parts.length > 3000) S.parts.splice(0, 1500);
+  // balls + paddle
+  for (const b of S.balls) { X.fillStyle = '#fff'; X.beginPath(); X.arc(b.x, b.y, b.r, 0, 7); X.fill(); }
+  X.fillStyle = '#f07070'; X.fillRect(S.px - S.pw / 2, PY, S.pw, 16);
+  X.font = '800 34px Arial'; X.fillStyle = 'rgba(255,255,255,.7)'; X.fillText('Satisfying ASMR 🔊  Watch till the end', W / 2, 1790);
+  X.font = '800 24px Arial'; X.fillStyle = 'rgba(255,255,255,.4)'; X.fillText('FOLLOW  PHYSICS ROYALE ARENA', W / 2, 1840);
+  if (S.endT !== null) { const k = t - S.endT; X.font = '900 130px Arial'; X.globalAlpha = Math.min(1, k * 3); X.fillStyle = '#fff'; X.fillText(S.left ? pct + '%… 😩' : '100% 🎉', W / 2, 1050); X.font = '800 48px Arial'; X.fillText(S.left ? 'So close! Comment 1 more try 👇' : 'Did you watch till the end? 👇', W / 2, 1150); X.globalAlpha = 1; }
+}
+window.frame = (fast) => {
+  if (S.f / FPS >= S.intro && S.endT === null) { for (let i = 0; i < SUB; i++) { step(); S.t += DT; if (S.endT !== null) break; } if (S.t > 57 && S.endT === null) S.endT = S.t; } else S.t += 1 / FPS;
+  if (!fast) draw(); S.f++;
+  const done = S.endT !== null && S.t - S.endT > 3.2;
+  const ev = EV; EV = [];
+  return { done, ev: fast ? [] : ev.map(e => ({ ...e, f: S.f })), img: fast ? '' : C.toDataURL('image/jpeg', 0.9), t: S.t, ok: !S.left };
+};
+</script></body></html>

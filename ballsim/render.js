@@ -1,8 +1,12 @@
-// Render one "Which country survives?" video. usage: node ballsim/render.js <out.mp4> [seed]
+// Render one Physics Royale video. usage: node ballsim/render.js <out.mp4> [format] [seed]
+// formats: country (circle battle) · floors (neon towers race) · rings (break free) · breakout (brick ASMR) · hex (1 escape = 2 balls) · mix (random)
 const { chromium } = require('playwright');
 const { spawn, execFileSync } = require('child_process');
 const fs = require('fs'), path = require('path');
-const OUT = path.resolve(process.argv[2] || 'ball.mp4'), FPS = 30, SR = 44100; let SEED = Number(process.argv[3]) || 0;
+const OUT = path.resolve(process.argv[2] || 'ball.mp4'), FPS = 30, SR = 44100; let SEED = Number(process.argv[4]) || 0;
+const FORMATS = ['country', 'floors', 'rings', 'breakout', 'hex'];
+let FMT = process.argv[3] || 'country'; if (!FORMATS.includes(FMT)) FMT = FORMATS[Math.floor(Math.random() * FORMATS.length)];
+const PAGE = FMT === 'country' ? 'sim.html' : FMT + '.html';
 
 function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, win fanfare, soft pad
   const N = Math.ceil(dur * SR), a = new Float32Array(N);
@@ -13,6 +17,8 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   let lastTick = -1;
   for (const e of events) {
     const t = e.f / FPS;
+    if (e.k === 'note') { const f = 523.25 * Math.pow(2, [0, 2, 4, 7, 9][e.n % 5] / 12 + Math.floor(e.n / 5) / 2); add(t, 0.5, (x) => 0.2 * (Math.sin(2 * Math.PI * f * x) + 0.3 * Math.sin(4 * Math.PI * f * x)) * Math.exp(-x * 7)); continue; }
+    if (e.k === 'hit' && e.soft) { add(t, 0.08, (x) => 0.2 * Math.sin(2 * Math.PI * 220 * x) * Math.exp(-x * 40)); continue; }
     if (e.k === 'tick') { if (t - lastTick < 0.035) continue; lastTick = t; const f = 900 * (e.p || 1); add(t, 0.06, (x) => 0.16 * Math.sin(2 * Math.PI * f * x) * Math.exp(-x * 70)); }
     else if (e.k === 'hit') add(t, 0.14, (x) => 0.35 * (Math.sin(2 * Math.PI * (140 - 300 * x) * x) * Math.exp(-x * 25) + 0.4 * rn() * Math.exp(-x * 60)));
     else if (e.k === 'pop') add(t, 0.5, (x) => 0.5 * (rn() * Math.exp(-x * 12) * 0.6 + Math.sin(2 * Math.PI * (300 + 500 * Math.exp(-x * 8)) * x) * Math.exp(-x * 9)));
@@ -28,11 +34,13 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
 
 (async () => {
   const br = await chromium.launch(); const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } });
-  await pg.goto('file://' + path.join(__dirname, 'sim.html'));
-  if (!SEED) for (let k = 0; k < 40; k++) {   // pick a seed whose battle lasts 35-55 s (dry run, no drawing)
+  await pg.goto('file://' + path.join(__dirname, PAGE));
+  const [D0, D1] = await pg.evaluate(() => window.DUR || [35, 55]);
+  if (!SEED) for (let k = 0; k < 40; k++) {   // pick a seed whose video lasts D0-D1 s and ends properly (dry run, no drawing)
     const sd = 1 + Math.floor(Math.random() * 1e6); await pg.evaluate((s) => window.init({ seed: s, n: 7 }), sd);
-    let f = 0; for (; f < FPS * 80; f++) { if ((await pg.evaluate(() => window.frame(true))).done) break; }
-    if (f / FPS >= 35 && f / FPS <= 55) { SEED = sd; break; } SEED = sd;
+    const r = await pg.evaluate((max) => { let f = 0, r; for (; f < max; f++) { r = window.frame(true); if (r.done) break; } return { f, ok: r.ok !== false }; }, FPS * 80);
+    const sec = r.f / FPS; console.log('try', sd, sec.toFixed(1), r.ok);
+    if (sec >= D0 && sec <= D1 + 5 && (r.ok || k > 25)) { SEED = sd; break; } SEED = sd;
   }
   await pg.evaluate((s) => window.init({ seed: s, n: 7 }), SEED);
   const vid = OUT.replace(/\.mp4$/, '.v.mp4');
@@ -48,5 +56,5 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   const dur = (f + 1) / FPS, wav = OUT.replace(/\.mp4$/, '.wav'); fs.writeFileSync(wav, synth(events, dur));
   execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', vid, '-i', wav, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', OUT]);
   fs.unlinkSync(vid); fs.unlinkSync(wav);
-  console.log('done', OUT, 'seed', SEED, 'sec', dur.toFixed(1), 'events', events.length);
+  console.log('done', OUT, 'format', FMT, 'seed', SEED, 'sec', dur.toFixed(1), 'events', events.length);
 })().catch((e) => { console.error(e); process.exit(1); });

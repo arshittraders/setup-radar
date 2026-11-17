@@ -1,0 +1,78 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// "Can it break free?" — a ball inside spinning neon rings, each ring has one gap; escaping a ring shatters it.
+const C = document.getElementById('c'), X = C.getContext('2d');
+const W = 1080, H = 1920, CX = 540, CY = 1080, FPS = 30, SUB = 8, DT = 1 / (FPS * SUB);
+window.DUR = [25, 55];
+let S, rnd, EV = [];
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const back = x => { x = Math.max(0, Math.min(1, x)); const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const wrap = a => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
+window.init = (cfg) => {
+  rnd = mulberry(cfg.seed || 7);
+  const N = 10 + Math.floor(rnd() * 7), r0 = 130, r1 = 490, hue0 = rnd() * 360, gap = 0.55 + rnd() * 0.3;
+  const rings = Array.from({ length: N }, (_, i) => ({ R: r0 + (r1 - r0) * i / (N - 1), ph: rnd() * 6.28, w: (0.5 + rnd() * 0.9) * (i % 2 ? 1 : -1) * (rnd() < 0.15 ? 2 : 1), hue: (hue0 + i * 300 / N) % 360, gap, broke: null }));
+  const a = rnd() * 6.28;
+  S = { t: 0, f: 0, rings, N, cur: 0, b: { x: CX, y: CY, vx: Math.cos(a) * 500, vy: Math.sin(a) * 500, r: 13 }, trail: [], parts: [], g: 1300 + rnd() * 500, lastTick: 0, endT: null, win: false, intro: 1, flash: 0 };
+};
+function step() {
+  const b = S.b; b.vy += S.g * DT; b.x += b.vx * DT; b.y += b.vy * DT;
+  const R = S.rings[S.cur]; if (!R) return;
+  const dx = b.x - CX, dy = b.y - CY, d = Math.hypot(dx, dy);
+  if (d + b.r > R.R) {
+    const a = Math.atan2(dy, dx), gc = R.ph + R.w * S.t, inGap = Math.abs(wrap(a - gc)) < R.gap / 2 - 0.3 * b.r / R.R;
+    if (inGap || d > R.R) { if (d > R.R) shatter(R); }
+    else {
+      const nx = dx / d, ny = dy / d, vn = b.vx * nx + b.vy * ny;
+      if (vn > 0) { b.vx -= 2 * vn * nx; b.vy -= 2 * vn * ny; const s = Math.hypot(b.vx, b.vy), want = Math.min(1500, Math.max(760, s)); b.vx *= want / s; b.vy *= want / s;
+        if (S.t - S.lastTick > 0.05) { S.lastTick = S.t; EV.push({ t: S.t, k: 'note', n: S.cur % 12 }); } R.hit = S.t; }
+      b.x = CX + nx * (R.R - b.r); b.y = CY + ny * (R.R - b.r);
+    }
+  }
+}
+function shatter(R) {
+  R.broke = S.t; S.flash = 1;
+  for (let k = 0; k < 70; k++) { const a = rnd() * 6.28; S.parts.push({ x: CX + Math.cos(a) * R.R, y: CY + Math.sin(a) * R.R, vx: Math.cos(a) * (100 + rnd() * 400), vy: Math.sin(a) * (100 + rnd() * 400), t: S.t, hue: R.hue }); }
+  EV.push({ t: S.t, k: 'pop' }); EV.push({ t: S.t, k: 'note', n: 12 + (S.cur % 8) });
+  S.cur++; if (S.cur >= S.N) { S.win = true; S.endT = S.t; EV.push({ t: S.t + 0.2, k: 'win' }); }
+}
+function draw() {
+  const t = S.t;
+  X.fillStyle = '#07021a'; X.fillRect(0, 0, W, H);
+  X.strokeStyle = 'rgba(180,60,255,.08)'; X.lineWidth = 2; for (let x = 0; x < W; x += 54) { X.beginPath(); X.moveTo(x, 0); X.lineTo(x, H); X.stroke(); } for (let y = 0; y < H; y += 54) { X.beginPath(); X.moveTo(0, y); X.lineTo(W, y); X.stroke(); }
+  X.textAlign = 'center'; X.font = '900 70px Arial'; X.fillStyle = '#ff7ad9'; X.shadowColor = '#ff3fd0'; X.shadowBlur = 30; X.fillText('CAN IT BREAK FREE?', W / 2, 190);
+  X.font = '900 120px Arial'; X.fillStyle = '#ff5a6e'; X.shadowColor = '#ff2040'; X.fillText(t.toFixed(1), W / 2, 330);
+  X.font = '900 42px Arial'; X.fillStyle = '#ffd23f'; X.shadowColor = '#ffb000'; X.fillText(`RINGS ${S.cur} / ${S.N}`, W / 2, 395); X.shadowBlur = 0;
+  // rings
+  X.lineCap = 'round';
+  for (let i = S.N - 1; i >= 0; i--) {
+    const R = S.rings[i]; if (R.broke !== null) continue;
+    const gc = R.ph + R.w * t, a0 = gc + R.gap / 2, a1 = gc - R.gap / 2 + 2 * Math.PI, lit = i === S.cur, hit = R.hit && t - R.hit < 0.12;
+    X.strokeStyle = `hsl(${R.hue},100%,${hit ? 80 : lit ? 65 : 55}%)`; X.lineWidth = lit ? 9 : 6; X.shadowColor = `hsl(${R.hue},100%,60%)`; X.shadowBlur = lit ? 30 : 14;
+    X.beginPath(); X.arc(CX, CY, R.R, a0, a1); X.stroke();
+  }
+  X.shadowBlur = 0;
+  for (const p of S.parts) { const k = t - p.t; if (k > 1.3) continue; X.globalAlpha = 1 - k / 1.3; X.fillStyle = `hsl(${p.hue},100%,65%)`; X.fillRect(p.x + p.vx * k, p.y + p.vy * k + 500 * k * k, 7, 7); }
+  X.globalAlpha = 1;
+  // ball + trail
+  const b = S.b; S.trail.push([b.x, b.y]); if (S.trail.length > 14) S.trail.shift();
+  S.trail.forEach(([x, y], i) => { X.globalAlpha = i / 14 * 0.6; X.fillStyle = '#9dffb0'; X.beginPath(); X.arc(x, y, b.r * i / 14, 0, 7); X.fill(); });
+  X.globalAlpha = 1; X.fillStyle = '#fff'; X.shadowColor = '#fff'; X.shadowBlur = 25; X.beginPath(); X.arc(b.x, b.y, b.r, 0, 7); X.fill(); X.shadowBlur = 0;
+  if (S.flash > 0) { X.fillStyle = `rgba(255,255,255,${S.flash * 0.12})`; X.fillRect(0, 0, W, H); S.flash *= 0.8; }
+  X.font = '800 34px Arial'; X.fillStyle = 'rgba(255,255,255,.75)'; X.fillText(S.endT ? '' : 'Guess the time ⏱️ 👇', W / 2, 1720);
+  X.font = '800 24px Arial'; X.fillStyle = 'rgba(255,255,255,.45)'; X.fillText('FOLLOW  PHYSICS ROYALE ARENA', W / 2, 1800);
+  if (S.f / FPS < S.intro) { const k = S.f / FPS; X.save(); X.translate(W / 2, CY + 20); X.scale(back(k / 0.3), back(k / 0.3)); X.font = '900 110px Arial'; X.fillStyle = '#fff'; X.fillText('GO!', 0, 0); X.restore(); }
+  if (S.endT !== null) { const k = t - S.endT; X.fillStyle = `rgba(0,0,0,${Math.min(0.6, k)})`; X.fillRect(0, 0, W, H); X.save(); X.translate(W / 2, CY); X.scale(back((k - 0.1) / 0.4), back((k - 0.1) / 0.4));
+    X.font = '900 120px Arial'; X.fillStyle = S.win ? '#7dff9a' : '#ff5a6e'; X.shadowColor = X.fillStyle; X.shadowBlur = 40; X.fillText(S.win ? 'FREE! 🎉' : 'SO CLOSE…', 0, 0);
+    X.font = '900 60px Arial'; X.fillStyle = '#fff'; X.fillText(S.win ? `in ${S.endT.toFixed(1)} seconds` : `${S.cur} / ${S.N} rings`, 0, 100); X.font = '800 44px Arial'; X.fillText('Did you guess right? 👇', 0, 190); X.restore(); X.shadowBlur = 0; }
+}
+window.frame = (fast) => {
+  if (S.f / FPS >= S.intro && S.endT === null) { for (let i = 0; i < SUB; i++) { step(); S.t += DT; if (S.endT !== null) break; } if (S.t > 57 && S.endT === null) S.endT = S.t; } else if (S.endT !== null) S.t += 1 / FPS;
+  if (!fast) draw(); S.f++;
+  const done = S.endT !== null && S.t - S.endT > 3.5;
+  const ev = EV; EV = [];
+  return { done, ev: fast ? [] : ev.map(e => ({ ...e, f: S.f })), img: fast ? '' : C.toDataURL('image/jpeg', 0.9), t: S.t, ok: S.win };
+};
+</script></body></html>

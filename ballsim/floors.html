@@ -1,0 +1,117 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// "Who hits bottom first?" — neon tower race: balls break floors, every broken floor adds/multiplies balls.
+const C = document.getElementById('c'), X = C.getContext('2d');
+const W = 1080, H = 1920, FPS = 30, SUB = 2, DT = 1 / (FPS * SUB), G = 2200, CAP = 1100;
+const TOP = 470, BOT = 1690, F1 = TOP + 120, NF = 10, SPC = (BOT - F1) / (NF - 1);
+window.DUR = [30, 55];
+let S, rnd, EV = [];
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const back = x => { x = Math.max(0, Math.min(1, x)); const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const COLS = { yellow: '#e6ff3c', pink: '#ff4fd8', cyan: '#3fe6ff', green: '#4dff8a', purple: '#b07cff', orange: '#ffa53c' };
+const TEMPL = [
+  { title: ['1 BALL VS {B}', 'WHO HITS BOTTOM?'], cols: [{ s: 1, op: 'x', k: [7, 10, 100] }, { s: 'big', op: '+', k: 'same' }] },
+  { title: ['CAN 1 BALL', 'BEAT {B}?'], cols: [{ s: 1, op: 'x', k: [8, 10, 100] }, { s: 'big', op: '+', k: 'same' }] },
+  { title: ['×{K} VS +{A}', 'WHICH GROWS FASTER?'], cols: [{ s: 1, op: 'x', k: [5, 7, 9] }, { s: 1, op: '+', k: 'big' }] },
+  { title: ['PICK A COLOR', 'FIRST THROUGH 10 FLOORS WINS'], cols: [{ s: 'big', op: '+', k: 'same' }, { s: 'mid', op: 'x', k: [3, 5] }, { s: 1, op: 'x', k: [10, 100] }] },
+];
+window.init = (cfg) => {
+  rnd = mulberry(cfg.seed || 7); const pick = a => a[Math.floor(rnd() * a.length)];
+  const T = TEMPL[Math.floor(rnd() * TEMPL.length)], palette = Object.keys(COLS).sort(() => rnd() - 0.5);
+  const big = pick([1000, 4000, 6216, 9000, 10000]), mid = pick([50, 100, 250]);
+  const cols = T.cols.map((c, i) => {
+    const s = c.s === 'big' ? big : c.s === 'mid' ? mid : 1;
+    const k = c.op === 'x' ? pick(c.k) : c.k === 'same' ? pick([100, 777, 1000, 2000]) : pick([777, 1000, 5000]);
+    return { s, op: c.op, k, col: COLS[palette[i]], count: s, floor: 0, hp: [], balls: [], done: null, lastTick: 0, pulse: 0 };
+  });
+  // floor HP: geometric; scaled so the fastest column needs ~38-46 s (a ball hits ~1.4×/s)
+  const q = 2.3 + rnd() * 1.4, hp = [], tgt = 38 + rnd() * 8;
+  const tFor = (c) => { let n = c.s, s = 0; for (let i = 0; i < NF; i++) { s += Math.pow(q, i) / (1.4 * Math.min(n, 1e12)); n = c.op === 'x' ? n * c.k : n + c.k; } return s; };
+  const h = tgt / Math.min(...cols.map(tFor));
+  for (let i = 0; i < NF; i++) { const v = h * Math.pow(q, i) * (0.9 + rnd() * 0.2); hp.push(v < 10 ? Math.max(2, Math.round(v)) : v < 1000 ? Math.round(v) : Math.round(v / 100) * 100); }
+  for (const c of cols) { c.hp = hp.slice(); c.max = hp.slice(); }
+  const n = cols.length, gap = n === 3 ? 30 : 60, cw = (W - 120 - gap * (n - 1)) / n;
+  cols.forEach((c, i) => { c.x0 = 60 + i * (cw + gap); c.x1 = c.x0 + cw; c.r = n === 3 ? 4.5 : 5.5; spawn(c, c.count, TOP + 40); });
+  const B = fmt(cols[1].s), K = cols[0].k, A = fmt(cols[1].k);
+  S = { t: 0, f: 0, cols, title: T.title.map(s => s.replace('{B}', B).replace('{K}', K).replace('{A}', A)), winner: null, endT: null, parts: [], intro: 1.2 };
+};
+function spawn(c, total, y) {
+  const want = Math.min(CAP, Math.ceil(total)), add = want - c.balls.length;
+  for (let i = 0; i < add; i++) c.balls.push({ x: c.x0 + 10 + rnd() * (c.x1 - c.x0 - 20), y: y - rnd() * 60, vx: (rnd() - 0.5) * 500, vy: -rnd() * 500 });
+  c.w = c.count / c.balls.length;
+}
+function floorY(f) { return F1 + f * SPC; }
+function step() {
+  for (const c of S.cols) {
+    if (c.done) continue;
+    const fy = floorY(c.floor);
+    for (const b of c.balls) {
+      b.vy += G * DT; b.x += b.vx * DT; b.y += b.vy * DT;
+      if (b.x < c.x0 + c.r) { b.x = c.x0 + c.r; b.vx = Math.abs(b.vx); } else if (b.x > c.x1 - c.r) { b.x = c.x1 - c.r; b.vx = -Math.abs(b.vx); }
+      if (b.y < TOP + c.r) { b.y = TOP + c.r; b.vy = Math.abs(b.vy); }
+      if (b.y > fy - c.r && b.vy > 0) {
+        b.y = fy - c.r; b.vy = -(620 + rnd() * 340); b.vx += (rnd() - 0.5) * 120;
+        c.hp[c.floor] -= c.w; c.pulse = 1;
+        if (S.t - c.lastTick > 0.045) { c.lastTick = S.t; EV.push({ t: S.t, k: 'tick', p: 0.6 + c.floor * 0.09 }); }
+        if (c.hp[c.floor] <= 0) { brk(c); break; }
+      }
+    }
+  }
+}
+function brk(c) {
+  const y = floorY(c.floor);
+  for (let k = 0; k < 40; k++) { const a = rnd() * 7, v = 150 + rnd() * 500; S.parts.push({ x: c.x0 + rnd() * (c.x1 - c.x0), y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 200, t: S.t, col: c.col }); }
+  c.hp[c.floor] = 0; c.floor++;
+  c.count = c.op === 'x' ? c.count * c.k : c.count + c.k;
+  EV.push({ t: S.t, k: 'pop' });
+  if (c.floor >= NF) { c.done = S.t; if (!S.winner) { S.winner = c; S.endT = S.t; EV.push({ t: S.t + 0.3, k: 'win' }); } return; }
+  spawn(c, c.count, y - 5);
+}
+function glowLine(x0, y0, x1, y1, col, w, blur) { X.strokeStyle = col; X.lineWidth = w; X.shadowColor = col; X.shadowBlur = blur; X.beginPath(); X.moveTo(x0, y0); X.lineTo(x1, y1); X.stroke(); X.shadowBlur = 0; }
+function draw() {
+  const t = S.t;
+  X.fillStyle = '#05050c'; X.fillRect(0, 0, W, H);
+  X.strokeStyle = 'rgba(120,80,255,.07)'; X.lineWidth = 2; for (let x = 0; x < W; x += 60) { X.beginPath(); X.moveTo(x, 0); X.lineTo(x, H); X.stroke(); } for (let y = 0; y < H; y += 60) { X.beginPath(); X.moveTo(0, y); X.lineTo(W, y); X.stroke(); }
+  X.textAlign = 'center'; X.fillStyle = '#fff'; X.shadowColor = '#b07cff'; X.shadowBlur = 25;
+  X.font = '900 72px Arial'; X.fillText(S.title[0], W / 2, 150); X.font = '900 50px Arial'; X.fillText(S.title[1], W / 2, 220); X.shadowBlur = 0;
+  for (const c of S.cols) {
+    const cx = (c.x0 + c.x1) / 2, n3 = S.cols.length === 3;
+    X.fillStyle = '#fff'; X.font = `900 ${n3 ? 58 : 70}px Arial`; X.fillText(fmt(c.count), cx, 320);
+    X.font = '800 24px Arial'; X.fillStyle = 'rgba(255,255,255,.75)'; X.fillText(`BALLS | FLOOR ${Math.min(NF, c.floor + 1)}/${NF}`, cx, 356);
+    X.fillStyle = c.col; X.fillText((c.op === 'x' ? '×' : '+') + fmt(c.k) + ' PER FLOOR', cx, 390);
+    // walls
+    glowLine(c.x0, TOP, c.x0, BOT, c.col, 6, 22); glowLine(c.x1, TOP, c.x1, BOT, c.col, 6, 22); glowLine(c.x0, TOP, c.x1, TOP, c.col, 6, 22);
+    for (let f = 0; f < NF; f++) {
+      const y = floorY(f); if (f < c.floor) continue;
+      const act = f === c.floor, w = act ? 8 + c.pulse * 4 : 3;
+      glowLine(c.x0, y, c.x1, y, act ? c.col : c.col + '88', w, act ? 26 : 6);
+      const s = fmt(Math.max(0, Math.ceil(c.hp[f]))); X.font = `800 ${act ? 26 : 20}px Arial`; const tw = X.measureText(s).width + 18;
+      X.fillStyle = '#05050c'; X.fillRect(cx - tw / 2, y - 16, tw, 30); X.fillStyle = act ? '#fff' : 'rgba(255,255,255,.6)'; X.fillText(s, cx, y + 8);
+    }
+    c.pulse *= 0.8;
+    // balls (additive glow)
+    X.globalCompositeOperation = 'lighter'; X.fillStyle = c.col; X.globalAlpha = 0.9;
+    for (const b of c.balls) X.fillRect(b.x - c.r, b.y - c.r, c.r * 2, c.r * 2);
+    X.fillStyle = '#fff'; X.globalAlpha = 0.6; for (let i = 0; i < c.balls.length; i += 3) { const b = c.balls[i]; X.fillRect(b.x - 1.5, b.y - 1.5, 3, 3); }
+    X.globalAlpha = 1; X.globalCompositeOperation = 'source-over';
+    if (S.winner === c) { X.strokeStyle = '#fff'; X.lineWidth = 6; X.strokeRect(c.x0 - 10, TOP - 10, c.x1 - c.x0 + 20, BOT - TOP + 20); }
+  }
+  for (const p of S.parts) { const k = t - p.t; if (k > 1) continue; X.globalAlpha = 1 - k; X.fillStyle = p.col; X.fillRect(p.x + p.vx * k, p.y + p.vy * k + 700 * k * k, 6, 6); }
+  X.globalAlpha = 1;
+  X.font = '800 30px Arial'; X.fillStyle = 'rgba(255,255,255,.8)'; X.fillText(S.winner ? 'DID YOU GUESS RIGHT? 👇' : 'DROP YOUR GUESS IN THE COMMENTS 👇', W / 2, 1770);
+  X.font = '800 24px Arial'; X.fillStyle = 'rgba(255,255,255,.45)'; X.fillText('FOLLOW  PHYSICS ROYALE ARENA', W / 2, 1815);
+  if (S.f / FPS < S.intro) { const k = S.f / FPS; X.fillStyle = 'rgba(0,0,0,.4)'; X.fillRect(0, 0, W, H); X.save(); X.translate(W / 2, 1000); X.scale(back(k / 0.35), back(k / 0.35)); X.font = '900 120px Arial'; X.fillStyle = '#fff'; X.shadowColor = '#b07cff'; X.shadowBlur = 40; X.fillText('GUESS NOW!', 0, 0); X.restore(); X.shadowBlur = 0; }
+  if (S.winner) { const k = t - S.endT, c = S.winner; X.save(); X.translate(W / 2, 1000); X.scale(back((k - 0.2) / 0.4), back((k - 0.2) / 0.4)); X.fillStyle = 'rgba(0,0,0,.75)'; X.beginPath(); X.roundRect(-420, -110, 840, 200, 30); X.fill(); X.strokeStyle = c.col; X.lineWidth = 6; X.stroke();
+    X.font = '900 84px Arial'; X.fillStyle = c.col; X.shadowColor = c.col; X.shadowBlur = 30; X.fillText('🏆 ' + ((c.op === 'x' ? '×' : '+') + fmt(c.k)) + ' WINS!', 0, 20); X.restore(); X.shadowBlur = 0; }
+}
+window.frame = (fast) => {
+  if (S.f / FPS >= S.intro && !S.winner) { for (let i = 0; i < SUB; i++) { step(); S.t += DT; if (S.winner) break; } } else S.t += 1 / FPS;
+  if (!fast) draw(); S.f++;
+  const done = (S.winner && S.t - S.endT > 3.5) || S.t > 60;
+  const ev = EV; EV = [];
+  return { done, ev: fast ? [] : ev.map(e => ({ ...e, f: S.f })), img: fast ? '' : C.toDataURL('image/jpeg', 0.9), t: S.t, ok: !!S.winner };
+};
+</script></body></html>

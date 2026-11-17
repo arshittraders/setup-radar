@@ -134,7 +134,7 @@ async function one() {
     }
     }
     if (J.kind === 'sim') {   // Physics Royale: pure code video (free) — a fresh battle every time
-      sh('node', [path.join(__dirname, '..', 'ballsim', 'render.js'), path.join(job, 'out.mp4')]);
+      sh('node', [path.join(__dirname, '..', 'ballsim', 'render.js'), path.join(job, 'out.mp4'), plan.format || 'country']);
       sh('ffmpeg', ['-y', '-v', 'error', '-ss', '6', '-i', path.join(job, 'out.mp4'), '-frames:v', '1', '-q:v', '3', path.join(job, 'thumb.jpg')]);
     } else if (J.kind === 'toon') await toonRender(J, plan); else {
     // 4) voices — young female characters use the fixed free Indic voice (IndicF5), rest OpenAI
