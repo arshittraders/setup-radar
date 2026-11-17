@@ -13,10 +13,10 @@ const back = x => { x = Math.max(0, Math.min(1, x)); const c = 1.9; return 1 + (
 const fmt = n => Math.round(n).toLocaleString('en-US');
 const COLS = { yellow: '#e6ff3c', pink: '#ff4fd8', cyan: '#3fe6ff', green: '#4dff8a', purple: '#b07cff', orange: '#ffa53c' };
 const TEMPL = [
-  { title: ['1 BALL VS {B}', 'WHO HITS BOTTOM?'], cols: [{ s: 1, op: 'x', k: [7, 10, 100] }, { s: 'big', op: '+', k: 'same' }] },
-  { title: ['CAN 1 BALL', 'BEAT {B}?'], cols: [{ s: 1, op: 'x', k: [8, 10, 100] }, { s: 'big', op: '+', k: 'same' }] },
+  { title: ['1 BALL VS {B}', 'WHO HITS BOTTOM?'], cols: [{ s: 1, op: 'x', k: [5, 7, 10] }, { s: 'big', op: '+', k: 'same' }] },
+  { title: ['CAN 1 BALL', 'BEAT {B}?'], cols: [{ s: 1, op: 'x', k: [6, 8, 10] }, { s: 'big', op: '+', k: 'same' }] },
   { title: ['×{K} VS +{A}', 'WHICH GROWS FASTER?'], cols: [{ s: 1, op: 'x', k: [5, 7, 9] }, { s: 1, op: '+', k: 'big' }] },
-  { title: ['PICK A COLOR', 'FIRST THROUGH 10 FLOORS WINS'], cols: [{ s: 'big', op: '+', k: 'same' }, { s: 'mid', op: 'x', k: [3, 5] }, { s: 1, op: 'x', k: [10, 100] }] },
+  { title: ['PICK A COLOR', 'FIRST THROUGH 10 FLOORS WINS'], cols: [{ s: 'big', op: '+', k: 'same' }, { s: 'mid', op: 'x', k: [3, 5] }, { s: 1, op: 'x', k: [8, 10] }] },
 ];
 window.init = (cfg) => {
   rnd = mulberry(cfg.seed || 7); const pick = a => a[Math.floor(rnd() * a.length)];
@@ -27,11 +27,9 @@ window.init = (cfg) => {
     const k = c.op === 'x' ? pick(c.k) : c.k === 'same' ? pick([100, 777, 1000, 2000]) : pick([777, 1000, 5000]);
     return { s, op: c.op, k, col: COLS[palette[i]], count: s, floor: 0, hp: [], balls: [], done: null, lastTick: 0, pulse: 0 };
   });
-  // floor HP: geometric; scaled so the fastest column needs ~38-46 s (a ball hits ~1.4×/s)
-  const q = 2.3 + rnd() * 1.4, hp = [], tgt = 38 + rnd() * 8;
-  const tFor = (c) => { let n = c.s, s = 0; for (let i = 0; i < NF; i++) { s += Math.pow(q, i) / (1.4 * Math.min(n, 1e12)); n = c.op === 'x' ? n * c.k : n + c.k; } return s; };
-  const h = tgt / Math.min(...cols.map(tFor));
-  for (let i = 0; i < NF; i++) { const v = h * Math.pow(q, i) * (0.9 + rnd() * 0.2); hp.push(v < 10 ? Math.max(2, Math.round(v)) : v < 1000 ? Math.round(v) : Math.round(v / 100) * 100); }
+  // floor HP: tuned so one (random) column breaks a floor every ~4 s — the others race it with their own rule
+  const tgt = 38 + rnd() * 8, d = cols[Math.floor(rnd() * cols.length)], hp = []; let nn = d.s;
+  for (let i = 0; i < NF; i++) { const v = 1.4 * nn * (tgt / NF) * (0.75 + rnd() * 0.5); hp.push(v < 10 ? Math.max(2, Math.round(v)) : v < 1000 ? Math.round(v) : Math.round(v / 100) * 100); nn = d.op === "x" ? nn * d.k : nn + d.k; }
   for (const c of cols) { c.hp = hp.slice(); c.max = hp.slice(); }
   const n = cols.length, gap = n === 3 ? 30 : 60, cw = (W - 120 - gap * (n - 1)) / n;
   cols.forEach((c, i) => { c.x0 = 60 + i * (cw + gap); c.x1 = c.x0 + cw; c.r = n === 3 ? 4.5 : 5.5; spawn(c, c.count, TOP + 40); });
@@ -112,6 +110,6 @@ window.frame = (fast) => {
   if (!fast) draw(); S.f++;
   const done = (S.winner && S.t - S.endT > 3.5) || S.t > 60;
   const ev = EV; EV = [];
-  return { done, ev: fast ? [] : ev.map(e => ({ ...e, f: S.f })), img: fast ? '' : C.toDataURL('image/jpeg', 0.9), t: S.t, ok: !!S.winner };
+  return { done, ev: fast ? [] : ev.map(e => ({ ...e, f: S.f })), img: fast ? '' : C.toDataURL('image/jpeg', 0.9), t: S.t, ok: !!S.winner && S.cols.every(c => c.floor >= 2) };
 };
 </script></body></html>
