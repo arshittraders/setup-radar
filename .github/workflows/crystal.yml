@@ -1,0 +1,45 @@
+name: crystal
+on:
+  workflow_dispatch:
+    inputs:
+      fruit: { description: "strawberry|apple|grapes", default: "strawberry" }
+      tag: { description: "release asset name", required: true }
+      samples: { description: "cycles samples", default: "32" }
+permissions:
+  contents: write
+jobs:
+  chunk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        c: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - run: pip install -q bpy==5.3.0
+      - run: |
+          F0=$(( ${{ matrix.c }} * 30 + 1 )); F1=$(( F0 + 29 ))
+          mkdir -p out && python morph/crystal.py -- --fruit ${{ inputs.fruit }} --samples ${{ inputs.samples }} --f0 $F0 --f1 $F1 --out out/c 2>&1 | grep -vE "Fra:|Sample" | tail -15
+          ls out | head -3; ls out | wc -l
+      - uses: actions/upload-artifact@v4
+        with: { name: "c${{ matrix.c }}", path: "out/*.jpg" }
+  final:
+    needs: chunk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: fr, merge-multiple: true }
+      - run: pip install -q numpy
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          ls fr | wc -l
+          ffmpeg -v error -y -framerate 30 -start_number 1 -i fr/c_%04d.jpg -vf "scale=1080:1920:flags=lanczos" -c:v libx264 -crf 17 -pix_fmt yuv420p v.mp4
+          D=$(ffprobe -v error -show_entries format=duration -of csv=p=0 v.mp4)
+          python morph/audio_crystal.py $D a.wav
+          ffmpeg -v error -y -i v.mp4 -i a.wav -c:v copy -c:a aac -b:a 160k -shortest ${{ inputs.tag }}.mp4
+          gh release view studio-debug >/dev/null 2>&1 || gh release create studio-debug -t studio-debug -n debug --prerelease
+          gh release upload studio-debug ${{ inputs.tag }}.mp4 --clobber
