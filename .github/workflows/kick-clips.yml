@@ -1,0 +1,60 @@
+name: kick-clips
+on:
+  workflow_dispatch:
+    inputs:
+      ch: { description: "kick channel slug", default: "dasgasd3m" }
+      vod: { description: "kick vod uuid", default: "32d7bbef-dfdb-443f-b49b-0f1de52aabd9" }
+      start: { description: "scan start sec", default: "600" }
+      end: { description: "scan end sec", default: "14400" }
+      n: { description: "clips", default: "8" }
+      win: { description: "clip seconds", default: "50" }
+      tag: { description: "asset name", default: "dom-raw" }
+      mode: { description: "combined | chat | audio", default: "combined" }
+permissions:
+  contents: write
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          pip install -q -U curl_cffi faster-whisper
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mkdir -p out; S=${{ inputs.start }}; E=${{ inputs.end }}; W=${{ inputs.win }}
+          python3 - <<'PY'
+          import json, re
+          from curl_cffi import requests
+          ch = "${{ inputs.ch }}"; vod = "${{ inputs.vod }}"
+          info = requests.get(f"https://kick.com/api/v1/channels/{ch}", impersonate="chrome").json()
+          vids = requests.get(f"https://kick.com/api/v2/channels/{ch}/videos", impersonate="chrome").json()
+          v = next(x for x in vids if x["video"]["uuid"] == vod)
+          src = v["source"]; base = src.rsplit("/", 1)[0]
+          m = requests.get(src, impersonate="chrome").text
+          best, bh = None, 0
+          lines = m.splitlines()
+          for i, l in enumerate(lines):
+              r = re.search(r"RESOLUTION=\d+x(\d+)", l)
+              if r and int(r.group(1)) <= 1080 and int(r.group(1)) > bh: bh, best = int(r.group(1)), lines[i + 1]
+          var = best if best.startswith("http") else base + "/" + best
+          open("vod.env", "w").write(f"VAR={var}\nCID={info['id']}\nT0='{v['start_time']}'\n")
+          print("variant", bh, var, "start", v["start_time"], "dur", v["duration"])
+          PY
+          . ./vod.env
+          ffmpeg -nostats -v error -ss $S -t $((E-S)) -i "$VAR" -vn -ac 1 -ar 16000 aud.wav
+          ffmpeg -nostats -i aud.wav -af ebur128 -f null - 2> ebur.log || true
+          python clip/kick_chat.py $CID "$T0" $S $E out/chat.json 8 || echo '{"samples":[]}' > out/chat.json
+          python clip/smartpeaks.py ebur.log out/chat.json $S ${{ inputs.n }} $W ${{ inputs.mode }} | tee out/peaks.txt
+          k=0; while read T SC WHY; do k=$((k+1));
+            ffmpeg -nostats -v error -y -ss $T -i "$VAR" -t $W -c copy -bsf:a aac_adtstoasc "out/dm$k.mp4" < /dev/null || true
+            ffmpeg -v error -y -ss 5 -i "out/dm$k.mp4" -frames:v 1 "out/dm$k.jpg" < /dev/null || true
+            ffmpeg -v error -y -i "out/dm$k.mp4" -vn -ac 1 -ar 16000 "out/dm$k.wav" < /dev/null || true
+          done < out/peaks.txt
+          python clip/whisper_words.py out/words.json out/dm*.wav || echo '{}' > out/words.json
+          rm -f out/*.wav; ls -la out
+          cd out && zip -q ../${{ inputs.tag }}.zip * && cd .. && ls -la ${{ inputs.tag }}.zip
+          gh release upload studio-debug ${{ inputs.tag }}.zip --clobber
