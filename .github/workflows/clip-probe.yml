@@ -20,11 +20,4 @@ jobs:
         run: |
           yt-dlp --ignore-no-formats-error --skip-download -j "https://www.youtube.com/watch?v=XRo2L3077NI" > meta.json 2>err.txt || true
           tail -3 err.txt
-          python3 -c "
-import json; d=json.load(open('meta.json'))
-print('title',d.get('title'),'dur',d.get('duration'))
-h=d.get('heatmap') or []; print('heatmap points',len(h))
-top=sorted(h,key=lambda x:-x['value'])[:15]
-for x in sorted(top,key=lambda x:x['start_time']): print(int(x['start_time']),int(x['end_time']),round(x['value'],3))
-print('chapters',d.get('chapters'))
-" || head -c 500 meta.json
+          python3 clip/heat.py meta.json || head -c 500 meta.json
