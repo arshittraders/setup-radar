@@ -1,0 +1,175 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1080px;height:1920px;overflow:hidden;background:#efe3cf;font-family:Inter,sans-serif}
+#bgc{position:absolute;inset:-60px;filter:blur(26px)}
+#gl{position:absolute;inset:0}
+.num{position:absolute;left:0;right:0;text-align:center;font-weight:900;color:#2a1a14;letter-spacing:-2px;
+ text-shadow:0 0 0 #fff,4px 0 0 #fff,-4px 0 0 #fff,0 4px 0 #fff,0 -4px 0 #fff,3px 3px 0 #fff,-3px 3px 0 #fff,3px -3px 0 #fff,-3px -3px 0 #fff,0 10px 30px rgba(0,0,0,.25)}
+#cuts{top:70px;font-size:150px}
+#cubes{top:1560px;font-size:84px}
+.pill{position:absolute;left:50%;transform:translateX(-50%);padding:8px 26px;border-radius:999px;font:900 30px Inter;letter-spacing:4px;color:#fff;border:4px solid #fff}
+#pc{top:252px;background:#a3165d}
+#pb{top:1672px;background:#2a1a14}
+.card{position:absolute;left:50%;white-space:nowrap;min-width:640px;transform:translate(-50%,0);background:#fff;border-radius:44px;padding:30px 60px 34px;text-align:center;box-shadow:0 30px 70px rgba(0,0,0,.28);opacity:0}
+.card .tag{display:inline-block;background:#a3165d;color:#fff;font:900 26px Inter;letter-spacing:4px;padding:6px 20px;border-radius:999px}
+.card .big{font:900 92px Inter;color:#1d1210;letter-spacing:-2px;margin-top:8px}
+.card .big b{color:#a3165d}
+.card .sm{font:700 34px Inter;color:#555;margin-top:2px}
+</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<canvas id="bgc" width="1200" height="2040"></canvas>
+<canvas id="gl" width="1080" height="1920"></canvas>
+<div class="num" id="cuts">0</div><div class="pill" id="pc">CUTS</div>
+<div class="num" id="cubes">0</div><div class="pill" id="pb">CUBES</div>
+<div class="card" id="fc" style="top:1180px"><div class="tag">FOLLOWER ROUND</div><div class="big">1,050 CUTS</div><div class="sm">1,000 + <b style="color:#a3165d">50</b> × 1 follower</div></div>
+<div class="card" id="ec" style="top:1290px"><div class="tag">NEXT ONION</div><div class="big"><b>+50</b> CUTS</div><div class="sm">for every new follower</div></div>
+<script src="tl.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const { R, H } = TL;
+// ---------- blurred kitchen background ----------
+{ const c = document.getElementById('bgc').getContext('2d');
+  let g = c.createLinearGradient(0, 0, 0, 2040); g.addColorStop(0, '#f3e9d8'); g.addColorStop(1, '#e8d8bf'); c.fillStyle = g; c.fillRect(0, 0, 1200, 2040);
+  c.fillStyle = '#ffffff'; c.globalAlpha = .7; c.fillRect(380, 40, 420, 420); c.globalAlpha = 1;
+  c.fillStyle = '#c9a77c'; c.fillRect(0, 470, 1200, 26); c.fillRect(0, 230, 330, 18); c.fillRect(870, 230, 330, 18);
+  [['#4f8a3a', 120, 150, 110], ['#6aa84f', 200, 120, 80], ['#3f7a2f', 1000, 140, 120], ['#5c9a45', 1080, 110, 80]].forEach(([col, x, y, r]) => { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); });
+  [['#b5653a', 90, 400, 120, 80], ['#c27a4a', 1010, 390, 130, 90], ['#8a5a3a', 600, 420, 80, 60], ['#d9b48a', 300, 410, 60, 70], ['#a0522d', 800, 420, 70, 60]].forEach(([col, x, y, w, h]) => { c.fillStyle = col; c.fillRect(x - w / 2, y - h / 2, w, h); });
+  c.fillStyle = '#ddd0bb'; c.fillRect(0, 700, 1200, 1400); }
+// ---------- renderer ----------
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setSize(1080, 1920, false); renderer.setClearColor(0x000000, 0);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.localClippingEnabled = true;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+const cam = new THREE.PerspectiveCamera(30, 1080 / 1920, 0.1, 100); cam.position.set(4.6, 6.4, 9.6); cam.lookAt(0.15, 0.45, 0.35);
+const sun = new THREE.DirectionalLight(0xfff4e6, 2.4); sun.position.set(-3, 7, 4); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 20 }); sun.shadow.radius = 6; sun.shadow.bias = -0.0005; scene.add(sun);
+scene.add(new THREE.HemisphereLight(0xfff6ea, 0x8a5a3a, 0.6));
+// ---------- board ----------
+function woodTex() { const c = document.createElement('canvas'); c.width = 1024; c.height = 2048; const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 1024, 0); g.addColorStop(0, '#b97a43'); g.addColorStop(.5, '#c98a50'); g.addColorStop(1, '#b0723d'); x.fillStyle = g; x.fillRect(0, 0, 1024, 2048);
+  let s = 3; const rn = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 260; i++) { const x0 = rn() * 1024, w = 1 + rn() * 5; x.strokeStyle = `rgba(${90 + rn() * 40},${50 + rn() * 25},${20},${.15 + rn() * .25})`; x.lineWidth = w; x.beginPath();
+    for (let y = 0; y <= 2048; y += 32) x.lineTo(x0 + Math.sin(y / 300 + i) * 18 + Math.sin(y / 70 + i * 3) * 4, y); x.stroke(); }
+  for (let i = 0; i < 6; i++) { const cx = rn() * 1024, cy = rn() * 2048; for (let k = 0; k < 10; k++) { x.strokeStyle = 'rgba(90,50,20,.22)'; x.lineWidth = 2; x.beginPath(); x.ellipse(cx, cy, 8 + k * 7, 30 + k * 18, 0, 0, 7); x.stroke(); } }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }
+const board = new THREE.Mesh(new THREE.BoxGeometry(8.5, 0.3, 15), new THREE.MeshPhysicalMaterial({ map: woodTex(), roughness: 0.55, clearcoat: 0.25, clearcoatRoughness: 0.5 }));
+board.position.set(0.6, -0.15, -0.6); board.rotation.y = -0.38; board.receiveShadow = true; scene.add(board);
+const table = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.18 })); table.rotation.x = -Math.PI / 2; table.position.y = -0.3; table.receiveShadow = true; scene.add(table);
+// ---------- onion ----------
+const PROF = [[0, 0], [.32, .02], [.62, .1], [.85, .26], [.98, .5], [1.0, .68], [.95, .9], [.8, 1.15], [.58, 1.38], [.34, 1.55], [.15, 1.66], [.04, 1.73], [0, 1.75]];
+const prof = new THREE.SplineCurve(PROF.map(([r, y]) => new THREE.Vector2(r, y))).getPoints(80);
+function Rof(y) { if (y <= 0 || y >= H) return 0; for (let i = 1; i < prof.length; i++) if (prof[i].y >= y) { const a = prof[i - 1], b = prof[i]; return a.x + (b.x - a.x) * (y - a.y) / ((b.y - a.y) || 1); } return 0; }
+window.Rof = Rof;
+function skinTex() { const c = document.createElement('canvas'); c.width = 2048; c.height = 512; const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 0, 512); g.addColorStop(0, '#3a0620'); g.addColorStop(.25, '#5e0c34'); g.addColorStop(.6, '#6e1240'); g.addColorStop(1, '#430a26'); x.fillStyle = g; x.fillRect(0, 0, 2048, 512);
+  let s = 11; const rn = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 700; i++) { const x0 = rn() * 2048; x.strokeStyle = rn() < .5 ? `rgba(40,0,20,${.12 + rn() * .2})` : `rgba(230,140,190,${.05 + rn() * .12})`; x.lineWidth = .8 + rn() * 2.5; x.beginPath(); x.moveTo(x0, 0); x.bezierCurveTo(x0 + (rn() - .5) * 30, 170, x0 + (rn() - .5) * 30, 340, x0 + (rn() - .5) * 20, 512); x.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }
+const U = { uNX: { value: 0 }, uNY: { value: 0 }, uNZ: { value: 0 }, uSX: { value: 1 }, uSY: { value: 1 }, uSZ: { value: 1 } };
+const LINES = `uniform float uNX,uNY,uNZ,uSX,uSY,uSZ; varying vec3 vOP;
+float cutL(float v,float lo,float sp,float n){ if(n<0.5) return 0.0; float k=floor((v-lo)/sp+0.5); float on=step(1.0,k)*step(k,n); float d=abs(v-lo-k*sp); float fw=fwidth(v); float w=0.0035+fw*0.6;
+  float a=1.0-smoothstep(w,w+fw*1.2,d); return on*a*clamp(sp/(fw*5.0),0.1,1.0); }
+float cutAll(vec3 p){ return max(max(cutL(p.x,-${R.toFixed(2)},uSX,uNX),cutL(p.y,0.0,uSY,uNY)),cutL(p.z,-${R.toFixed(2)},uSZ,uNZ)); }`;
+function addLines(mat, extraFrag = '') { mat.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, U);
+  sh.vertexShader = 'varying vec3 vOP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvOP = position;');
+  sh.fragmentShader = LINES + '\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n' + extraFrag + '\n{ float cl=cutAll(vOP); diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.97,0.85,0.9),cl*0.85); }'); }; }
+const onionMat = new THREE.MeshPhysicalMaterial({ map: skinTex(), roughness: 0.42, clearcoat: 0.55, clearcoatRoughness: 0.35, sheen: 0.15, sheenColor: new THREE.Color('#d070a0'), side: THREE.DoubleSide });
+addLines(onionMat);
+const onion = new THREE.Group(); scene.add(onion);
+const onionMesh = new THREE.Mesh(new THREE.LatheGeometry(prof, 160), onionMat); onionMesh.castShadow = true; onion.add(onionMesh);
+const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.05, 0.22, 12), new THREE.MeshStandardMaterial({ color: '#6b4a2a', roughness: .8 })); stem.position.y = H + 0.07; stem.rotation.z = 0.12; onion.add(stem);
+const clip = new THREE.Plane(new THREE.Vector3(0, 0, -1), 99); onionMat.clippingPlanes = [clip]; stem.material.clippingPlanes = [clip];
+// cross-section cap (rings + dice grid)
+const capMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.5, side: THREE.DoubleSide, vertexColors: false });
+addLines(capMat, `{ float rr=vRN; float ring=abs(fract(rr*7.0+0.15)-0.5); float rl=1.0-smoothstep(0.03,0.09,ring); vec3 base=mix(vec3(0.98,0.93,0.95),vec3(0.93,0.78,0.86),smoothstep(0.6,1.0,rr)); base=mix(base,vec3(0.55,0.08,0.32),rl*0.85); base=mix(base,vec3(0.45,0.05,0.25),smoothstep(0.93,1.0,rr)); diffuseColor.rgb=base; }`);
+const capOBC = capMat.onBeforeCompile; capMat.onBeforeCompile = (sh) => { capOBC(sh); sh.vertexShader = 'attribute float rn; varying float vRN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvRN = rn;'); sh.fragmentShader = 'varying float vRN;\n' + sh.fragmentShader; };
+const CAPN = 60; const capGeo = new THREE.BufferGeometry(); const capPos = new Float32Array((CAPN + 1) * (CAPN + 1) * 3), capRN = new Float32Array((CAPN + 1) * (CAPN + 1)); const capIdx = [];
+for (let i = 0; i < CAPN; i++) for (let j = 0; j < CAPN; j++) { const a = i * (CAPN + 1) + j, b = a + 1, c = a + CAPN + 1, d = c + 1; capIdx.push(a, c, b, b, c, d); }
+capGeo.setIndex(capIdx); capGeo.setAttribute('position', new THREE.BufferAttribute(capPos, 3)); capGeo.setAttribute('rn', new THREE.BufferAttribute(capRN, 1));
+const cap = new THREE.Mesh(capGeo, capMat); cap.castShadow = true; onion.add(cap);
+function setCap(zc) { if (zc >= R || zc <= -R) { cap.visible = false; return; } cap.visible = true; let k = 0;
+  for (let i = 0; i <= CAPN; i++) { const y = H * i / CAPN; const ry = Rof(y); const hw = Math.sqrt(Math.max(0, ry * ry - zc * zc));
+    for (let j = 0; j <= CAPN; j++) { const xx = -hw + 2 * hw * j / CAPN; capPos[k * 3] = xx; capPos[k * 3 + 1] = y; capPos[k * 3 + 2] = zc + 0.002; capRN[k] = ry > 0 ? Math.min(1, Math.hypot(xx, zc) / ry) : 1; k++; } }
+  capGeo.attributes.position.needsUpdate = true; capGeo.attributes.rn.needsUpdate = true; capGeo.computeVertexNormals(); capGeo.computeBoundingSphere(); }
+// ---------- knife ----------
+const knife = new THREE.Group(); scene.add(knife);
+{ const s = new THREE.Shape(); s.moveTo(-1.4, 0.02); s.quadraticCurveTo(-1.55, 0.25, -1.25, 0.62); s.lineTo(1.9, 0.62); s.lineTo(1.9, 0.0); s.lineTo(-1.2, -0.02); s.quadraticCurveTo(-1.38, -0.01, -1.4, 0.02);
+  const blade = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.022, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.006, bevelSegments: 2, curveSegments: 24 }), new THREE.MeshPhysicalMaterial({ color: '#e9edf1', metalness: 0.85, roughness: 0.28, envMapIntensity: 1.6, clearcoat: .5, transparent: true }));
+  blade.geometry.translate(0, 0, -0.011); blade.castShadow = true; knife.add(blade);
+  const hd = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.38, 0.16), new THREE.MeshPhysicalMaterial({ color: '#2b1a12', roughness: 0.35, clearcoat: .6, transparent: true })); hd.position.set(2.65, 0.36, 0); hd.castShadow = true; knife.add(hd);
+  [2.2, 2.65, 3.1].forEach((px) => { const r = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .17, 12), new THREE.MeshStandardMaterial({ color: '#c0c4c8', metalness: 1, roughness: .2 })); r.rotation.x = Math.PI / 2; r.position.set(px, .36, 0); knife.add(r); }); }
+const ghosts = [0, 1, 2].map(() => { const g = knife.clone(true); g.traverse((m) => { if (m.isMesh) { m.material = m.material.clone(); m.material.transparent = true; m.material.opacity = 0.22; m.castShadow = false; } }); scene.add(g); return g; });
+const BAS = { x: new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 0, 0)),
+  z: new THREE.Matrix4().makeBasis(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)),
+  y: new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 0, -1), new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, -1, 0)) };
+function placeKnife(obj, ax, c, ph) { // ph 0..1: 0 above / start, 0.5 fully through, 1 back
+  const q = new THREE.Quaternion().setFromRotationMatrix(BAS[ax]); obj.quaternion.copy(q); const dn = Math.sin(Math.PI * Math.min(1, ph)) ;
+  if (ax === 'x') obj.position.set(c, H + 0.45 - (H + 0.47) * dn, 0.15);
+  else if (ax === 'z') obj.position.set(-0.25, H + 0.45 - (H + 0.47) * dn, c);
+  else obj.position.set(-R - 0.9 + (2 * R + 1.05) * dn, c, 0.15); }
+// ---------- cubes ----------
+const MAXI = 16000; const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
+const cubeMat = new THREE.MeshStandardMaterial({ roughness: 0.5, color: '#ffffff' });
+const cubes = new THREE.InstancedMesh(cubeGeo, cubeMat, MAXI); cubes.castShadow = true; cubes.receiveShadow = true; scene.add(cubes); cubes.count = 0;
+const tmpC = new THREE.Color(); { let sd = 5; for (let i = 0; i < MAXI; i++) { const r = (sd = (sd * 16807) % 2147483647) / 2147483647; cubes.setColorAt(i, tmpC.set(r < .1 ? '#8e2058' : r < .22 ? '#d07aa2' : r < .62 ? '#f6e1ea' : '#fdf3f6')); } }
+let CUR = null;
+function prepRound(r) { let s = 7 + r.i * 101; const rn = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  const spx = 2 * R / (r.nx + 1), spy = H / (r.ny + 1), spz = 2 * R / (r.nz + 1); const P = [];
+  if (r.real <= MAXI) { for (let i = 0; i <= r.nx; i++) for (let j = 0; j <= r.ny; j++) for (let k = 0; k <= r.nz; k++) { const p = [-R + (i + .5) * spx, (j + .5) * spy, -R + (k + .5) * spz]; if (Math.hypot(p[0], p[2]) < Rof(p[1]) * 0.97) P.push(p); } }
+  else while (P.length < MAXI) { const p = [(rn() * 2 - 1) * R, rn() * H, (rn() * 2 - 1) * R]; if (Math.hypot(p[0], p[2]) < Rof(p[1]) * 0.97) P.push(p); }
+  P.sort((a, b) => b[2] - a[2]);   // front first
+  const n = P.length; const size = r.real <= MAXI ? Math.min(spx, spy, spz) * 0.9 : Math.cbrt(2.2 / n) * 1.05;
+  // pile targets: cone, lower first
+  const Rp = 1.25 + 0.35 * Math.min(1, n / 4000), Hp = 0.45 + 0.75 * Math.min(1, n / 6000); const T = [];
+  for (let i = 0; i < n; i++) { const rr = Rp * Math.sqrt(rn()), a = rn() * 6.283, hm = Math.max(0.0, Hp * (1 - rr / Rp)); T.push([Math.cos(a) * rr, size / 2 + hm * Math.pow(rn(), 0.6), 0.55 + Math.sin(a) * rr * 0.85]); }
+  T.sort((a, b) => a[1] - b[1]);
+  CUR = { r, P, T, size, rot: P.map(() => [rn() * 6, rn() * 6, rn() * 6]), jit: P.map(() => rn()) };
+  cubes.count = n; if (cubes.instanceColor) cubes.instanceColor.needsUpdate = true; }
+const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), Sv = new THREE.Vector3();
+const fmt = (n) => n.toLocaleString('en-US');
+// ---------- render(t) ----------
+window.render = (t) => {
+  const r = TL.roundAt(t); if (!CUR || CUR.r !== r) prepRound(r);
+  const fc = document.getElementById('fc'), ec = document.getElementById('ec');
+  fc.style.opacity = r.follower && t < r.tCut + 0.4 ? Math.min(1, (t - r.t0) / .3) * (t < r.tCut ? 1 : 1 - (t - r.tCut) / .4) : 0;
+  ec.style.opacity = r.follower && t > r.tHold + 0.4 ? Math.min(1, (t - r.tHold - .4) / .3) : 0;
+  // onion entry
+  const e = Math.max(0, Math.min(1, (t - r.tEnter) / TL.ENTER)); const drop = e < .6 ? 4.2 * (1 - Math.pow(e / .6, 2)) : Math.abs(Math.sin((e - .6) / .4 * Math.PI)) * 0.25 * (1 - (e - .6) / .4);
+  onion.position.y = t < r.tEnter ? 99 : drop; onion.visible = t >= r.tEnter;
+  // cuts
+  const n = TL.cutsAt(r, t), s = TL.split(r, n);
+  U.uSX.value = 2 * R / (r.nx + 1); U.uSY.value = H / (r.ny + 1); U.uSZ.value = 2 * R / (r.nz + 1); U.uNX.value = s.x; U.uNY.value = s.y; U.uNZ.value = s.z;
+  document.getElementById('cuts').textContent = fmt(n);
+  // knife
+  const cutting = t >= r.tCut - 0.35 && t < r.tCol + 0.25; knife.visible = cutting && t >= r.tEnter; ghosts.forEach((g) => (g.visible = false));
+  if (knife.visible) { const k = Math.min(r.N, n + 1); const tk0 = TL.cutTime(r, k - 1 < 1 ? 0 : k - 1), tk1 = TL.cutTime(r, k); const dt = Math.max(0.0001, tk1 - (k > 1 ? tk0 : r.tCut - 0.35));
+    const ax = k <= r.nx ? 'x' : k <= r.nx + r.ny ? 'y' : 'z'; const idx = ax === 'x' ? k : ax === 'y' ? k - r.nx : k - r.nx - r.ny;
+    const c = ax === 'x' ? -R + idx * U.uSX.value : ax === 'y' ? idx * U.uSY.value : -R + idx * U.uSZ.value;
+    let ph = t >= r.tCol ? 1 - (t - r.tCol) / .25 * 0 + 0 : Math.min(1, Math.max(0, (t - (tk1 - Math.min(dt, .5))) / Math.min(dt, .5)));
+    if (t >= r.tCol - 0.02) { ph = 0; knife.position.y += 0; }
+    placeKnife(knife, ax, c, ph);
+    if (t >= r.tCol) knife.position.y += (t - r.tCol) * 14;
+    const fast = dt < 1 / 20; knife.traverse((m) => { if (m.isMesh) m.material.opacity = fast ? 0.55 : 1; });
+    if (fast && t < r.tCol) ghosts.forEach((g, gi) => { g.visible = true; const kk = Math.max(1, k - (gi + 1) * Math.max(1, Math.round(1 / 30 / dt / 3)));
+      const a2 = kk <= r.nx ? 'x' : kk <= r.nx + r.ny ? 'y' : 'z'; const i2 = a2 === 'x' ? kk : a2 === 'y' ? kk - r.nx : kk - r.nx - r.ny; const c2 = a2 === 'x' ? -R + i2 * U.uSX.value : a2 === 'y' ? i2 * U.uSY.value : -R + i2 * U.uSZ.value; placeKnife(g, a2, c2, (gi * .3 + .2) % 1); }); }
+  // collapse
+  const sweep = Math.max(0, Math.min(1, (t - r.tCol) / (r.Tcol * 0.78))); const zc = R + 0.02 - sweep * (2 * R + 0.06);
+  clip.constant = t < r.tCol ? 99 : zc; setCap(t < r.tCol ? 99 : zc);
+  let fallen = 0; const C = CUR;
+  for (let i = 0; i < C.P.length; i++) { const p = C.P[i], tg = C.T[i]; let x, y, z, rx = 0, ry = 0, rz = 0, sc = C.size;
+    const trel = r.tCol + ((R - p[2]) / (2 * R + 0.06)) * r.Tcol * 0.78; const u = (t - trel) / (0.55 + C.jit[i] * 0.25);
+    if (t < r.tCol || u <= 0) { sc = 0.0001; x = p[0]; y = p[1]; z = p[2]; }
+    else { const w = Math.min(1, u); const g = w * w; x = p[0] + (tg[0] - p[0]) * (1 - Math.pow(1 - w, 2)); z = p[2] + (tg[2] - p[2]) * (1 - Math.pow(1 - w, 2)); y = p[1] + (tg[1] - p[1]) * g + (w < 1 ? Math.sin(w * Math.PI) * 0.18 : 0);
+      rx = C.rot[i][0] * w; ry = C.rot[i][1] * w; rz = C.rot[i][2] * w; if (u >= .5) fallen++; }
+    Q.setFromEuler(E.set(rx, ry, rz)); M4.compose(V.set(x, y + onion.position.y * 0, z), Q, Sv.set(sc, sc, sc)); cubes.setMatrixAt(i, M4); }
+  cubes.instanceMatrix.needsUpdate = true; cubes.visible = t >= r.tCol;
+  const realF = Math.round(r.real * fallen / C.P.length); const cb = document.getElementById('cubes'); cb.textContent = (r.real > 100000 && realF > 0 ? '≈' : '') + fmt(r.real > 100000 ? Math.round(realF / 1000) * 1000 : realF);
+  renderer.render(scene, cam);
+};
+window.READY = true;
+</script></body></html>

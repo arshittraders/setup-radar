@@ -1,0 +1,43 @@
+name: onion
+on:
+  workflow_dispatch:
+    inputs:
+      tag: { description: "release asset name", default: "onion-cuts" }
+permissions:
+  contents: write
+jobs:
+  seg:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        i: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-inter >/dev/null || sudo apt-get install -y -qq ffmpeg >/dev/null
+          cd onion && npm init -y >/dev/null && npm i three@0.160.0 playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+      - run: |
+          cd onion && TOT=$(node -e "require('./tl.js');console.log(Math.round(TL.TOTAL*30))")
+          C=$(( (TOT + 11) / 12 )); F0=$(( ${{ matrix.i }} * C )); F1=$(( F0 + C )); [ $F1 -gt $TOT ] && F1=$TOT
+          node render.js $F0 $F1 ../seg${{ matrix.i }}.mp4
+      - uses: actions/upload-artifact@v4
+        with: { name: "seg${{ matrix.i }}", path: "seg${{ matrix.i }}.mp4" }
+  final:
+    needs: seg
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: segs, merge-multiple: true }
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          for i in 0 1 2 3 4 5 6 7 8 9 10 11; do echo "file 'segs/seg$i.mp4'" >> list.txt; done
+          ffmpeg -v error -y -f concat -safe 0 -i list.txt -c copy v.mp4
+          cd onion && node audio.js ../a.wav && cd ..
+          ffmpeg -v error -y -i v.mp4 -i a.wav -c:v copy -c:a aac -b:a 192k -af "loudnorm=I=-14:TP=-1.5" -shortest -movflags +faststart ${{ inputs.tag }}.mp4
+          ls -la ${{ inputs.tag }}.mp4
+          gh release upload studio-debug ${{ inputs.tag }}.mp4 --clobber
