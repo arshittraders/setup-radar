@@ -1,0 +1,24 @@
+{
+ "a": {"voice": "hi-IN-MadhurNeural", "rate": "+32%", "pitch": "+10Hz", "lines": [
+  "ओह भाई! GTA 6 में सीधा बीच पर ट्रक घुसा दिया!",
+  "देखो देखो, सारी छतरियाँ उड़ा दीं!",
+  "भाई ग्राफिक्स तो देखो, रेत तक उड़ रही है!",
+  "अरे अरे, फिर से! ये बंदा रुकने वाला नहीं है!",
+  "ओह्ह ये देखो, पूरी दुकान ही उड़ा दी!",
+  "कमेंट करो, GTA 6 में तुम सबसे पहले क्या करोगे?"]},
+ "b": {"voice": "hi-IN-MadhurNeural", "rate": "+32%", "pitch": "+10Hz", "lines": [
+  "भाई इसका दिमाग खराब है, ट्रक सीधा समुंदर की तरफ!",
+  "ओह ओह ओह! पानी में घुस गया!",
+  "पत्थरों पे चढ़ा दिया भाई, GTA 6 की फिज़िक्स देखो!",
+  "पानी का इफ़ेक्ट, एकदम असली लग रहा है ब्रो!",
+  "और ये लो, फिर भी बाहर निकल आया!",
+  "ऐसी और वीडियो चाहिए तो फॉलो कर दो!"]},
+ "c": {"voice": "en-US-AndrewNeural", "rate": "+22%", "pitch": "+4Hz", "lines": [
+  "Bro just crashed right into an ambulance in GTA 6!",
+  "Wait, wait... is he actually stealing it?!",
+  "Cops are already on him, this is getting crazy!",
+  "He's literally driving an ambulance across the beach!",
+  "Oh no no no, they're ramming him!",
+  "Would you survive this? Drop it in the comments!",
+  "WASTED! GTA 6 is absolutely insane, bro."]}
+}

@@ -1,0 +1,19 @@
+name: tts
+on:
+  workflow_dispatch:
+    inputs:
+      cfg: { description: "lines json", default: "clip/gta_lines.json" }
+      tag: { description: "asset name", default: "gta-tts" }
+permissions:
+  contents: write
+jobs:
+  tts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q edge-tts
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          python clip/tts.py ${{ inputs.cfg }} out
+          cd out && zip -q ../${{ inputs.tag }}.zip *.mp3 && cd ..
+          gh release upload studio-debug ${{ inputs.tag }}.zip --clobber
