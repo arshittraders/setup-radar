@@ -7,6 +7,7 @@ on:
       end: { description: "scan end sec", default: "12600" }
       n: { description: "clips", default: "8" }
       win: { description: "clip seconds", default: "55" }
+      tag: { description: "asset name", default: "kreek-raw" }
 permissions:
   contents: write
 jobs:
@@ -34,5 +35,5 @@ jobs:
           for f in out/kc*.mp4; do ffmpeg -v error -y -i "$f" -vn -ac 1 -ar 16000 "${f%.mp4}.wav"; done
           python clip/whisper_words.py out/kreek-words.json out/kc*.wav || echo '{}' > out/kreek-words.json
           ffmpeg -v error -y -ss 10 -i out/kc1.mp4 -frames:v 1 out/kreek-frame.jpg || true
-          cd out && zip -q ../kreek-raw.zip kc*.mp4 kreek-words.json kreek-peaks.txt kreek-frame.jpg kreek-overlay.png && cd .. && ls -la kreek-raw.zip
-          gh release upload studio-debug kreek-raw.zip --clobber
+          cd out && zip -q ../${{ inputs.tag }}.zip kc*.mp4 kreek-words.json kreek-peaks.txt kreek-frame.jpg kreek-overlay.png && cd .. && ls -la ${{ inputs.tag }}.zip
+          gh release upload studio-debug ${{ inputs.tag }}.zip --clobber
