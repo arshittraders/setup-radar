@@ -1,0 +1,31 @@
+name: kick-probe
+on:
+  workflow_dispatch:
+    inputs:
+      ch: { description: "kick channel", default: "dasgasd3m" }
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          pip install -q -U "yt-dlp[default]" curl_cffi
+      - run: |
+          python3 - <<'PY'
+          import json
+          from curl_cffi import requests
+          for u in ["https://kick.com/api/v2/channels/${{ inputs.ch }}/videos", "https://kick.com/api/v1/channels/${{ inputs.ch }}"]:
+              try:
+                  r = requests.get(u, impersonate="chrome", timeout=30); print(u, r.status_code)
+                  d = r.json()
+                  if isinstance(d, list):
+                      for v in d[:10]: print("VOD", v.get("video",{}).get("uuid"), v.get("session_title"), v.get("start_time"), v.get("duration"), v.get("source","")[:120])
+                  else: print(str(d)[:300])
+              except Exception as e: print("ERR", u, e)
+          PY
+          U=$(python3 -c "
+          from curl_cffi import requests
+          d=requests.get('https://kick.com/api/v2/channels/${{ inputs.ch }}/videos',impersonate='chrome').json()
+          print('https://kick.com/${{ inputs.ch }}/videos/'+d[0]['video']['uuid'])" 2>/dev/null)
+          echo "URL=$U"; [ -n "$U" ] && yt-dlp -F "$U" 2>&1 | tail -8
