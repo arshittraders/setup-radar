@@ -1,0 +1,48 @@
+name: kick-scan
+on:
+  workflow_dispatch:
+    inputs:
+      ch: { default: "dasgasd3m" }
+      vod: { default: "baa12604-007b-4bfa-b0d3-7a61078f4670" }
+      every: { default: "900" }
+      tag: { default: "dom-scan" }
+permissions: { contents: write }
+jobs:
+  s:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null && pip install -q curl_cffi pillow
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mkdir -p out && python3 - <<'PY'
+          import json, re, subprocess
+          from curl_cffi import requests
+          ch="${{ inputs.ch }}"; vod="${{ inputs.vod }}"; every=int("${{ inputs.every }}")
+          for q in ["sort=view&time=week","sort=date&time=week"]:
+              try:
+                  r=requests.get(f"https://kick.com/api/v2/channels/{ch}/clips?{q}",impersonate="chrome",timeout=30)
+                  d=r.json(); cl=d.get("clips") or d.get("data") or []
+                  print("CLIPS",q,r.status_code,len(cl))
+                  json.dump(cl,open(f"out/clips-{q.split('&')[0]}.json","w"))
+                  for c in cl[:25]: print("CLIP",c.get("id"),c.get("view_count"),c.get("duration"),c.get("created_at"),(c.get("category") or {}).get("name"),"|",c.get("title"),"|",(c.get("clip_url") or c.get("video_url") or "")[:110])
+              except Exception as e: print("clip err",e)
+          vids=requests.get(f"https://kick.com/api/v2/channels/{ch}/videos",impersonate="chrome").json()
+          v=next(x for x in vids if x["video"]["uuid"]==vod); src=v["source"]; base=src.rsplit("/",1)[0]
+          m=requests.get(src,impersonate="chrome").text
+          var=[l for l in m.splitlines() if l and not l.startswith("#")]; var=sorted(var,key=lambda s:("360" not in s, "480" not in s))[0]
+          var=var if var.startswith("http") else base+"/"+var
+          dur=v["duration"]//1000; print("dur",dur,var)
+          from PIL import Image, ImageDraw
+          fr=[]
+          for t in range(60,dur,every):
+              p=f"f{t}.jpg"; subprocess.run(["ffmpeg","-v","error","-y","-ss",str(t),"-i",var,"-frames:v","1","-vf","scale=320:-2",p],stdin=subprocess.DEVNULL)
+              try: im=Image.open(p); d=ImageDraw.Draw(im); d.rectangle((0,0,80,18),fill="black"); d.text((3,3),f"{t//3600}h{t%3600//60:02d}",fill="yellow"); fr.append(im)
+              except Exception: pass
+          cols=6; rows=(len(fr)+cols-1)//cols
+          g=Image.new("RGB",(320*cols,180*rows))
+          for i,im in enumerate(fr): g.paste(im,((i%cols)*320,(i//cols)*180))
+          g.save("out/sheet.jpg",quality=80); print("frames",len(fr))
+          PY
+          cd out && zip -q ../${{ inputs.tag }}.zip * && cd .. && gh release upload studio-debug ${{ inputs.tag }}.zip --clobber
