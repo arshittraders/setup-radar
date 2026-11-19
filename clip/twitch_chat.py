@@ -20,6 +20,7 @@ def page(off):
         try:
             rq = urllib.request.Request(GQL, data=body, headers={"Client-Id": CID, "Content-Type": "text/plain;charset=UTF-8"})
             d = json.load(urllib.request.urlopen(rq, timeout=20))
+            if isinstance(d, list) and d and d[0].get("errors"): raise RuntimeError(str(d[0]["errors"])[:250])
             edges = ((((d[0].get("data") or {}).get("video") or {}).get("comments") or {}).get("edges")) or []
             msgs = []
             for e in edges:
@@ -29,9 +30,10 @@ def page(off):
                 if t is not None: msgs.append((float(t), txt))
             return off, msgs
         except Exception as ex:
-            time.sleep(1.5 * (tries + 1)); err = ex
+            time.sleep(1.5 * (tries + 1)); ERR.append(repr(ex)[:300])
     return off, None
 
+ERR = []
 offs = list(range(S, E, STEP))
 with ThreadPoolExecutor(12) as ex:
     res = list(ex.map(page, offs))
@@ -45,4 +47,5 @@ for off, msgs in res:
     react = sum(1 for _, t in msgs if REACT.search(t)) / len(msgs)
     samples.append([off, round(rate, 3), round(react, 3)])
 json.dump({"vod": VOD, "step": STEP, "samples": samples}, open(OUT, "w"))
+if ERR: print("first error:", ERR[0])
 print(f"chat samples {len(samples)} failed {bad} nonzero {sum(1 for s in samples if s[1] > 0)}")

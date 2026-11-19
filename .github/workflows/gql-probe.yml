@@ -1,0 +1,10 @@
+name: gql-probe
+on: { workflow_dispatch: {} }
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python clip/twitch_chat.py 2932147800 14400 14480 c.json 8; cat c.json | head -c 400
+          curl -s -X POST https://gql.twitch.tv/gql -H "Client-Id: kimne78kjfvjnd1iheqfa5sqpdhla9" -d '[{"operationName":"VideoCommentsByOffsetOrCursor","variables":{"videoID":"2932147800","contentOffsetSeconds":14400},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"b70a3591ff0f4e0313d126c6a1502d79a1c02baebb288227c582044aa76adf6a"}}}]' | head -c 600
