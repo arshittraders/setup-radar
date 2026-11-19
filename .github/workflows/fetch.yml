@@ -1,0 +1,15 @@
+name: fetch
+on:
+  workflow_dispatch:
+    inputs:
+      urls: { description: "space separated name=url pairs", required: true }
+permissions:
+  contents: write
+jobs:
+  f:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          for pr in ${{ inputs.urls }}; do n="${pr%%=*}"; u="${pr#*=}"; curl -sSL -o "$n" "$u" && ls -la "$n" && gh release upload studio-debug "$n" --clobber; done
