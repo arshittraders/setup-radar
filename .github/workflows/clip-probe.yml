@@ -18,6 +18,6 @@ jobs:
           echo "$HOME/.deno/bin" >> $GITHUB_PATH
       - env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          yt-dlp --ignore-no-formats-error --skip-download -j "https://www.youtube.com/watch?v=XRo2L3077NI" > meta.json 2>err.txt || true
-          tail -3 err.txt
-          python3 clip/heat.py meta.json || head -c 500 meta.json
+          yt-dlp --flat-playlist --playlist-items 1:8 --print "%(id)s|%(title)s|%(duration)s|%(upload_date)s" "https://www.twitch.tv/kreekcraft/videos?filter=archives" 2>&1 | tail -10
+          ID=$(yt-dlp --flat-playlist --playlist-items 1 --print "%(id)s" "https://www.twitch.tv/kreekcraft/videos?filter=archives" 2>/dev/null | head -1)
+          echo "ID=$ID"; yt-dlp -F "https://www.twitch.tv/videos/${ID#v}" 2>&1 | tail -8
