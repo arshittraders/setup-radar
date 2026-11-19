@@ -1,0 +1,27 @@
+name: kreek-probe
+on:
+  workflow_dispatch:
+    inputs:
+      vod: { description: "twitch vod id", default: "2932147800" }
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg webp >/dev/null
+          pip install -q -U "yt-dlp[default]"
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mkdir out
+          curl -sSL -o out/overlay.webp "https://crusercontent.com/organizations/43893b4f-434d-549b-9037-4f1c62984ff2/campaigns/references/assets/a6688393-4374-492e-8ec3-059554a1870f.webp" && dwebp out/overlay.webp -o out/kreek-overlay.png && file out/kreek-overlay.png
+          U="https://www.twitch.tv/videos/${{ inputs.vod }}"
+          yt-dlp --list-subs "$U" 2>&1 | tail -5
+          yt-dlp --skip-download --write-subs --sub-langs all -o "out/chat" "$U" 2>&1 | tail -3; ls -la out
+          f=$(ls out/chat*.json 2>/dev/null | head -1); [ -n "$f" ] && python clip/chatpeaks.py "$f" 74084 | tee out/kreek-peaks.txt
+          for T in 01:00:00 03:00:00 06:00:00; do yt-dlp -q -f "720p60/best[height<=720]" --download-sections "*$T-$T" --force-keyframes-at-cuts -o "out/f_$T.%(ext)s" "$U" || true; done
+          yt-dlp -q -f "720p60/best[height<=720]" --download-sections "*01:00:00-01:00:04" -o "out/sec.%(ext)s" "$U" || true
+          ls -la out; s=$(ls out/sec.* | head -1); ffmpeg -v error -y -i "$s" -frames:v 1 out/kreek-frame.jpg || true
+          cd out && gh release upload studio-debug kreek-overlay.png kreek-frame.jpg kreek-peaks.txt --clobber
