@@ -1,0 +1,36 @@
+name: kreek-clips
+on:
+  workflow_dispatch:
+    inputs:
+      vod: { description: "twitch vod id", default: "2932147800" }
+      start: { description: "scan start sec", default: "1800" }
+      end: { description: "scan end sec", default: "12600" }
+      n: { description: "clips", default: "8" }
+      win: { description: "clip seconds", default: "55" }
+permissions:
+  contents: write
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg webp >/dev/null
+          pip install -q -U "yt-dlp[default]" faster-whisper
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mkdir -p out && U="https://www.twitch.tv/videos/${{ inputs.vod }}"
+          curl -sSL -o out/overlay.webp "https://crusercontent.com/organizations/43893b4f-434d-549b-9037-4f1c62984ff2/campaigns/references/assets/a6688393-4374-492e-8ec3-059554a1870f.webp" && dwebp -quiet out/overlay.webp -o out/kreek-overlay.png || true
+          S=${{ inputs.start }}; E=${{ inputs.end }}
+          yt-dlp -q -f Audio_Only --download-sections "*$S-$E" -o "aud.%(ext)s" "$U"
+          A=$(ls aud.* | head -1); ffmpeg -nostats -i "$A" -af ebur128 -f null - 2> ebur.log || true
+          python clip/peaks.py ebur.log $S ${{ inputs.n }} ${{ inputs.win }} | tee out/kreek-peaks.txt
+          k=0; while read T SC; do k=$((k+1)); E2=$((T + ${{ inputs.win }}));
+            yt-dlp -q -f "720p60/best[height<=720]" --download-sections "*$T-$E2" -o "out/kc$k.%(ext)s" "$U" || true; done < out/kreek-peaks.txt
+          ls -la out
+          for f in out/kc*.mp4; do ffmpeg -v error -y -i "$f" -vn -ac 1 -ar 16000 "${f%.mp4}.wav"; done
+          python clip/whisper_words.py out/kreek-words.json out/kc*.wav
+          ffmpeg -v error -y -ss 10 -i out/kc1.mp4 -frames:v 1 out/kreek-frame.jpg || true
+          cd out && zip -q ../kreek-raw.zip kc*.mp4 kreek-words.json kreek-peaks.txt kreek-frame.jpg kreek-overlay.png && cd .. && ls -la kreek-raw.zip
+          gh release upload studio-debug kreek-raw.zip --clobber
