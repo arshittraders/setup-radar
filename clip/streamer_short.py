@@ -42,5 +42,5 @@ cur = 'v4'
 for k, (p, a, b) in enumerate(ev):
     n = f'v{k + 5}'; fc.append(f"[{cur}][{k + 3}:v]overlay=0:1480:enable='between(t,{a:.2f},{b:.2f})'[{n}]"); cur = n
 fc.append('[0:a]loudnorm=I=-14:TP=-1.5[aout]')
-subprocess.run(['ffmpeg', '-v', 'error', '-y'] + inp + ['-filter_complex', ';'.join(fc), '-map', f'[{cur}]', '-map', '[aout]', '-r', '60', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out], check=True)
+subprocess.run(['ffmpeg', '-v', 'error', '-y'] + inp + ['-filter_complex', ';'.join(fc), '-map', f'[{cur}]', '-map', '[aout]', '-r', '60', '-c:v', 'libx264', '-preset', 'medium', '-crf', '22', '-maxrate', '4500k', '-bufsize', '9000k', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out], check=True)
 print('done', out, round(L, 1), 's', len(ev), 'caption frames')
