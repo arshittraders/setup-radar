@@ -1,0 +1,28 @@
+name: kick-clipdl
+on:
+  workflow_dispatch:
+    inputs:
+      urls: { description: "space separated name=m3u8 pairs" }
+      tag: { default: "dom-clips" }
+permissions: { contents: write }
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null && pip install -q faster-whisper
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mkdir -p out
+          for p in ${{ inputs.urls }}; do n=${p%%=*}; u=${p#*=}
+            ffmpeg -nostats -v error -y -i "$u" -c copy -bsf:a aac_adtstoasc "out/$n.mp4" < /dev/null || echo "FAIL $n"
+            ffmpeg -v error -y -ss 3 -i "out/$n.mp4" -frames:v 1 -vf scale=640:-2 "out/$n.jpg" < /dev/null || true
+            ffmpeg -v error -y -i "out/$n.mp4" -vn -ac 1 -ar 16000 "out/$n.wav" < /dev/null || true
+            ffmpeg -nostats -i "out/$n.mp4" -vn -af ebur128 -f null - 2> "out/$n.ebur" < /dev/null || true
+          done
+          python clip/whisper_words.py out/words.json out/*.wav || echo '{}' > out/words.json
+          rm -f out/*.wav; ls -la out
+          cd out && zip -q ../${{ inputs.tag }}.zip * && cd .. && gh release upload studio-debug ${{ inputs.tag }}.zip --clobber
