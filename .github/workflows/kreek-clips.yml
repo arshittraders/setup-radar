@@ -15,6 +15,8 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
       - run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg webp >/dev/null
           pip install -q -U "yt-dlp[default]" faster-whisper
@@ -30,7 +32,7 @@ jobs:
             yt-dlp -q -f "720p60/best[height<=720]" --download-sections "*$T-$E2" -o "out/kc$k.%(ext)s" "$U" || true; done < out/kreek-peaks.txt
           ls -la out
           for f in out/kc*.mp4; do ffmpeg -v error -y -i "$f" -vn -ac 1 -ar 16000 "${f%.mp4}.wav"; done
-          python clip/whisper_words.py out/kreek-words.json out/kc*.wav
+          python clip/whisper_words.py out/kreek-words.json out/kc*.wav || echo '{}' > out/kreek-words.json
           ffmpeg -v error -y -ss 10 -i out/kc1.mp4 -frames:v 1 out/kreek-frame.jpg || true
           cd out && zip -q ../kreek-raw.zip kc*.mp4 kreek-words.json kreek-peaks.txt kreek-frame.jpg kreek-overlay.png && cd .. && ls -la kreek-raw.zip
           gh release upload studio-debug kreek-raw.zip --clobber
