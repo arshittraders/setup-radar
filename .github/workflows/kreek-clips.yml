@@ -8,6 +8,7 @@ on:
       n: { description: "clips", default: "8" }
       win: { description: "clip seconds", default: "55" }
       tag: { description: "asset name", default: "kreek-raw" }
+      mode: { description: "moment picker: combined | chat | audio", default: "combined" }
 permissions:
   contents: write
 jobs:
@@ -28,12 +29,13 @@ jobs:
           S=${{ inputs.start }}; E=${{ inputs.end }}
           yt-dlp -q -f Audio_Only --download-sections "*$S-$E" -o "aud.%(ext)s" "$U"
           A=$(ls aud.* | head -1); ffmpeg -nostats -i "$A" -af ebur128 -f null - 2> ebur.log || true
-          python clip/peaks.py ebur.log $S ${{ inputs.n }} ${{ inputs.win }} | tee out/kreek-peaks.txt
+          python clip/twitch_chat.py ${{ inputs.vod }} $S $E out/kreek-chat.json 8 || echo '{"samples":[]}' > out/kreek-chat.json
+          python clip/smartpeaks.py ebur.log out/kreek-chat.json $S ${{ inputs.n }} ${{ inputs.win }} ${{ inputs.mode }} | tee out/kreek-peaks.txt
           k=0; while read T SC; do k=$((k+1)); E2=$((T + ${{ inputs.win }}));
             yt-dlp -q -f "720p60/best[height<=720]" --download-sections "*$T-$E2" -o "out/kc$k.%(ext)s" "$U" || true; done < out/kreek-peaks.txt
           ls -la out
           for f in out/kc*.mp4; do ffmpeg -v error -y -i "$f" -vn -ac 1 -ar 16000 "${f%.mp4}.wav"; done
           python clip/whisper_words.py out/kreek-words.json out/kc*.wav || echo '{}' > out/kreek-words.json
           ffmpeg -v error -y -ss 10 -i out/kc1.mp4 -frames:v 1 out/kreek-frame.jpg || true
-          cd out && zip -q ../${{ inputs.tag }}.zip kc*.mp4 kreek-words.json kreek-peaks.txt kreek-frame.jpg kreek-overlay.png && cd .. && ls -la ${{ inputs.tag }}.zip
+          cd out && zip -q ../${{ inputs.tag }}.zip kc*.mp4 kreek-words.json kreek-peaks.txt kreek-chat.json kreek-frame.jpg kreek-overlay.png && cd .. && ls -la ${{ inputs.tag }}.zip
           gh release upload studio-debug ${{ inputs.tag }}.zip --clobber
