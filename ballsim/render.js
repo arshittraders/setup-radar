@@ -45,15 +45,24 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   await pg.evaluate((s) => window.init({ seed: s, n: 7 }), SEED);
   const vid = OUT.replace(/\.mp4$/, '.v.mp4');
   const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', vid], { stdio: ['pipe', 'inherit', 'inherit'] });
-  const events = []; let f = 0;
+  const events = []; let f = 0, HOOK_F = null;
   for (; f < FPS * 80; f++) {
     const r = await pg.evaluate(() => window.frame());
-    events.push(...r.ev);
+    events.push(...r.ev); if (HOOK_F === null && r.ph >= 3) HOOK_F = f;   // overflow: first frame of "STILL SPLITTING!" (the packed arena)
     const ok = enc.stdin.write(Buffer.from(r.img.split(',')[1], 'base64')); if (!ok) await new Promise((x) => enc.stdin.once('drain', x));
     if (r.done) break;
   }
   enc.stdin.end(); await new Promise((r) => enc.on('close', r)); await br.close();
-  const dur = (f + 1) / FPS, wav = OUT.replace(/\.mp4$/, '.wav'); fs.writeFileSync(wav, synth(events, dur));
+  let dur = (f + 1) / FPS; const wav = OUT.replace(/\.mp4$/, '.wav'); fs.writeFileSync(wav, synth(events, dur));
+  // OVERFLOW hook: open with a 2 s glimpse of the packed arena (looks like the maximum)… then cut back to 1 ball. The real ending goes way beyond it.
+  if (FMT === 'overflow' && HOOK_F !== null) {
+    const tp = Math.max(0, HOOK_F / FPS + 0.4).toFixed(2), te = (Number(tp) + 2).toFixed(2), tmp = OUT.replace(/\.mp4$/, '.h.mp4'), tw = OUT.replace(/\.mp4$/, '.h.wav');
+    execFileSync('ffmpeg', ['-y', '-v', 'error', '-ss', tp, '-t', '2', '-i', vid, '-i', vid, '-ss', tp, '-t', '2', '-i', wav, '-i', wav, '-filter_complex',   // separate inputs → no huge frame buffering
+      `[0:v]setpts=PTS-STARTPTS,fade=t=out:st=1.8:d=0.2:color=white[hv];[1:v]fade=t=in:st=0:d=0.25:color=white[mv];[hv][mv]concat=n=2:v=1:a=0[v];` +
+      `[2:a]asetpts=PTS-STARTPTS,afade=t=out:st=1.7:d=0.3[ha];[ha][3:a]concat=n=2:v=0:a=1[a]`,
+      '-map', '[v]', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-pix_fmt', 'yuv420p', tmp, '-map', '[a]', tw]);
+    fs.renameSync(tmp, vid); fs.renameSync(tw, wav); dur += 2; console.log('overflow hook from', tp);
+  }
   // 2.6 s end card: freeze last frame, dim it, ask for a comment + follow (this is what turns viewers into followers)
   const END = 2.6, D = dur.toFixed(2), FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
   const L = FMT === 'country' ? ['COMMENT YOUR COUNTRY', 'IT JOINS THE NEXT BATTLE', 'FOLLOW FOR TOMORROW'] : FMT === 'overflow' ? ['DID YOU GUESS THE NUMBER?', 'COMMENT YOUR GUESS', 'FOLLOW FOR PART 2'] : ['DID YOU GUESS RIGHT?', 'COMMENT YOUR PICK', 'FOLLOW FOR PART 2'];

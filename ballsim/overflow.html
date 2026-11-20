@@ -128,6 +128,6 @@ window.frame = (fast) => {
   if (!fast) draw(); S.f++;
   const done = S.endT !== null && S.t - S.endT > 3.2;
   const ev = EV; EV = [];
-  return { done, ev: fast ? [] : ev.map(e => ({ ...e, f: S.f })), img: fast ? '' : C.toDataURL('image/jpeg', 0.9), t: S.t, ok: !!S.burst };
+  return { done, ev: fast ? [] : ev.map(e => ({ ...e, f: S.f })), img: fast ? '' : C.toDataURL('image/jpeg', 0.9), t: S.t, ok: !!S.burst, ph: S.phase };
 };
 </script></body></html>
