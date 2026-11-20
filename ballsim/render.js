@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
 const { spawn, execFileSync } = require('child_process');
 const fs = require('fs'), path = require('path');
 const OUT = path.resolve(process.argv[2] || 'ball.mp4'), FPS = 30, SR = 44100; let SEED = Number(process.argv[4]) || 0;
-const FORMATS = ['country', 'floors', 'rings', 'breakout', 'hex'];
+const FORMATS = ['country', 'floors', 'rings', 'breakout', 'hex', 'overflow'];
 let FMT = process.argv[3] || 'country'; if (!FORMATS.includes(FMT)) FMT = FORMATS[Math.floor(Math.random() * FORMATS.length)];
 const PAGE = FMT === 'country' ? 'sim.html' : FMT + '.html';
 
@@ -56,7 +56,7 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   const dur = (f + 1) / FPS, wav = OUT.replace(/\.mp4$/, '.wav'); fs.writeFileSync(wav, synth(events, dur));
   // 2.6 s end card: freeze last frame, dim it, ask for a comment + follow (this is what turns viewers into followers)
   const END = 2.6, D = dur.toFixed(2), FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
-  const L = FMT === 'country' ? ['COMMENT YOUR COUNTRY', 'IT JOINS THE NEXT BATTLE', 'FOLLOW FOR TOMORROW'] : ['DID YOU GUESS RIGHT?', 'COMMENT YOUR PICK', 'FOLLOW FOR PART 2'];
+  const L = FMT === 'country' ? ['COMMENT YOUR COUNTRY', 'IT JOINS THE NEXT BATTLE', 'FOLLOW FOR TOMORROW'] : FMT === 'overflow' ? ['DID YOU GUESS THE NUMBER?', 'COMMENT YOUR GUESS', 'FOLLOW FOR PART 2'] : ['DID YOU GUESS RIGHT?', 'COMMENT YOUR PICK', 'FOLLOW FOR PART 2'];
   let ding = null; try { const LIB = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sfx', 'library.json'), 'utf8')).filter((x) => x.cat === 'ding'); if (LIB.length) ding = path.join(__dirname, '..', LIB[SEED % LIB.length].file); } catch (e) {}
   const dt = (t, y, size, col) => `drawtext=fontfile=${FONT}:text='${t}':fontsize=${size}:fontcolor=${col}:x=(w-text_w)/2:y=${y}:enable='gte(t,${D})'`;
   const vf = `[0:v]tpad=stop_mode=clone:stop_duration=${END},drawbox=x=0:y=1470:w=iw:h=450:color=black@0.8:t=fill:enable='gte(t,${D})',${dt(L[0], 1510, 62, 'white')},${dt(L[1], 1595, 50, '0xffd23f')},drawbox=x=110:y=1690:w=860:h=125:color=0xff2d55@1:t=fill:enable='gte(t,${D})',${dt(L[2], 1724, 60, 'white')}[v]`;
