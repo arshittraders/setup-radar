@@ -1,0 +1,16 @@
+
+const EP=window.EP;const SC=EP.SC;
+window.render=(t)=>{
+  const T=window.T;let i=T.findIndex(s=>t<s.end);if(i<0)i=T.length-1;const s=T[i];const u=t-s.start,d=s.end-s.start;
+  x=x1;x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,W,H);SC[Math.min(i,SC.length-1)](u,d,t);x.setTransform(1,0,0,1,0,0);
+  const sk=i>0?Math.max(0,1-u/.5)*14:0;cv.style.transform=sk?`translate(${Math.sin(t*90)*sk}px,${Math.cos(t*77)*sk}px) scale(${1+sk/400})`:'';
+  if(i>0&&u<.45){const P=T[i-1];x=x2;x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,W,H);SC[i-1](P.end-P.start+u,P.end-P.start,t);x.setTransform(1,0,0,1,0,0);x=x1;cv2.style.opacity=1-u/.45}else cv2.style.opacity=0;
+  const fl=i>0?cl(1-u/.2)*.22:0;document.getElementById('flash').style.opacity=fl;
+  const ti=document.getElementById('title');if(i===0){ti.innerHTML=EP.title;const p=eo(pr(t,.2,.8));ti.style.opacity=p*(1-pr(t,d-1.2,.6));ti.style.transform=`scale(${.7+.3*p})`}else ti.style.opacity=0;
+  ['b1','b2'].forEach((id,k)=>{const e=document.getElementById(id);e.textContent=EP.badges[k];if(i===EP.badgeScene){const p=pr(u,1.4+k*1.4,.4);e.style.opacity=p;e.style.transform=`scale(${.5+.5*eo(p)}) rotate(${k?4:-4}deg)`}else e.style.opacity=0});
+  const cap=document.getElementById('cap');const ws=s.text.replace(/\.\.\./g,'…').split(/\s+/).filter(Boolean);
+  const voiced=s.vend||s.end;const vt=(t-s.start)/(voiced-s.start);const tot=ws.reduce((a,w)=>a+w.length+2,0);let acc=0,k=0;for(;k<ws.length;k++){acc+=ws[k].length+2;if(acc/tot>=vt)break}
+  k=Math.min(k,ws.length-1);const c0=Math.floor(k/3)*3;const em=new RegExp(EP.em);cap.innerHTML=ws.slice(c0,c0+3).map((w,j)=>`<span class="${c0+j===k?'on':''} ${em.test(w)?'em':''}">${w}</span>`).join(' ');
+  cap.style.top=(i===7?1720:(EP.capTop&&EP.capTop[i])||1290)+'px';cap.style.opacity=(t-s.start)<(voiced-s.start)+.15?1:0;
+};
+</script></body></html>
