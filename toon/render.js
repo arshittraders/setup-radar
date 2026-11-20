@@ -76,10 +76,17 @@ ff(['-i', W('tom1.wav'), '-i', W('tom2.wav'), '-i', W('cym.wav'), '-filter_compl
 src('0.4*sin(2*PI*(400*t+900*t*t-600*t*t*t))', 0.9, 'sl_r.wav'); ff(['-i', W('sl_r.wav'), '-af', 'afade=t=out:st=0.6:d=0.3,volume=1.2', W('slide.wav')]);
 src('0.4*(2*random(0)-1)*sin(PI*t/0.4)', 0.4, 'wh_r.wav'); ff(['-i', W('wh_r.wav'), '-af', 'bandpass=f=1400:w=1800,volume=3', W('whoosh.wav')]);
 src('0.4*sin(2*PI*1568*t)*exp(-4*t)+0.25*sin(2*PI*2093*t)*exp(-5*t)', 1.0, 'ding.wav');
+// prefer real CC0 recordings from the shared library (sfx/library.json, Openverse CC0) over the synthesized versions above
+let SEED = 0; for (const ch of String(S.title || '')) SEED = (SEED * 31 + ch.charCodeAt(0)) >>> 0;
+try { const LIB = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sfx', 'library.json'), 'utf8'));
+  const pick = (c, k) => { const a = LIB.filter((x) => x.cat === c); return a.length ? path.join(__dirname, '..', a[(SEED + k) % a.length].file) : null; };
+  for (const [name, cat, k] of [['whoosh', 'whoosh', 0], ['ding', 'ding', 1], ['boing', 'boing', 2], ['rimshot', 'drum', 3], ['pop', 'pop', 4]]) { const f = pick(cat, k); if (f) ff(['-i', f, '-ar', '44100', '-ac', '1', W(name + '.wav')]); }
+} catch (e) { console.log('sfx lib skipped', e.message); }
 for (const n of Object.keys(MEME)) { const f = path.join(__dirname, 'assets', 'sfx', n + '.mp3'); if (fs.existsSync(f)) ff(['-i', f, '-ar', '44100', '-ac', '1', W(n + '.wav')]); }
 const parts = [['music.wav', 0, 1]];
-T.forEach((l) => {
+T.forEach((l, i) => {
   parts.push([`v-${l.id}.wav`, l.t, 1.15]);
+  if (i && T[i - 1].scene !== l.scene && l.sfx !== 'whoosh' && fs.existsSync(W('whoosh.wav'))) parts.push(['whoosh.wav', Math.max(0, l.t - 0.35), 0.4]);   // scene change swoosh
   const meme = MEME[l.sfx] && fs.existsSync(W(l.sfx + '.wav'));
   if (meme) parts.push([l.sfx + '.wav', l.t + l.d + 0.05, 0.55]);
   else if (l.sfx && fs.existsSync(W(l.sfx + '.wav'))) parts.push([l.sfx + '.wav', l.sfx === 'whoosh' ? Math.max(0, l.t - 0.25) : l.t + l.d - (l.sfx === 'rimshot' ? 0.05 : 0.1), 0.6]);

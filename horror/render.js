@@ -47,6 +47,10 @@ ff(['-i', W('whoosh_raw.wav'), '-af', 'bandpass=f=900:w=700,volume=2.5', W('whoo
 src(`0.25*(2*random(0)-1)*exp(-200*mod(t,1))`, Math.max(0.5, s2).toFixed(2), W('tick_raw.wav'));
 ff(['-i', W('tick_raw.wav'), '-af', 'highpass=f=2500,volume=0.6', W('tick.wav')]);
 
+// prefer real CC0 recordings from the shared library (sfx/library.json, Openverse CC0) over the synthesized versions
+try { const LIB = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sfx', 'library.json'), 'utf8')); let SEED = 0; for (const ch of String((typeof S !== 'undefined' && S.title) || '')) SEED = (SEED * 31 + ch.charCodeAt(0)) >>> 0;
+  for (const [name, cat, k] of [['whoosh', 'whoosh', 0], ['sting', 'horror', 1], ['beat', 'heart', 0]]) { const a = LIB.filter((x) => x.cat === cat); if (a.length) ff(['-i', path.join(__dirname, '..', a[(SEED + k) % a.length].file), '-ar', '44100', '-ac', '1', W(name + '.wav')]); }
+} catch (e) { console.log('sfx lib skipped', e.message); }
 const sfx = [{ f: W('drone.wav'), at: 0 }, { f: W('tick.wav'), at: 0 }, { f: W('buzz.wav'), at: 0.2 }, { f: W('whoosh.wav'), at: handT - 0.5 }, { f: W('sting.wav'), at: sting }];
 knocks.forEach(k => sfx.push({ f: W('knock.wav'), at: k }));
 for (let b = s4; b < sting - 0.3; b += 0.85) sfx.push({ f: W('beat.wav'), at: b });

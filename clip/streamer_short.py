@@ -41,6 +41,15 @@ fc = ['[0:v]split=2[a][b]', f'[a]crop={FACE},scale=1080:702:flags=lanczos,eq=con
 cur = 'v4'
 for k, (p, a, b) in enumerate(ev):
     n = f'v{k + 5}'; fc.append(f"[{cur}][{k + 3}:v]overlay=0:1480:enable='between(t,{a:.2f},{b:.2f})'[{n}]"); cur = n
-fc.append('[0:a]loudnorm=I=-14:TP=-1.5[aout]')
+fc.append('[0:a]loudnorm=I=-14:TP=-1.5[a0]')
+# CC0 sound effects (sfx/library.json): swoosh as the hook card lands, soft hit as it leaves
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'sfx'))
+try:
+    import sfx as SFXLIB
+    seed = sum(map(ord, out))
+    xa, xf = SFXLIB.ffmpeg_mix([(0.0, 'whoosh', seed, 0.45), (3.15, 'whoosh', seed + 1, 0.3)], 3 + len(ev), '[a0]', '[aout]')
+except Exception as e:
+    print('sfx skipped', e); xa, xf = [], '[a0]anull[aout]'
+inp += xa; fc.append(xf)
 subprocess.run(['ffmpeg', '-v', 'error', '-y'] + inp + ['-filter_complex', ';'.join(fc), '-map', f'[{cur}]', '-map', '[aout]', '-r', '60', '-c:v', 'libx264', '-preset', 'medium', '-crf', '22', '-maxrate', '4500k', '-bufsize', '9000k', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out], check=True)
 print('done', out, round(L, 1), 's', len(ev), 'caption frames')

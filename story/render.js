@@ -40,6 +40,10 @@ src(`0.14*(2*random(0)-1)*sin(PI*t/0.9)`, 0.9, W('wh_r.wav'));
 ff(['-i', W('wh_r.wav'), '-af', 'bandpass=f=800:w=700,volume=2.8', W('whoosh.wav')]);
 
 const HORROR = (S.mood || 'horror') === 'horror';
+// prefer real CC0 recordings from the shared library (sfx/library.json, Openverse CC0) over the synthesized versions
+try { const LIB = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sfx', 'library.json'), 'utf8')); let SEED = 0; for (const ch of String((typeof S !== 'undefined' && S.title) || '')) SEED = (SEED * 31 + ch.charCodeAt(0)) >>> 0;
+  for (const [name, cat, k] of [['whoosh', 'whoosh', 0], ['stinger', 'horror', 1], ['slam', 'impact', 2]]) { const a = LIB.filter((x) => x.cat === cat); if (a.length) ff(['-i', path.join(__dirname, '..', a[(SEED + k) % a.length].file), '-ar', '44100', '-ac', '1', W(name + '.wav')]); }
+} catch (e) { console.log('sfx lib skipped', e.message); }
 const sfx = HORROR ? [{ f: W('drone.wav'), at: 0 }, { f: W('whoosh.wav'), at: 0 }, ...(S.hook ? [{ f: W('stinger.wav'), at: 0.08 }] : [])] : [];
 if (!HORROR) { execFileSync('node', [path.join(__dirname, '..', 'shorts', 'music.js'), TOTAL.toFixed(2), W('music.wav'), String(S.title.length)]); ff(['-i', W('music.wav'), '-af', 'volume=0.18,lowpass=f=5000', W('music_lo.wav')]); sfx.push({ f: W('music_lo.wav'), at: 0 }); }
 slams.forEach(x => sfx.push({ f: W('slam.wav'), at: x }));
