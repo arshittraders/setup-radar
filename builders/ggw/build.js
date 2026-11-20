@@ -1,7 +1,7 @@
 // timeline + voice track + music, then frames → mp4.  node build.js [testTimes]
 const { chromium } = require('playwright'); const SFX = require('/home/claude/setup-radar/sfx/sfx.js'); const { spawn, execFileSync } = require('child_process'); const fs = require('fs'), path = require('path');
 const FPS = 30, SR = 44100, EP = process.argv[2], D = __dirname + '/' + EP, TEST = process.argv[3];
-const OUT = { he01: 'history-ek-min-01-qutub', he02: 'history-ek-min-02-konark', he03: 'history-ek-min-03-taj', gg05: 'gupt-gyan-05-dwarka', gg06: 'gupt-gyan-06-iron-pillar', gg07: 'gupt-gyan-07-roswell', gg08: 'gupt-gyan-08-stonehenge' }[EP];
+const OUT = { he01: 'history-ek-min-01-qutub', he02: 'history-ek-min-02-konark', he03: 'history-ek-min-03-taj', he04: 'history-ek-min-04-red-fort', he05: 'history-ek-min-05-nalanda', he06: 'history-ek-min-06-chess', he07: 'history-ek-min-07-zero', gg05: 'gupt-gyan-05-dwarka', gg06: 'gupt-gyan-06-iron-pillar', gg07: 'gupt-gyan-07-roswell', gg08: 'gupt-gyan-08-stonehenge' }[EP];
 fs.mkdirSync(D + '/proc', { recursive: true });
 const lines = JSON.parse(fs.readFileSync((EP.startsWith('he') ? '/home/claude/setup-radar/heb/eps.json' : '/home/claude/setup-radar/ggb/eps.json'), 'utf8'))[EP];
 lines.forEach((_, i) => { const n = String(i).padStart(2, '0'); execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', `${__dirname}/v/${EP}_l${n}.mp3`, '-af', 'silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse', '-ar', '44100', '-ac', '1', `${D}/proc/l${n}.wav`]); });
