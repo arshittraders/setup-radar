@@ -54,7 +54,17 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   }
   enc.stdin.end(); await new Promise((r) => enc.on('close', r)); await br.close();
   const dur = (f + 1) / FPS, wav = OUT.replace(/\.mp4$/, '.wav'); fs.writeFileSync(wav, synth(events, dur));
-  execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', vid, '-i', wav, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', OUT]);
+  // 2.6 s end card: freeze last frame, dim it, ask for a comment + follow (this is what turns viewers into followers)
+  const END = 2.6, D = dur.toFixed(2), FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
+  const L = FMT === 'country' ? ['COMMENT YOUR COUNTRY', 'IT JOINS THE NEXT BATTLE', 'FOLLOW FOR TOMORROW'] : ['DID YOU GUESS RIGHT?', 'COMMENT YOUR PICK', 'FOLLOW FOR PART 2'];
+  let ding = null; try { const LIB = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sfx', 'library.json'), 'utf8')).filter((x) => x.cat === 'ding'); if (LIB.length) ding = path.join(__dirname, '..', LIB[SEED % LIB.length].file); } catch (e) {}
+  const dt = (t, y, size, col) => `drawtext=fontfile=${FONT}:text='${t}':fontsize=${size}:fontcolor=${col}:x=(w-text_w)/2:y=${y}:enable='gte(t,${D})'`;
+  const vf = `[0:v]tpad=stop_mode=clone:stop_duration=${END},drawbox=x=0:y=1470:w=iw:h=450:color=black@0.8:t=fill:enable='gte(t,${D})',${dt(L[0], 1510, 62, 'white')},${dt(L[1], 1595, 50, '0xffd23f')},drawbox=x=110:y=1690:w=860:h=125:color=0xff2d55@1:t=fill:enable='gte(t,${D})',${dt(L[2], 1724, 60, 'white')}[v]`;
+  const af = ding ? `[1:a]apad=pad_dur=${END}[a1];[2:a]adelay=${Math.round(dur * 1000)}|${Math.round(dur * 1000)},volume=0.6[a2];[a1][a2]amix=inputs=2:duration=first:normalize=0[a]` : `[1:a]apad=pad_dur=${END}[a]`;
+  try {
+    execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', vid, '-i', wav, ...(ding ? ['-i', ding] : []), '-filter_complex', vf + ';' + af, '-map', '[v]', '-map', '[a]', '-t', (dur + END).toFixed(2), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', OUT]);
+  } catch (e) { console.log('end card failed, plain mux', e.message);
+    execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', vid, '-i', wav, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', OUT]); }
   fs.unlinkSync(vid); fs.unlinkSync(wav);
   console.log('done', OUT, 'format', FMT, 'seed', SEED, 'sec', dur.toFixed(1), 'events', events.length);
 })().catch((e) => { console.error(e); process.exit(1); });
