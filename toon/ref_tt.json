@@ -1,0 +1,34 @@
+{
+ "voices": {
+  "G": {
+   "voice": "Fenrir",
+   "style": "Speak in Hindi as Tiklu, a confident, show-off, swaggy 15-year-old Indian teenage boy (teen voice, not a child, not an adult). Cool, fast, full of attitude, like a desi teen influencer; same voice every line. Say exactly:"
+  },
+  "B": {
+   "voice": "Charon",
+   "style": "Speak in Hindi as Jugnu, a calm, deadpan, nerdy 15-year-old Indian teenage boy with glasses (teen voice). Dry, flat, sarcastic, slow and smart, a tiny pause before every punchline; same voice every line. Say exactly:"
+  }
+ },
+ "lines": [
+  {
+   "id": "r1",
+   "who": "G",
+   "text": "भाई, आज से मेरा नया लुक है, पूरा स्कूल मुझे ही देखेगा!"
+  },
+  {
+   "id": "r2",
+   "who": "G",
+   "text": "अरे ये स्टाइल है स्टाइल, तुम लोग नहीं समझोगे।"
+  },
+  {
+   "id": "r3",
+   "who": "B",
+   "text": "देखेगा तो सही, क्योंकि तूने टोपी उल्टी पहनी है।"
+  },
+  {
+   "id": "r4",
+   "who": "B",
+   "text": "हाँ भाई, समझ गया… धूप पीछे से आ रही है।"
+  }
+ ]
+}

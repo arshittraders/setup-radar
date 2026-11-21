@@ -5,6 +5,9 @@ on:
       only:
         description: 'who to regenerate (G,B,L1..) — empty = all'
         default: ''
+      script:
+        description: 'script json path (default toon/script.json)'
+        default: ''
 permissions:
   contents: write
   id-token: write
@@ -21,6 +24,7 @@ jobs:
       - name: Voices
         env:
           ONLY: ${{ inputs.only }}
+          SCRIPT: ${{ inputs.script }}
         run: node toon/tts.js tn
       - name: Upload
         if: always()

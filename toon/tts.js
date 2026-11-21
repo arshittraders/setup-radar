@@ -2,7 +2,7 @@
 const fs = require('fs'), path = require('path');
 const { makeTakes } = require('./takes');
 const out = process.argv[2] || 'tn'; fs.mkdirSync(out, { recursive: true });
-const S = JSON.parse(fs.readFileSync(path.join(__dirname, 'script.json'), 'utf8'));
+const S = JSON.parse(fs.readFileSync(process.env.SCRIPT ? path.resolve(process.env.SCRIPT) : path.join(__dirname, 'script.json'), 'utf8'));   // SCRIPT=toon/ref_tt.json → Tiklu/Jugnu reference voices
 const FN = 'https://ceoehwleopykotddcxxk.supabase.co/functions/v1/studio';
 const tok = async () => (await (await fetch(process.env.ACTIONS_ID_TOKEN_REQUEST_URL + '&audience=studio-worker', { headers: { Authorization: 'bearer ' + process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN } })).json()).value;
 const tts = async (text, voice, style) => {
