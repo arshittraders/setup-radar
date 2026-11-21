@@ -90,8 +90,8 @@ async function toonRender(J, plan) {
   const { makeTakes } = require(path.join(__dirname, '..', 'toon', 'takes.js'));
   const lines = plan.lines.filter(l => l.who === 'G' || l.who === 'B');
   let engine = 'gemini';
-  // Tinglu Tashan (cast 'tt'): its own Gemini voices — never the Golu/Bunty F5 clone
-  const TT_V = { G: { voice: 'Fenrir', style: "Speak in Hindi as Tinglu, a confident, show-off, swaggy 15-year-old Indian teenage boy (teen voice, not a child, not an adult). Cool, fast, full of attitude, like a desi teen influencer; same voice every line. Say exactly:" },
+  // Tiklu Tashan (cast 'tt'): its own Gemini voices — never the Golu/Bunty F5 clone
+  const TT_V = { G: { voice: 'Fenrir', style: "Speak in Hindi as Tiklu, a confident, show-off, swaggy 15-year-old Indian teenage boy (teen voice, not a child, not an adult). Cool, fast, full of attitude, like a desi teen influencer; same voice every line. Say exactly:" },
     B: { voice: 'Charon', style: "Speak in Hindi as Jugnu, a calm, deadpan, nerdy 15-year-old Indian teenage boy with glasses (teen voice). Dry, flat, sarcastic, slow and smart, a tiny pause before every punchline; same voice every line. Say exactly:" } };
   const V = plan.cast === 'tt' ? { ...TOON_V, ...TT_V } : TOON_V;
   if (process.env.F5_PY && plan.cast !== 'tt') {   // final voices: IndicF5 clone of the approved Golu/Bunty lines (same voice every line, free)

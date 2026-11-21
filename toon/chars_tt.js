@@ -1,4 +1,4 @@
-// Tinglu Tashan cast (client channel, original art — deliberately NOT Golu/Bunty): TINGLU ('G') = show-off teen, backward green cap,
+// Tiklu Tashan cast (client channel, original art — deliberately NOT Golu/Bunty): TIKLU ('G') = show-off teen, backward green cap,
 // red-white striped tee, denim shorts, yellow sneakers; JUGNU ('B') = deadpan topper friend, curly hair, round glasses, open yellow shirt over teal tee.
 // o: { m: mouth 0..1, blink: bool, mood: 'happy'|'smile'|'shock'|'grumpy'|'smug'|'angry'|'laugh'|'disgust', wave: 0..1, t: seconds }
 (function (root) {
