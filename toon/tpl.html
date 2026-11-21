@@ -72,13 +72,15 @@ window.render = (t) => { if (window.KIN) KIN.grain(t, .1);
     const laughNow = L.some((x) => x.laugh && x.who !== w && t > x.t + x.d && t < x.t + x.d + 1.3) || L.some((x) => x.laugh && x.who === w && t > x.t + x.d && t < x.t + x.d + 0.9 && w === "G");
     let pose = scene === "end" ? "wave" : act ? ({ angry: "point", shock: "shock", laugh: "laugh", smug: "shrug", confused: "shrug" }[md] || "talk")
       : ({ laugh: "laugh", shock: "shock", angry: "cross", grumpy: w === "B" ? "cross" : "idle", smug: w === "B" ? "cross" : "idle", confused: "idle" }[md] || "idle");
+    if (D.cast === "tt" && act && scene !== "end" && pose === "talk") pose = ["talk", "point", "talk", "shrug"][li % 4];   // Tiklu Tashan: livelier hands, line by line
     if (laughNow && scene !== "end") pose = "laugh";
     html += `<g transform="translate(${pos[w]},${1470 - hop}) scale(${sc * 1.28})">${TOON.draw(w, { m, mood: pose === "laugh" && !act ? "laugh" : md, blink: blinkOf(w), wave: scene === "end" ? 1 : 0, pose, dir, t })}</g>`;
   }
   $("chars").innerHTML = html;
   // camera: gentle push toward the speaker; punchline = close-up on speaker, then a reaction cut to the listener
   let z = 1, cx = 540, cy = 1000, sx = 0, sy = 0, fl = 0;
-  if (speak && scene !== "end") { const k = ease((t - l.t) / 0.6); z = 1 + 0.06 * k; cx = 540 + (pos[speak] - 540) * 0.6 * k; }
+  if (speak && scene !== "end") { const k = ease((t - l.t) / 0.6); z = 1 + 0.06 * k; cx = 540 + (pos[speak] - 540) * 0.6 * k;
+    if (D.cast === "tt") { const k2 = ease((t - l.t) / 0.35); z = (li % 2 ? 1.22 : 1.12) * k2 + (1 - k2) * 1.04; cx = 540 + (pos[speak] - 540) * 0.9; cy = 1000 - 120 * k2; } }   // Tiklu: close-up on every speaker, alternating framing
   for (const x of L) {
     const other = x.who === "G" ? "B" : "G";
     if (x.laugh && x.scene !== "end") {

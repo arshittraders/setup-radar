@@ -94,8 +94,9 @@ async function toonRender(J, plan) {
   const TT_V = { G: { voice: 'Fenrir', style: "Speak in Hindi as Tiklu, a confident, show-off, swaggy 15-year-old Indian teenage boy (teen voice, not a child, not an adult). Cool, fast, full of attitude, like a desi teen influencer; same voice every line. Say exactly:" },
     B: { voice: 'Charon', style: "Speak in Hindi as Jugnu, a calm, deadpan, nerdy 15-year-old Indian teenage boy with glasses (teen voice). Dry, flat, sarcastic, slow and smart, a tiny pause before every punchline; same voice every line. Say exactly:" } };
   const V = plan.cast === 'tt' ? { ...TOON_V, ...TT_V } : TOON_V;
-  if (process.env.F5_PY && plan.cast !== 'tt') {   // final voices: IndicF5 clone of the approved Golu/Bunty lines (same voice every line, free)
-    try { require(path.join(__dirname, '..', 'toon', 'f5.js')).f5Takes(lines, job, process.env.F5_PY); engine = 'f5'; }
+  const f5ok = plan.cast !== 'tt' || fs.existsSync(path.join(__dirname, 'voices', 'tiklu.wav'));   // Tiklu/Jugnu: clone their fixed reference voices once they exist
+  if (process.env.F5_PY && f5ok) {   // final voices: IndicF5 clone of the approved Golu/Bunty lines (same voice every line, free)
+    try { require(path.join(__dirname, '..', 'toon', 'f5.js')).f5Takes(lines, job, process.env.F5_PY, console.log, plan.cast === 'tt' ? 'tt' : 'gb'); engine = 'f5'; }
     catch (e) { console.log('f5 voices failed, Gemini fallback:', String(e.message || e).slice(0, 200)); }
   }
   if (engine !== 'f5') await makeTakes(lines, V, job, async (text, voice, style) => { const j = await sup({ action: 'w_tts', job_id: J.id, text, voice, style }); if (!j.pcm) throw new Error('no audio'); return j; });
