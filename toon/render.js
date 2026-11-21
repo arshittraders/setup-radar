@@ -103,7 +103,11 @@ console.log('audio ok');
 (async () => {
   const tpl = fs.readFileSync(path.join(__dirname, 'tpl.html'), 'utf8').replace(/FONTDIR/g, 'file://' + FONTS);
   const KIN = fs.readFileSync(path.join(__dirname, '..', 'motion', 'kinetic.js'), 'utf8');
-  fs.writeFileSync(path.join(__dirname, '_page.html'), tpl.replace('</body>', '<script>' + KIN + '</script></body>'));
+  // cast: 'gb' = Golu & Bunty (default), 'tt' = Tinglu Tashan (client) — own art + labels, nothing shared on screen
+  const CAST = { tt: { chars: 'chars_tt.js', rep: [['KAL GOLU-BUNTY', 'KAL TINGLU-JUGNU'], ['GOLU vs BUNTY', 'TINGLU TASHAN'], ['"GOLU 😊"', '"TINGLU 😎"'], ['"BUNTY 😒"', '"JUGNU 🤓"']] } }[S.cast] || null;
+  let page = tpl.replace('</body>', '<script>' + KIN + '</script></body>');
+  if (CAST) { page = page.replace('<script src="chars.js"></script>', `<script src="${CAST.chars}"></script>`); for (const [a, b] of CAST.rep) page = page.split(a).join(b); }
+  fs.writeFileSync(path.join(__dirname, '_page.html'), page);
   const br = await chromium.launch(); const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } });
   await pg.goto('file://' + path.join(__dirname, '_page.html')); await pg.evaluate(() => document.fonts.ready);
   await pg.evaluate((d) => window.setup(d), { lines: T, total: TOTAL, hook: 0.7, title: S.title, board: S.board || String(S.title || "").replace(/[^\u0900-\u097F\s!?]/g, "").trim() });
