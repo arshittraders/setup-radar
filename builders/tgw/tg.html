@@ -3,7 +3,7 @@
 *{margin:0;padding:0}body{width:1080px;height:1920px;overflow:hidden;background:#fff}
 #bg{position:absolute;inset:0}#ch{position:absolute;left:0;top:0;width:1080px;height:1920px}
 #cap{position:absolute;left:60px;right:60px;top:1500px;text-align:center;font:800 64px/1.25 BD;color:#fff;-webkit-text-stroke:12px #1d1030;paint-order:stroke fill}
-#cap .hl{color:#ffd23f}
+#cap span{padding:0 .06em;border-radius:.1em}
 #bub{position:absolute;left:40px;top:640px;width:640px;padding:30px 36px;border-radius:40px;background:#fff;border:7px solid #1d1030;font:800 54px/1.25 BD;color:#1d1030;box-shadow:10px 12px 0 rgba(0,0,0,.18);opacity:0}
 #bub b{display:block;font-size:34px;color:#c0392b;margin-bottom:6px}
 #bub:after{content:"";position:absolute;left:60px;bottom:-46px;border:24px solid transparent;border-top:28px solid #1d1030}
@@ -18,7 +18,7 @@
 <div id="bub"><b>👩‍🏫 मैडम</b><span id="bt"></span></div>
 <div id="emo"></div><div id="hah">HA HA HA!</div>
 <div id="cap"></div>
-<script src="chars_t.js"></script><script>
+<script src="kinetic.js"></script><script src="chars_t.js"></script><script>
 const $=id=>document.getElementById(id),cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),eo=v=>1-Math.pow(1-cl(v),3);
 window.L=window.L||[];window.AMP=window.AMP||{};
 const x=$('bg').getContext('2d');
@@ -51,7 +51,9 @@ function render(t){
   // madam bubble
   const b=$('bub');if(cur&&cur.who==='M'){const p=eo((t-cur.s)/.25);b.style.opacity=1;b.style.transform=`scale(${.6+.4*p}) rotate(-2deg)`;$('bt').textContent=cur.text}else b.style.opacity=Math.max(0,+b.style.opacity-.15);
   // caption (Tingu lines)
-  const c=$('cap');if(cur&&cur.who==='T'){const w=cur.text.split(' '),k=Math.floor((t-cur.s)/(cur.e-cur.s)*w.length);c.innerHTML=w.map((s,i)=>i<=k?`<span class="hl">${s}</span>`:s).join(' ');c.style.opacity=1}else c.style.opacity=0;
+  const c=$('cap');if(cur&&cur.who==='T'){const w=cur.text.split(' ');if(c._k!==cur.s){c._k=cur.s;c.innerHTML=w.map(s=>`<span>${s}</span>`).join(' ')}
+    const tot=w.reduce((a,s)=>a+s.length+1,0);let acc=0;[...c.children].forEach((sp,i)=>{const a=cur.s+(cur.e-cur.s)*acc/tot;acc+=w[i].length+1;KIN.word(sp,t,a,cur.s+(cur.e-cur.s)*acc/tot,{on:'rgba(255,138,31,.95)',txt:'#ffd23f',base:'#fff'})});c.style.opacity=1}else c.style.opacity=0;
+  KIN.grain(t,.12);
   // punch emoji + HA HA
   const e=$('emo'),h=$('hah');if(last&&last.who==='T'&&last.emoji&&t>last.e&&t<last.e+1.2){const k=(t-last.e)/1.2;e.textContent=last.emoji;e.style.opacity=1-k;e.style.left='780px';e.style.top=(780-k*200)+'px';e.style.transform=`scale(${.6+k*.8}) rotate(${k*30}deg)`;h.style.opacity=1-k;h.style.transform=`scale(${1+Math.sin(k*20)*.06})`}else{e.style.opacity=0;h.style.opacity=0}
 }

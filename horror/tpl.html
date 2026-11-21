@@ -225,7 +225,7 @@ window.render=function(t){
   $('turb').setAttribute('seed',Math.floor(t*24)%97);
   // subtitles
   const sub=$('sub'); const g=d.segs.find(x=>t>=x.start-0.05&&t<x.end+0.35);
-  if(t<stingT&&window.karaoke&&g&&g.words){window.karaoke(sub,d.segs,t,{max:4,on:g.who==='N'?'#ffd23f':'#ff5a5a'});}
+  if(t<stingT&&window.karaoke&&g&&g.words){window.karaoke(sub,d.segs,t,{max:4,on:g.who==='N'?'#ffd23f':'#ff5a5a',mark:'rgba(150,0,10,.85)'});}
   else { const txt=g&&t<stingT?g.sub:''; if(sub._t!==txt){sub._t=txt;sub._k=null;sub.innerHTML=txt;} sub.style.opacity=g&&t<stingT?1:0; }
   // black open + flash + end
   $('black').style.opacity=t<0.25?1-t/0.25:(t>stingT+0.12?1:0);

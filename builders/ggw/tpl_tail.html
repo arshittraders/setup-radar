@@ -4,13 +4,15 @@ window.render=(t)=>{
   const T=window.T;let i=T.findIndex(s=>t<s.end);if(i<0)i=T.length-1;const s=T[i];const u=t-s.start,d=s.end-s.start;
   x=x1;x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,W,H);SC[Math.min(i,SC.length-1)](u,d,t);x.setTransform(1,0,0,1,0,0);
   const sk=i>0?Math.max(0,1-u/.5)*14:0;cv.style.transform=sk?`translate(${Math.sin(t*90)*sk}px,${Math.cos(t*77)*sk}px) scale(${1+sk/400})`:'';
-  if(i>0&&u<.45){const P=T[i-1];x=x2;x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,W,H);SC[i-1](P.end-P.start+u,P.end-P.start,t);x.setTransform(1,0,0,1,0,0);x=x1;cv2.style.opacity=1-u/.45}else cv2.style.opacity=0;
+  if(i>0&&u<.4){const P=T[i-1];x=x2;x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,W,H);SC[i-1](P.end-P.start+u,P.end-P.start,t);x.setTransform(1,0,0,1,0,0);x=x1;cv2.style.opacity=1;KIN.whipOut(cv2,u/.4);const sh=cv.style.transform;KIN.whipIn(cv,u/.4);if(sh&&cv.style.transform)cv.style.transform+=' '+sh}else{cv2.style.opacity=0;cv.style.filter='';}
   const fl=i>0?cl(1-u/.2)*.22:0;document.getElementById('flash').style.opacity=fl;
-  const ti=document.getElementById('title');if(i===0){ti.innerHTML=EP.title;const p=eo(pr(t,.2,.8));ti.style.opacity=p*(1-pr(t,d-1.2,.6));ti.style.transform=`scale(${.7+.3*p})`}else ti.style.opacity=0;
+  const ti=document.getElementById('title');if(i===0){if(ti._src!==EP.title){ti.innerHTML=EP.title;ti._src=EP.title;ti._kw=0}const p=eo(pr(t,.2,.8));ti.style.opacity=1-pr(t,d-1.2,.6);ti.style.transform=`scale(${.9+.1*p})`;KIN.headline(ti,t,.2,.12)}else ti.style.opacity=0;
   ['b1','b2'].forEach((id,k)=>{const e=document.getElementById(id);e.textContent=EP.badges[k];if(i===EP.badgeScene){const p=pr(u,1.4+k*1.4,.4);e.style.opacity=p;e.style.transform=`scale(${.5+.5*eo(p)}) rotate(${k?4:-4}deg)`}else e.style.opacity=0});
   const cap=document.getElementById('cap');const ws=s.text.replace(/\.\.\./g,'…').split(/\s+/).filter(Boolean);
-  const voiced=s.vend||s.end;const vt=(t-s.start)/(voiced-s.start);const tot=ws.reduce((a,w)=>a+w.length+2,0);let acc=0,k=0;for(;k<ws.length;k++){acc+=ws[k].length+2;if(acc/tot>=vt)break}
-  k=Math.min(k,ws.length-1);const c0=Math.floor(k/3)*3;const em=new RegExp(EP.em);cap.innerHTML=ws.slice(c0,c0+3).map((w,j)=>`<span class="${c0+j===k?'on':''} ${em.test(w)?'em':''}">${w}</span>`).join(' ');
-  cap.style.top=(i===7?1720:(EP.capTop&&EP.capTop[i])||1290)+'px';cap.style.opacity=(t-s.start)<(voiced-s.start)+.15?1:0;
+  const vs=s.vstart||s.start,voiced=s.vend||s.end;const tot=ws.reduce((a,w)=>a+w.length+2,0);let acc=0;const WT=ws.map(w=>{const a=vs+(voiced-vs)*acc/tot;acc+=w.length+2;return [a,vs+(voiced-vs)*acc/tot]});
+  let k=WT.findIndex(w=>t<w[1]);if(k<0)k=ws.length-1;const c0=Math.floor(k/3)*3;const em=new RegExp(EP.em);const key=s.start+':'+c0;
+  if(cap._k!==key){cap._k=key;cap.innerHTML=ws.slice(c0,c0+3).map((w,j)=>`<span data-i="${c0+j}" class="${em.test(w)?'em':''}">${w}</span>`).join(' ')}
+  [...cap.children].forEach(sp=>{const j=+sp.dataset.i;KIN.word(sp,t,WT[j][0],WT[j][1],{on:'rgba(255,90,31,.9)'})});
+  cap.style.top=(i===7?1720:(EP.capTop&&EP.capTop[i])||1290)+'px';cap.style.opacity=t<voiced+.15?1:0;KIN.grain(t,.14);
 };
 </script></body></html>

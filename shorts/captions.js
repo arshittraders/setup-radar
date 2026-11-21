@@ -57,7 +57,10 @@ window.karaoke=function(el,segs,t,opt){opt=opt||{};
   el.style.opacity=1;
   [...el.children].forEach(s=>{const i=+s.dataset.i,w=W[i];const on=lt>=w.s-0.03&&lt<w.e+0.05, done=lt>=w.e;
     s.style.color=on?(opt.on||'#ffe14d'):(done?(opt.done||'#ffffff'):(opt.off||'rgba(255,255,255,.75)'));
-    const p=on?Math.min(1,(lt-w.s+0.03)/0.1):0; s.style.transform='scale('+(1+0.13*p)+')';
-    s.style.display='inline-block';s.style.transition='none';});
+    if(window.KIN){KIN.word(s,lt,w.s,w.e,{on:opt.mark||'rgba(255,90,31,.85)',ghost:0});s.style.padding='0 .06em';s.style.borderRadius='.1em';}
+    else{const p=on?Math.min(1,(lt-w.s+0.03)/0.1):0; s.style.transform='scale('+(1+0.13*p)+')';s.style.display='inline-block';s.style.transition='none';}});
+  if(window.KIN&&opt.grain!==false)KIN.grain(t,opt.grain||0.13);
 };`;
-module.exports = { wordTimes, CLIENT };
+// motion layer (motion/kinetic.js) is shipped with the captions so every page that adds CLIENT gets it
+const KIN_SRC = (() => { try { return require('fs').readFileSync(require('path').join(__dirname, '..', 'motion', 'kinetic.js'), 'utf8'); } catch (_) { return ''; } })();
+module.exports = { wordTimes, CLIENT: KIN_SRC + '\n' + CLIENT };

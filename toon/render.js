@@ -102,7 +102,8 @@ console.log('audio ok');
 // ---------- frames ----------
 (async () => {
   const tpl = fs.readFileSync(path.join(__dirname, 'tpl.html'), 'utf8').replace(/FONTDIR/g, 'file://' + FONTS);
-  fs.writeFileSync(path.join(__dirname, '_page.html'), tpl);
+  const KIN = fs.readFileSync(path.join(__dirname, '..', 'motion', 'kinetic.js'), 'utf8');
+  fs.writeFileSync(path.join(__dirname, '_page.html'), tpl.replace('</body>', '<script>' + KIN + '</script></body>'));
   const br = await chromium.launch(); const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } });
   await pg.goto('file://' + path.join(__dirname, '_page.html')); await pg.evaluate(() => document.fonts.ready);
   await pg.evaluate((d) => window.setup(d), { lines: T, total: TOTAL, hook: 0.7, title: S.title, board: S.board || String(S.title || "").replace(/[^\u0900-\u097F\s!?]/g, "").trim() });

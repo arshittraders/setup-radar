@@ -34,7 +34,7 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
 
 (async () => {
   const br = await chromium.launch(); const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } });
-  await pg.goto('file://' + path.join(__dirname, PAGE));
+  await pg.goto('file://' + path.join(__dirname, PAGE)); await pg.addScriptTag({ path: path.join(__dirname, 'kintext.js') });
   const [D0, D1] = await pg.evaluate(() => window.DUR || [35, 55]);
   if (!SEED) for (let k = 0; k < 40; k++) {   // pick a seed whose video lasts D0-D1 s and ends properly (dry run, no drawing)
     const sd = 1 + Math.floor(Math.random() * 1e6); await pg.evaluate((s) => window.init({ seed: s, n: 7 }), sd);

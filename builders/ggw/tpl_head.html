@@ -8,7 +8,8 @@ canvas{position:absolute;inset:0}
 #cap{position:absolute;left:50px;right:50px;top:1290px;text-align:center;font-family:BD,'Noto Color Emoji';font-weight:800;font-size:86px;line-height:1.18;color:#fff;
   text-shadow:0 0 18px rgba(0,0,0,.9),0 6px 0 #000,3px 3px 0 #000,-3px -3px 0 #000,3px -3px 0 #000,-3px 3px 0 #000}
 #cap span{display:inline-block;margin:0 10px;transition:none}
-#cap .on{color:#ffd23f;transform:scale(1.12)}
+#cap .on{color:#ffd23f}
+#cap span{padding:0 .08em;border-radius:.1em}
 #cap .em{color:#7CFF6B}
 #title{position:absolute;left:0;right:0;top:230px;text-align:center;font-family:BD;font-weight:800;color:#ffd23f;font-size:120px;line-height:1.05;
   text-shadow:0 0 30px rgba(255,170,0,.6),0 8px 0 #5a3500,4px 4px 0 #000,-4px -4px 0 #000}
@@ -26,7 +27,7 @@ canvas{position:absolute;inset:0}
 <div class="badge" id="b2" style="right:90px;top:600px"></div>
 <div id="cap"></div>
 <div id="flash"></div>
-<script src="ep.js"></script><script>
+<script src="kinetic.js"></script><script src="ep.js"></script><script>
 const W=1080,H=1920,cv=document.getElementById('c'),cv2=document.getElementById('c2');let x=cv.getContext('2d');const x1=x,x2=cv2.getContext('2d');
 const cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)), eo=v=>1-Math.pow(1-v,3), pr=(t,a,d)=>cl((t-a)/d);
 let sd=7;const R=()=>((sd=(sd*16807)%2147483647)/2147483647);

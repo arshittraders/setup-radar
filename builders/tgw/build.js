@@ -5,7 +5,7 @@ const LINES = EPS[EP].lines.map((s, i) => { const [who, text] = s.split('|'); re
 const EMO = { tg02: ['😤','🤓','😏','💯','🔋'], tg03: ['🐢','🤒','🌍','🏃','⏰'], tg04: ['🌳','🚗','☕','🍎','🍱'], tg05: ['👷','🤝','🎂','🙈','📜'], tg06: ['🤥','🐱','🔄','🔥','🇬🇧'], tg07: ['🤓','🌳','🩴','🤒','🍬'], tg08: ['☔','💸','📵','📓','🗺️'], tg09: ['😰','💰','🚌','🎥','🏃'] }[EP];
 const META = { 1: { emoji: EMO[0], mood: 'smug', pose: 'talk' }, 3: { emoji: EMO[1], mood: 'smug', pose: 'talk' }, 5: { emoji: EMO[2], mood: 'happy', pose: 'point' }, 7: { emoji: EMO[3], mood: 'happy', pose: 'talk' }, 9: { emoji: EMO[4], mood: 'smug', pose: 'shrug' }, 10: { mood: 'happy', pose: 'wave' } };
 const LM = { 0: 'shock', 2: 'smug', 4: 'smile', 6: 'smile', 8: 'shock' };
-const P_ = D + '/p_' + EP; fs.mkdirSync(P_, { recursive: true });
+const P_ = D + '/p_' + EP; fs.mkdirSync(P_, { recursive: true }); fs.copyFileSync('/home/claude/setup-radar/motion/kinetic.js', D + '/kinetic.js');
 const dur = f => +execSync(`ffprobe -v error -show_entries format=duration -of csv=p=0 ${f}`).toString();
 let t = 0.5; const L = [];
 for (const l of LINES) {

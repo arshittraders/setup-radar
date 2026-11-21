@@ -90,7 +90,7 @@ window.render=t=>{
   $('title').style.opacity=ti; $('part').style.opacity=ti; $('title').style.transform=`scale(${0.85+0.15*ease((t-d.hookEnd)/0.5)})`;
   // subtitles
   const sb=$('sub'); const gg=d.segs.find(x=>t>=x.start-0.05&&t<x.end+0.35);
-  if(t<d.sting+0.5&&window.karaoke&&gg&&gg.words){window.karaoke(sb,d.segs,t,{max:4,on:gg.ghost?'#ff4d4d':'#ffd23f'});}
+  if(t<d.sting+0.5&&window.karaoke&&gg&&gg.words){window.karaoke(sb,d.segs,t,{max:4,on:gg.ghost?'#ff4d4d':'#ffd23f',mark:gg.ghost?'rgba(150,0,10,.85)':'rgba(255,90,31,.85)'});}
   else { const tx2=gg&&t<d.sting+0.5?gg.sub:''; if(sb._t!==tx2){sb._t=tx2;sb._k=null;sb.innerHTML=tx2;} sb.style.opacity=gg&&t<d.sting+0.5?1:0; }
   // red pulse on ghost lines
   const gl=d.segs.some(x=>x.ghost&&t>=x.start&&t<x.end+0.3); $('red').style.opacity=gl?0.6+0.4*Math.abs(Math.sin(t*4)):0;

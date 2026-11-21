@@ -11,7 +11,8 @@ svg{position:absolute;left:0;top:0}
 #title small{display:block;font-size:54px;color:#fff;-webkit-text-stroke:7px #2b1d0e}
 #cap{position:absolute;left:40px;right:40px;top:1560px;text-align:center;font-weight:800;font-size:74px;line-height:1.18;color:#fff;-webkit-text-stroke:9px #1d1a24;paint-order:stroke fill;text-shadow:0 7px 0 #1d1a24}
 #cap .w{display:inline-block;margin:0 8px}
-#cap .on{color:#ffe14d;transform:scale(1.1) rotate(-2deg)}
+#cap .on{color:#ffe14d}
+#cap .w{padding:0 .06em;border-radius:.1em}
 #who{position:absolute;left:0;right:0;top:1470px;text-align:center}
 #who span{font-family:Bangers;font-size:58px;letter-spacing:3px;padding:4px 30px 0;border-radius:16px;border:6px solid #1d1a24;color:#1d1a24;box-shadow:6px 6px 0 #1d1a24}
 .st{position:absolute;font-size:190px;line-height:1;filter:drop-shadow(8px 8px 0 rgba(0,0,0,.35))}
@@ -50,7 +51,7 @@ const BG = {
 };
 let D, curBg = "";
 window.setup = (d) => { D = d; };
-window.render = (t) => {
+window.render = (t) => { if (window.KIN) KIN.grain(t, .1);
   const L = D.lines; let li = -1; for (let i = 0; i < L.length; i++) if (t >= L[i].t - 0.001) li = i;
   const l = li >= 0 ? L[li] : null, scene = l ? l.scene : L[0].scene;
   const SC = window.SCENES && SCENES[scene];
@@ -98,7 +99,8 @@ window.render = (t) => {
   if (l && t < Math.min(l.t + l.d + 0.35, end + 0.2)) {
     const words = l.text.split(" "), p = (t - l.t) / l.d, on = Math.min(words.length - 1, Math.floor(p * words.length));
     const k = li + ":" + on; if ($("cap").dataset.k !== k) { $("cap").innerHTML = words.map((x, i) => `<span class="w${i === on && p < 1 ? " on" : ""}">${x}</span>`).join(" "); $("cap").dataset.k = k; }
-    $("cap").style.opacity = 1; $("cap").style.transform = `scale(${0.85 + 0.15 * back((t - l.t) / 0.25)})`;
+    if (window.KIN) { const tot = words.reduce((a, w) => a + w.length + 1, 0); let acc = 0; [...$("cap").children].forEach((sp, i) => { const a = l.t + l.d * acc / tot; acc += words[i].length + 1; KIN.word(sp, t, a, l.t + l.d * acc / tot, { on: l.who === "G" ? "rgba(255,138,31,.9)" : "rgba(109,74,255,.85)" }); }); }
+    $("cap").style.opacity = 1; $("cap").style.transform = window.KIN ? "" : `scale(${0.85 + 0.15 * back((t - l.t) / 0.25)})`;
     const s = $("who").firstElementChild; s.textContent = l.who === "G" ? "GOLU 😊" : "BUNTY 😒"; s.style.background = l.who === "G" ? "#ffd84a" : "#ff8a65"; $("who").style.opacity = 1;
   } else { $("cap").style.opacity = 0; $("who").style.opacity = 0; }
   // stickers + HAHA
