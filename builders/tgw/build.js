@@ -2,7 +2,7 @@ const { chromium } = require('playwright'); const SFX = require('/home/claude/se
 const EP = process.argv[2], D = __dirname, SR = 44100, A0 = '/home/claude/setup-radar/toon/assets';
 const EPS = JSON.parse(fs.readFileSync('/home/claude/setup-radar/tgb/eps.json')), BOARD = EPS[EP].board;
 const LINES = EPS[EP].lines.map((s, i) => { const [who, text] = s.split('|'); return { i, who, text }; });
-const EMO = { tg02: ['😤','🤓','😏','💯','🔋'], tg03: ['🐢','🤒','🌍','🏃','⏰'], tg04: ['🌳','🚗','☕','🍎','🍱'], tg05: ['👷','🤝','🎂','🙈','📜'], tg06: ['🤥','🐱','🔄','🔥','🇬🇧'], tg07: ['🤓','🌳','🩴','🤒','🍬'] }[EP];
+const EMO = { tg02: ['😤','🤓','😏','💯','🔋'], tg03: ['🐢','🤒','🌍','🏃','⏰'], tg04: ['🌳','🚗','☕','🍎','🍱'], tg05: ['👷','🤝','🎂','🙈','📜'], tg06: ['🤥','🐱','🔄','🔥','🇬🇧'], tg07: ['🤓','🌳','🩴','🤒','🍬'], tg08: ['☔','💸','📵','📓','🗺️'], tg09: ['😰','💰','🚌','🎥','🏃'] }[EP];
 const META = { 1: { emoji: EMO[0], mood: 'smug', pose: 'talk' }, 3: { emoji: EMO[1], mood: 'smug', pose: 'talk' }, 5: { emoji: EMO[2], mood: 'happy', pose: 'point' }, 7: { emoji: EMO[3], mood: 'happy', pose: 'talk' }, 9: { emoji: EMO[4], mood: 'smug', pose: 'shrug' }, 10: { mood: 'happy', pose: 'wave' } };
 const LM = { 0: 'shock', 2: 'smug', 4: 'smile', 6: 'smile', 8: 'shock' };
 const P_ = D + '/p_' + EP; fs.mkdirSync(P_, { recursive: true });
