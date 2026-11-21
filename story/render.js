@@ -73,7 +73,7 @@ shots.forEach((s, i) => { if (shots[i + 1]) s.end = shots[i + 1].start; else s.e
   await pg.addScriptTag({ content: CAP.CLIENT });
   await pg.evaluate(d => window.setup(d), { shots, segs: S.segments, slams, sting, hookEnd, title: S.title, part: S.part, next: S.next, horror: (S.mood || 'horror') === 'horror' });
   await pg.waitForTimeout(800);
-  const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-i', W('audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', W('out.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
+  const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-i', W('audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-maxrate', '6M', '-bufsize', '12M', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', W('out.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
   const frames = Math.ceil(TOTAL * FPS), thumbF = Math.round((last.start + 0.6) * FPS);
   for (let f = 0; f < frames; f++) {
     await pg.evaluate(x => window.render(x), f / FPS);

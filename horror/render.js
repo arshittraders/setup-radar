@@ -69,7 +69,7 @@ ff([...inputs, '-filter_complex', filt.join(';'), '-map', '[a]', '-t', TOTAL.toF
   await pg.addScriptTag({ content: CAP.CLIENT });
   await pg.evaluate(d => window.setup(d), { segs: S.segments, knocks });
   const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
-    '-i', W('audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', W('out.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
+    '-i', W('audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-maxrate', '6M', '-bufsize', '12M', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', W('out.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
   const frames = Math.ceil(TOTAL * FPS), thumbF = Math.round((handT + 0.75) * FPS);
   for (let f = 0; f < frames; f++) {
     await pg.evaluate(x => window.render(x), f / FPS);

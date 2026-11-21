@@ -108,7 +108,7 @@ console.log('audio ok');
   await pg.goto('file://' + path.join(__dirname, '_page.html')); await pg.evaluate(() => document.fonts.ready);
   await pg.evaluate((d) => window.setup(d), { lines: T, total: TOTAL, hook: 0.7, title: S.title, board: S.board || String(S.title || "").replace(/[^\u0900-\u097F\s!?]/g, "").trim() });
   const only = process.argv[4] ? process.argv[4].split(',').map(Number) : null;
-  const enc = only ? null : spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-i', W('audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', W('out.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
+  const enc = only ? null : spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-i', W('audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-maxrate', '6M', '-bufsize', '12M', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', W('out.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
   const N = Math.round(TOTAL * FPS);
   for (let f = 0; f < N; f++) {
     if (only && !only.includes(f)) continue;

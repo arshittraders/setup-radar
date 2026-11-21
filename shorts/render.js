@@ -51,7 +51,7 @@ execFileSync('ffmpeg', ['-y', '-v', 'error', ...inputs, '-filter_complex', filt.
   await pg.addScriptTag({ content: CAP.CLIENT });
   await pg.evaluate(d => window.setup(d), S);
   const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
-    '-i', path.join(job, 'audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p',
+    '-i', path.join(job, 'audio.m4a'), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-maxrate', '6M', '-bufsize', '12M', '-pix_fmt', 'yuv420p',
     '-c:a', 'copy', '-shortest', '-movflags', '+faststart', path.join(job, 'out.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
   const frames = Math.ceil(TOTAL * FPS);
   for (let f = 0; f < frames; f++) {

@@ -38,7 +38,7 @@ buf.write('RIFF', 0); buf.writeUInt32LE(36 + n * 2, 4); buf.write('WAVEfmt ', 8)
 for (let i = 0; i < n; i++) buf.writeInt16LE(Math.round(A[i] / pk * .95 * 32767), 44 + i * 2); fs.writeFileSync(`${P_}/mix.wav`, buf);
 (async () => { const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
   await p.goto('file://' + D + '/tg.html'); await p.evaluate(async (o) => { window.L = o.L; window.AMP = o.AMP; window.BOARD = o.BOARD; await document.fonts.ready; window.render(0.1); await new Promise(r => setTimeout(r, 300)); }, { L, AMP, BOARD });
-  const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', '30', '-i', '-', '-i', `${P_}/mix.wav`, '-af', 'loudnorm=I=-14:TP=-1.5', '-c:v', 'libx264', '-preset', 'medium', '-crf', '21', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', `${D}/../tingu-${EP.slice(2)}.mp4`], { stdio: ['pipe', 'inherit', 'inherit'] });
+  const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', '30', '-i', '-', '-i', `${P_}/mix.wav`, '-af', 'loudnorm=I=-14:TP=-1.5', '-c:v', 'libx264', '-preset', 'medium', '-crf', '21', '-maxrate', '6M', '-bufsize', '12M', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', `${D}/../tingu-${EP.slice(2)}.mp4`], { stdio: ['pipe', 'inherit', 'inherit'] });
   for (let i = 0; i < TOTAL * 30; i++) { await p.evaluate(t => window.render(t), i / 30); const im = await p.screenshot({ type: 'jpeg', quality: 88 }); if (!ff.stdin.write(im)) await new Promise(r => ff.stdin.once('drain', r)); }
   ff.stdin.end(); await new Promise(r => ff.on('close', r)); await b.close(); console.log('done', TOTAL.toFixed(1));
 })();

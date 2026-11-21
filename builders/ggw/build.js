@@ -51,7 +51,7 @@ function voice() { const N = Math.ceil(TOTAL * SR), a = new Float32Array(N); for
   const br = await chromium.launch(); const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } });
   await pg.goto('file://' + D + '/s.html'); await pg.evaluate((T) => (window.T = T), T); await pg.evaluate(() => document.fonts.ready);
   if (TEST) { for (const tt of TEST.split(',').map(Number)) { await pg.evaluate((x) => window.render(x), tt); await pg.screenshot({ path: `${D}/f_${tt}.jpg`, type: 'jpeg', quality: 70 }); } await br.close(); return; }
-  const vid = D + '/v.mp4'; const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p', vid], { stdio: ['pipe', 'inherit', 'inherit'] });
+  const vid = D + '/v.mp4'; const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-maxrate', '6M', '-bufsize', '12M', '-pix_fmt', 'yuv420p', vid], { stdio: ['pipe', 'inherit', 'inherit'] });
   const NF = Math.round(TOTAL * FPS); for (let f = 0; f < NF; f++) { await pg.evaluate((x) => window.render(x), f / FPS); const img = await pg.screenshot({ type: 'jpeg', quality: 90 }); if (!enc.stdin.write(img)) await new Promise((r) => enc.stdin.once('drain', r)); }
   enc.stdin.end(); await new Promise((r) => enc.on('close', r)); await br.close();
   fs.writeFileSync(D + '/m.wav', wav(music())); fs.writeFileSync(D + '/vo.wav', wav(voice()));

@@ -29,7 +29,7 @@ window.KIN = (function () {
   function grain(t, a) {
     if (!G) { G = document.createElement('canvas'); G.width = 540; G.height = 960; Object.assign(G.style, { position: 'absolute', left: 0, top: 0, width: '1080px', height: '1920px', pointerEvents: 'none', mixBlendMode: 'overlay', zIndex: 99, imageRendering: 'pixelated' });
       const g = G.getContext('2d'), im = g.createImageData(540, 960); let sd = 11; for (let i = 0; i < im.data.length; i += 4) { sd = (sd * 16807) % 2147483647; const v = 128 + ((sd % 160) - 80); im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; } g.putImageData(im, 0, 0); document.body.appendChild(G); }
-    const f = Math.floor(t * 12); G.style.opacity = a == null ? 0.16 : a; G.style.transform = `translate(${(f * 37) % 9 - 4}px,${(f * 53) % 9 - 4}px)`;
+    G.style.opacity = Math.min(a == null ? 0.06 : a, 0.06);   // static + faint: moving grain makes files ~4x bigger
   }
   // whip transition: element leaving (u 0→1) slides out to the left with motion blur; entering one comes from the right
   function whipOut(el, u) { const q = eo(u); el.style.transform = `translateX(${-q * 1080}px) skewX(${q * 8}deg)`; el.style.filter = `blur(${(Math.sin(Math.PI * cl(u)) * 18).toFixed(1)}px)`; }
