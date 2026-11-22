@@ -1,0 +1,17 @@
+function hut(cx,by,s,roof=0,lit=0,col='#a8865a'){x.save();x.translate(cx,by);x.scale(s,s);x.fillStyle=col;x.fillRect(-110,-150,220,150);x.fillStyle='rgba(0,0,0,.25)';x.fillRect(60,-150,50,150);
+ if(roof){x.fillStyle='#7a5a3a';x.beginPath();x.moveTo(-130,-150);x.lineTo(0,-230);x.lineTo(130,-150);x.fill()}else{x.fillStyle=col;x.beginPath();x.moveTo(-110,-150);x.lineTo(-70,-185);x.lineTo(-30,-150);x.lineTo(20,-172);x.lineTo(60,-150);x.fill()}
+ x.fillStyle=lit?`rgba(255,200,90,${lit})`:'#1a1008';x.fillRect(-70,-110,44,50);x.fillRect(20,-110,44,50);x.fillStyle='#1a1008';x.fillRect(-20,-80,40,80);x.restore()}
+function village(by,t,roof=0,lit=0,col){[[120,.9],[330,1.1],[560,1],[780,1.15],[980,.9]].forEach(([hx,s],k)=>hut(hx,by,s,roof,typeof lit==='function'?lit(k):lit,col))}
+function chip(s,cx,cy,a,col='#fff',bg='rgba(0,0,0,.55)'){x.save();x.globalAlpha=a;x.font='800 62px BD';const w=x.measureText(s).width+70;x.fillStyle=bg;x.beginPath();x.roundRect(cx-w/2,cy-55,w,100,50);x.fill();x.fillStyle=col;x.textAlign='center';x.fillText(s,cx,cy+18);x.restore()}
+function cracks(a){x.save();x.globalAlpha=a;x.strokeStyle='#3a2210';x.lineWidth=5;let sd=3;const r=()=>((sd=(sd*16807)%2147483647)/2147483647);for(let i=0;i<40;i++){let px=r()*W,py=1250+r()*650;x.beginPath();x.moveTo(px,py);for(let k=0;k<4;k++){px+=(r()-.5)*160;py+=(r()-.5)*80;x.lineTo(px,py)}x.stroke()}x.restore()}
+window.EP={title:'कुलधरा: एक रात<br>में ख़ाली गाँव 👻',badges:['श्राप? 🔥','~200 साल 👻'],badgeScene:4,em:'कुलधरा|राजस्थान|रात|ख़ाली|जैसलमेर|पालीवाल|चौरासी|रातों-रात|दीवान|सालिम|श्राप|सूनी|पानी|लगान|सबूत',capTop:{},SC:[
+ (u,d,t)=>{cam(1.14-.1*eo(cl(u/d)));sky(t,'#02030c','#0a0a24','#2a1a2a');village(1380,t,0,0,'#5a4a3a');x.fillStyle='#1a120a';x.fillRect(-W,1370,W*3,700);dust(t)},
+ (u,d,t)=>{cam(1.04);desert(t,'#1a1a3a','#8a5a3a');village(1400,t,1,0);x.setTransform(1,0,0,1,0,0);txt('जैसलमेर ~18 किमी 📍',540,460,86,'#ffd23f',pr(u,.3,.4));txt('पालीवाल ब्राह्मण',540,600,80,'#fff',pr(u,1.2,.4))},
+ (u,d,t)=>{cam(1.04);sky(t,'#02030c','#0a0a2a','#1a1a3a');const p=pr(u,.6,d*.75);village(1400,t,1,k=>p*5>k+1?0:.9);x.fillStyle='#120c06';x.fillRect(-W,1390,W*3,700);emo('🌙',820,700,120,1);x.setTransform(1,0,0,1,0,0);txt('84 गाँव... रातों-रात',540,460,88,'#ffd23f',pr(u,.3,.4))},
+ (u,d,t)=>{cam(1.04);const g=x.createRadialGradient(540,900,50,540,900,900);g.addColorStop(0,'#4a1010');g.addColorStop(1,'#0a0204');x.fillStyle=g;x.fillRect(-W,-H,W*3,H*3);man(360,1180,5.2,0);emo('👑',360,780,110,pr(u,.2,.3));man(720,1180,4.2,0);emo('💔',720,860,110,pr(u,1.4,.3));x.setTransform(1,0,0,1,0,0);txt('दीवान सालिम सिंह',540,460,90,'#ffd23f',pr(u,.3,.4))},
+ (u,d,t)=>{cam(1.03);sky(t,'#02030c','#14081a','#2a0a10');embers(t,'255,90,40');village(1300,t,1,0,'#4a3a2a');for(let i=0;i<7;i++){man(200+i*110+u*60,1440,2.2,.1)}x.fillStyle='#0e0804';x.fillRect(-W,1450,W*3,700)},
+ (u,d,t)=>{cam(1.05+.05*eo(cl(u/d)));desert(t,'#3a5a8a','#c89a6a');village(1420,t,0,0,'#b89a6a');x.setTransform(1,0,0,1,0,0);txt('आज भी वीरान 🏚️',540,460,96,'#ffd23f',pr(u,.3,.4))},
+ (u,d,t)=>{cam(1.03);const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#e0a050');g.addColorStop(1,'#8a4a20');x.fillStyle=g;x.fillRect(-W,-H,W*3,H*3);sun(540,780,110,1);x.fillStyle='#a06a3a';x.fillRect(-W,1240,W*3,700);cracks(pr(u,.4,1));x.setTransform(1,0,0,1,0,0);
+   txt('पानी की कमी? 🏜️',540,460,96,'#fff',pr(u,.3,.4));txt('❌ श्राप का सबूत नहीं',540,1180,74,'#fff',pr(u,d*.45,.4))},
+ (u,d,t)=>vs(u,t,['श्राप','👻'],['सूखा','🏜️'],['#3a1a6a','#7a3fd0'],['#6a3a0e','#c07a1f'])
+]};
