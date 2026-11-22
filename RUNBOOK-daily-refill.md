@@ -44,3 +44,11 @@ plan caption/yt_title like earlier rows of that channel). Re-run diag-cov to con
 ## 4. Report
 Send Himanshu a short Hinglish summary: which channels were refilled, till when each is covered,
 anything that failed. If something could not be fixed, say so plainly.
+
+## Clipzeno clip pool notes (updated 22 Nov)
+- KreekCraft VOD 2932147800 scanned ranges (kreek-raw*.zip in release studio-debug): 1800-10500 (raw7, pre-release
+  countdown), 10800-14000 (raw4), 17000-26000 (raw/raw5), 26200-31800 (raw8), 32000-42000 (raw6), 42200-46000 (raw9),
+  46000-74000 (raw3). Used so far: almost all good ones. Unused but weak/risky: raw3 kc7 (pills talk), raw3 kc10/11/12
+  (sleep / campaign %), giveaways (raw3 kc5, raw4 kc5, raw5 kc3, raw7 kc1/kc4), raw8 kc2/kc3 + raw9 kc2 (NSFW/crude).
+- Next refill needs NEW source: a newer KreekCraft GTA 6 VOD, or scan beyond 74000 s of 2932147800 (kreek-clips.yml).
+- Dom clips: dom-crying + dom-details still held ("ruckus clip limit") — ask Himanshu before scheduling them.
