@@ -5,7 +5,7 @@ CH = 'b68c5efb-3ea4-4239-b5fd-e725b8919691'
 PRESETS = {
  'kreek': dict(tags=['#GTA6', '#KreekCraft', '#GrandTheftAutoVI'], extra='#gta6clips #gaming', campaign='KreekCraft', url='',
                body="🎮 Clip from @KreekCraft's GTA 6 stream\nFollow for daily GTA 6 moments!"),
- 'dom': dict(tags=['#dasgasdom3', '#GTA6', '#dasgasd3m'], extra='#GrandTheftAutoVI #gta6clips', campaign='RUCKUS (Dasgas Dom)', url='',
+ 'dom': dict(tags=['#dasgasdom3', '#GTA6', '#dasgasd3m'], extra='#GrandTheftAutoVI #gta6clips', campaign='RUCKUS (Dasgas Dom)', url='https://contentrewards.com/c/campaigns/051002dd-5c46-43d0-a446-43f2957ba3a9',
              body="🎮 Dasgas Dom (dasgasd3m) is live on Kick → kick.com/dasgasd3m\nFollow for daily GTA 6 streamer moments!"),
 }
 P = PRESETS[sys.argv[3] if len(sys.argv) > 3 else 'kreek']; TAGS = ' '.join(P['tags'])

@@ -20,7 +20,7 @@ def png(path, words, size, hl_idx=-1, maxw=980, col=(255, 255, 255), hcol=(255, 
             d.text((x, 20 + li * lh), wd, font=f, fill=hcol if i == hl_idx else col, stroke_width=10, stroke_fill=(0, 0, 0)); x += lw + sp
     im.save(path)
 # caption events: 3-word pages, current word highlighted
-BAD = {'SHIT': 'SH*T', 'FUCK': 'F*CK', 'FUCKING': 'F*CKING', 'BITCH': 'B*TCH', 'NUDES': 'N*DES'}
+BAD = {'SHIT': 'SH*T', 'BULLSHIT': 'BULLSH*T', 'FUCK': 'F*CK', 'FUCKING': 'F*CKING', 'BITCH': 'B*TCH', 'NUDES': 'N*DES'}
 def cen(w): k = re.sub(r'[^A-Z]', '', w); return w.replace(k, BAD[k]) if k in BAD else w
 ws = [(s - ss, e - ss, cen(re.sub(r'[^\w\'!?.,-]', '', t).upper())) for s, e, t in W if s >= ss - .05 and e <= to + .05 and t.strip()]
 ev = []
