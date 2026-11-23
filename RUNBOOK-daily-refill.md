@@ -50,5 +50,10 @@ anything that failed. If something could not be fixed, say so plainly.
   countdown), 10800-14000 (raw4), 17000-26000 (raw/raw5), 26200-31800 (raw8), 32000-42000 (raw6), 42200-46000 (raw9),
   46000-74000 (raw3). Used so far: almost all good ones. Unused but weak/risky: raw3 kc7 (pills talk), raw3 kc10/11/12
   (sleep / campaign %), giveaways (raw3 kc5, raw4 kc5, raw5 kc3, raw7 kc1/kc4), raw8 kc2/kc3 + raw9 kc2 (NSFW/crude).
-- Next refill needs NEW source: a newer KreekCraft GTA 6 VOD, or scan beyond 74000 s of 2932147800 (kreek-clips.yml).
+- 2932147800 ends at ~74080 s (fully used). Newer VODs (list with `kreek-vods.yml` → release asset
+  vods-kreekcraft.txt): 2933758895 DAY 2 (41835 s), 2934981732 DAY 3 (42198 s), 2936183180 final mission (35316 s),
+  2937360376 best ending (12497 s; ending = spoilers, avoid).
+- DAY 2 scanned (23 Nov): 2000-12000 (kreek-d2a) and 15000-26000 (kreek-d2b). Used: d2a kc2/kc3/kc4/kc5, d2b kc1/kc2.
+  Unused/skip: d2a kc1/kc8 + d2b kc7/kc8 (crude/NSFW), d2a kc6/kc7, d2b kc3-kc6 (weak menus/sleep). Next: DAY 2 26000-41800, then DAY 3.
+- streamer_short.py: caption pages are now half-open intervals (no 1-frame double captions).
 - Dom clips: dom-crying + dom-details still held ("ruckus clip limit") — ask Himanshu before scheduling them.

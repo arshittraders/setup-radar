@@ -29,6 +29,7 @@ for p in range(0, len(ws), 3):
     for j, (s, e, t) in enumerate(page):
         nxt = page[j + 1][0] if j + 1 < len(page) else min(e + .35, ws[p + 3][0] if p + 3 < len(ws) else e + .6)
         fp = f'{work}/c{len(ev)}.png'; png(fp, [x[2] for x in page], 96, j); ev.append((fp, s, max(nxt, s + .08)))
+ev = [(p, a, min(b, ev[k + 1][1]) if k + 1 < len(ev) else b) for k, (p, a, b) in enumerate(ev)]   # never show two caption pages at once
 png(f'{work}/hook.png', hook.upper().split(), 92, -1, 1000, (255, 214, 0))
 ov = Image.open(ovp).convert('RGBA'); ov = ov.crop(ov.getbbox()); ov.thumbnail((780, 300)); ov.save(f'{work}/ov.png')
 L = to - ss
@@ -40,7 +41,7 @@ fc = ['[0:v]split=2[a][b]', f'[a]crop={FACE},scale=1080:702:flags=lanczos,eq=con
       "[v2][2:v]overlay=(W-w)/2:620[v3]", "[v3][1:v]overlay=0:70:enable='lt(t,3.2)'[v4]"]
 cur = 'v4'
 for k, (p, a, b) in enumerate(ev):
-    n = f'v{k + 5}'; fc.append(f"[{cur}][{k + 3}:v]overlay=0:1480:enable='between(t,{a:.2f},{b:.2f})'[{n}]"); cur = n
+    n = f'v{k + 5}'; fc.append(f"[{cur}][{k + 3}:v]overlay=0:1480:enable='gte(t,{a:.3f})*lt(t,{b:.3f})'[{n}]"); cur = n
 fc.append('[0:a]loudnorm=I=-14:TP=-1.5[a0]')
 # CC0 sound effects (sfx/library.json): swoosh as the hook card lands, soft hit as it leaves
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'sfx'))
