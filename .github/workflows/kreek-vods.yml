@@ -12,5 +12,5 @@ jobs:
       - run: pip install -q -U "yt-dlp[default]"
       - env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          yt-dlp --flat-playlist --playlist-end 10 --print "%(id)s|%(title)s|%(timestamp)s|%(duration)s" "https://www.twitch.tv/${{ inputs.channel }}/videos?filter=archives&sort=time" | tee vods-${{ inputs.channel }}.txt
-          gh release upload studio-debug vods-${{ inputs.channel }}.txt --clobber -R ${{ github.repository }}
+          C=${{ inputs.channel }}; for U in "https://www.twitch.tv/$C/videos?filter=archives&sort=time" "https://www.twitch.tv/$C/videos" "https://www.twitch.tv/$C/videos?filter=all&sort=time"; do echo "== $U"; yt-dlp --flat-playlist --playlist-end 10 --print "%(id)s|%(title)s|%(timestamp)s|%(duration)s" "$U" 2>&1 | tail -12; done | tee vods-$C.txt
+          gh release upload studio-debug vods-$C.txt --clobber -R ${{ github.repository }}
