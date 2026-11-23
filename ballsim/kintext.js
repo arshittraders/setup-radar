@@ -11,7 +11,8 @@
       if (p > 0) { X.globalAlpha = ga * q; X.filter = p < 1 ? `blur(${((1 - q) * 10).toFixed(1)}px)` : fl; orig.call(X, w, cx, y + (1 - q) * 40); } cx += wd[i] + sp; });
     X.textAlign = al; X.globalAlpha = ga; X.filter = fl;
   }
-  C.fillText = function (s, x, y, mw) { draw(F, this, s, x, y, mw); };
+  const BR = (s) => (typeof s === 'string' && window.BRAND && s.includes('PHYSICS ROYALE ARENA')) ? s.replace('PHYSICS ROYALE ARENA', window.BRAND) : s;   // channel's own name in the watermark
+  C.fillText = function (s, x, y, mw) { draw(F, this, BR(s), x, y, mw); };
   C.strokeText = function (s, x, y, mw) { draw(S, this, s, x, y, mw); };
   const hook = () => { if (!window.frame || window.frame._k) return; const f0 = window.frame, i0 = window.init; let n = 0;
     window.frame = function (fast) { T = fast ? 99 : n++ / 30; return f0.apply(this, arguments); }; window.frame._k = 1;
