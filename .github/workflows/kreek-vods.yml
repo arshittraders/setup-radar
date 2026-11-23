@@ -1,0 +1,16 @@
+name: kreek-vods
+on:
+  workflow_dispatch:
+    inputs:
+      channel: { description: "twitch channel", default: "kreekcraft" }
+permissions:
+  contents: write
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pip install -q -U "yt-dlp[default]"
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          yt-dlp --flat-playlist --playlist-end 10 --print "%(id)s|%(title)s|%(timestamp)s|%(duration)s" "https://www.twitch.tv/${{ inputs.channel }}/videos?filter=archives&sort=time" | tee vods-${{ inputs.channel }}.txt
+          gh release upload studio-debug vods-${{ inputs.channel }}.txt --clobber -R ${{ github.repository }}
