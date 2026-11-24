@@ -1,1 +1,9 @@
 __pycache__/
+# builder scratch (renders are shipped via ship/)
+builders/*.mp4
+builders/ggw/v/
+builders/ggw/he[0-9]*/
+builders/ggw/gg[0-9]*/
+builders/tgw/v/
+builders/tgw/p_*/
+builders/tgw/kinetic.js
