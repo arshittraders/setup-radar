@@ -54,6 +54,9 @@ anything that failed. If something could not be fixed, say so plainly.
   vods-kreekcraft.txt): 2933758895 DAY 2 (41835 s), 2934981732 DAY 3 (42198 s), 2936183180 final mission (35316 s),
   2937360376 best ending (12497 s; ending = spoilers, avoid).
 - DAY 2 scanned (23 Nov): 2000-12000 (kreek-d2a) and 15000-26000 (kreek-d2b). Used: d2a kc2/kc3/kc4/kc5, d2b kc1/kc2.
-  Unused/skip: d2a kc1/kc8 + d2b kc7/kc8 (crude/NSFW), d2a kc6/kc7, d2b kc3-kc6 (weak menus/sleep). Next: DAY 2 26000-41800, then DAY 3.
+  Unused/skip: d2a kc1/kc8 + d2b kc7/kc8 (crude/NSFW), d2a kc6/kc7, d2b kc3-kc6 (weak menus/sleep).
+- DAY 2 scanned (24 Nov): 26000-34000 (kreek-d2c), 34000-41800 (kreek-d2d) → DAY 2 fully scanned. Used: d2c kc1/kc2/kc6/kc8,
+  d2d kc2/kc7. Skip: d2c kc3/kc4/kc7 + d2d kc6 (crude/NSFW). Unused OK-ish: d2c kc5, d2d kc1 (tower climb, pairs with kc2), kc3/kc4/kc5, kc8 (outro).
+  Next: DAY 3 (2934981732) from 2000. Don't run >3 streamer_short.py renders in parallel (OOM kill).
 - streamer_short.py: caption pages are now half-open intervals (no 1-frame double captions).
 - Dom clips: dom-crying + dom-details still held ("ruckus clip limit") — ask Himanshu before scheduling them.
