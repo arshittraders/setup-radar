@@ -1,0 +1,27 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body><canvas id="c" width="1080" height="1920"></canvas><script src="common.js"></script><script>
+// "Which bucket wins?" — balls rain through a peg board into coloured buckets; live bar race; fullest bucket wins.
+const SUB = 5, DT = 1 / (FPS * SUB), TOP = 470, PR = 9, BR = 13, NB = 7, BW = 1000 / NB, BX = 40, BY = 1480;
+window.DUR = [35, 50];
+window.init = (cfg) => { rnd = mulberry(cfg.seed || 7); const pegs = []; const rows = 13;
+  for (let r = 0; r < rows; r++) { const n = r % 2 ? 11 : 12, off = r % 2 ? 45 : 0; for (let i = 0; i < n; i++) pegs.push({ x: 45 + off + i * 90 + (r % 2 ? 0 : 0), y: TOP + 40 + r * 72 }); }
+  const pick = [0, 1, 2, 3, 4, 5, 6, 7, 9].sort(() => rnd() - .5).slice(0, NB);
+  S = { t: 0, f: 0, pegs, balls: [], cnt: new Array(NB).fill(0), cols: pick.map(i => COLS[i]), names: pick.map(i => NAMES[i]), drop: 0, total: 140 + Math.floor(rnd() * 40), endT: null, intro: 1.2, flash: new Array(NB).fill(-9), lastT: 0, pegHit: new Map() }; };
+function step() { if (S.drop < S.total && S.t > S.drop * 0.19) { S.drop++; S.balls.push({ x: 540 + (rnd() - .5) * 120, y: TOP - 20, vx: (rnd() - .5) * 120, vy: 0, col: '#ffffff' }); }
+  for (let i = S.balls.length - 1; i >= 0; i--) { const b = S.balls[i]; b.vy += 1400 * DT; b.x += b.vx * DT; b.y += b.vy * DT;
+    if (b.x < BX + BR) { b.x = BX + BR; b.vx = Math.abs(b.vx) * .6; } if (b.x > BX + 1000 - BR) { b.x = BX + 1000 - BR; b.vx = -Math.abs(b.vx) * .6; }
+    for (let pi = 0; pi < S.pegs.length; pi++) { const p = S.pegs[pi], dx = b.x - p.x, dy = b.y - p.y; if (Math.abs(dx) > 30 || Math.abs(dy) > 30) continue; const d = Math.hypot(dx, dy), m = PR + BR;
+      if (d < m && d > 0) { const nx = dx / d, ny = dy / d; b.x = p.x + nx * m; b.y = p.y + ny * m; const vn = b.vx * nx + b.vy * ny; if (vn < 0) { b.vx -= 1.5 * vn * nx; b.vy -= 1.5 * vn * ny; b.vx += (rnd() - .5) * 60; S.pegHit.set(pi, S.t); if (S.t - S.lastT > .04) { S.lastT = S.t; EV.push({ t: S.t, k: 'tick', p: .8 + (p.y - TOP) / 2000 }); } } } }
+    if (b.y > BY) { const k = Math.max(0, Math.min(NB - 1, Math.floor((b.x - BX) / BW))); S.cnt[k]++; S.flash[k] = S.t; S.balls.splice(i, 1); EV.push({ t: S.t, k: 'note', n: k * 2 }); } }
+  if (S.drop >= S.total && !S.balls.length && S.endT === null) { S.endT = S.t; EV.push({ t: S.t + .2, k: 'win' }); } }
+function draw() { const t = S.t; bg('#1b1030', '#07040e');
+  for (let pi = 0; pi < S.pegs.length; pi++) { const p = S.pegs[pi], h = t - (S.pegHit.get(pi) ?? -9), lit = h < .25; X.fillStyle = lit ? '#ffd23f' : 'rgba(255,255,255,.85)'; if (lit) { X.shadowColor = '#ffd23f'; X.shadowBlur = 20; } X.beginPath(); X.arc(p.x, p.y, PR + (lit ? 3 : 0), 0, 7); X.fill(); X.shadowBlur = 0; }
+  for (const b of S.balls) ball(b.x, b.y, BR, b.col);
+  const mx = Math.max(10, ...S.cnt); for (let k = 0; k < NB; k++) { const x = BX + k * BW, h = 300 * S.cnt[k] / mx, fl = t - S.flash[k] < .15;
+    X.fillStyle = 'rgba(255,255,255,.08)'; X.fillRect(x + 6, BY, BW - 12, 300); X.fillStyle = S.cols[k]; X.globalAlpha = fl ? 1 : .85; X.fillRect(x + 6, BY + 300 - h, BW - 12, h); X.globalAlpha = 1;
+    txt(String(S.cnt[k]), x + BW / 2, BY + 290 - h, 44, '#fff', 6); X.fillStyle = 'rgba(255,255,255,.5)'; X.fillRect(x, BY - 30, 4, 330); }
+  txt('WHICH COLOR', W / 2, 190, 84, '#fff'); txt('GETS THE MOST?', W / 2, 280, 84, '#ffd23f');
+  txt(Math.max(0, S.total - S.drop) + ' balls left', W / 2, 370, 44, 'rgba(255,255,255,.75)'); wm();
+  if (S.f / FPS < S.intro) { X.fillStyle = 'rgba(0,0,0,.4)'; X.fillRect(0, 0, W, H); txt('PICK A COLOR!', W / 2, 1000, 120, '#ffd23f', 10); }
+  if (S.endT !== null) { const w = S.cnt.indexOf(Math.max(...S.cnt)); endCard(t - S.endT, S.names[w] + ' WINS! 🏆', S.cols[w], S.cnt[w] + ' balls — did you pick it? 👇'); } }
+window.frame = (fast) => { if (S.f / FPS >= S.intro && S.endT === null) { for (let i = 0; i < SUB; i++) { step(); S.t += DT; } } else S.t += 1 / FPS; if (!fast) draw(); return out(fast, S.endT !== null && S.t - S.endT > 3.5, { ok: true }); };
+</script></body></html>

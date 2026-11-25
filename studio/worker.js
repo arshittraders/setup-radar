@@ -115,7 +115,7 @@ async function one() {
   try {
     fs.mkdirSync(path.join(job, 'img'), { recursive: true }); fs.mkdirSync(path.join(job, 'panels'), { recursive: true });
     let plan;
-    if (J.kind === 'sim') { plan = J.plan || {}; } else if (J.kind === 'toon') { plan = J.plan; if (!plan || !(plan.lines || []).length) throw new Error('toon script missing'); } else if (J.kind === 'ai') { if (!c.series) throw new Error('series missing'); plan = await aiPart(J, CH, c.series); } else {
+    if (J.kind === 'sim' || J.kind === 'horror') { plan = J.plan || {}; if (J.kind === 'horror' && !(plan.lines || []).length) throw new Error('horror script missing'); } else if (J.kind === 'toon') { plan = J.plan; if (!plan || !(plan.lines || []).length) throw new Error('toon script missing'); } else if (J.kind === 'ai') { if (!c.series) throw new Error('series missing'); plan = await aiPart(J, CH, c.series); } else {
     // 1) storyboard -> panels
     const b = await fetch(c.board_url); if (!b.ok) throw new Error('board download ' + b.status);
     fs.writeFileSync(path.join(job, 'board.png'), Buffer.from(await b.arrayBuffer()));
@@ -139,9 +139,21 @@ async function one() {
     }
     }
     if (J.kind === 'sim') {   // Physics Royale: pure code video (free) — a fresh battle every time
-      process.env.BRAND = plan.brand || 'PHYSICS ROYALE ARENA';   // watermark = this channel's own name
+      process.env.BRAND = plan.brand || 'PHYSICS ROYALE ARENA'; process.env.SKIN = String(plan.skin || 0);   // watermark = this channel's own name
       sh('node', [path.join(__dirname, '..', 'ballsim', 'render.js'), path.join(job, 'out.mp4'), plan.format || 'country']);
       sh('ffmpeg', ['-y', '-v', 'error', '-ss', '6', '-i', path.join(job, 'out.mp4'), '-frames:v', '1', '-q:v', '3', path.join(job, 'thumb.jpg')]);
+    } else if (J.kind === 'horror') {   // free code-drawn horror: Gemini voice per line, scenes drawn in horror2/
+      const HV = { N: { voice: 'Charon', style: 'Speak in Hindi as a deep, slow, suspenseful horror-story narrator. Low voice, dramatic pauses, building dread. Say exactly:' },
+        F: { voice: 'Kore', style: 'Speak in Hindi as a scared young Indian woman, trembling, breathy, frightened. Say exactly:' },
+        M: { voice: 'Puck', style: 'Speak in Hindi as a nervous young Indian man, tense and scared. Say exactly:' },
+        G: { voice: 'Leda', style: 'Speak in Hindi as a ghost: very slow, cold, eerie whisper, drawn-out words. Say exactly:' } };
+      for (let i = 0; i < plan.lines.length; i++) { const l = plan.lines[i], v = HV[l.who] || HV.N;
+        let j; for (let k = 1; k <= 3; k++) { j = await sup({ action: 'w_tts', job_id: J.id, text: l.text, voice: v.voice, style: v.style }).catch((e) => ({ error: String(e) })); if (j && j.pcm) break; await new Promise((r) => setTimeout(r, 5000 * k)); }
+        if (!j || !j.pcm) throw new Error('horror voice: ' + JSON.stringify(j).slice(0, 200));
+        fs.writeFileSync(path.join(job, `a${i}.pcm`), Buffer.from(j.pcm, 'base64'));
+        sh('ffmpeg', ['-y', '-v', 'error', '-f', 's16le', '-ar', String((/rate=(\d+)/.exec(j.mime || '') || [0, 24000])[1]), '-ac', '1', '-i', path.join(job, `a${i}.pcm`), path.join(job, `a${i}.wav`)]); }
+      fs.writeFileSync(path.join(job, 'story.json'), JSON.stringify(plan));
+      sh('node', [path.join(__dirname, '..', 'horror2', 'render.js'), job]);
     } else if (J.kind === 'toon') await toonRender(J, plan); else {
     // 4) voices — young female characters use the fixed free Indic voice (IndicF5), rest OpenAI
     const vOf = g => plan.voices[g.who] || plan.voices.N;

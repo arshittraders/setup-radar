@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body><canvas id="c" width="1080" height="1920"></canvas><script src="common.js"></script><script>
+// "Every bounce = bigger" — one ball in a circle grows on each wall hit until it fills the circle.
+const CX = 540, CY = 1050, R = 420, SUB = 6, DT = 1 / (FPS * SUB);
+window.DUR = [25, 55];
+window.init = (cfg) => { rnd = mulberry(cfg.seed || 7); const c = COLS[Math.floor(rnd() * 8)];
+  S = { t: 0, f: 0, b: { x: CX + (rnd() - .5) * 100, y: CY - 200, vx: (rnd() - .5) * 700, vy: 0, r: 18, col: c }, g: 1500 + rnd() * 500, grow: 2.4 + rnd() * 0.8, n: 0, trail: [], endT: null, bump: 0, intro: 1, rings: [] }; };
+function step() { const b = S.b; b.vy += S.g * DT; b.x += b.vx * DT; b.y += b.vy * DT; const dx = b.x - CX, dy = b.y - CY, d = Math.hypot(dx, dy);
+  if (d > R - b.r) { const nx = dx / d, ny = dy / d, vn = b.vx * nx + b.vy * ny; b.x = CX + nx * (R - b.r); b.y = CY + ny * (R - b.r);
+    if (vn > 0) { b.vx -= 2 * vn * nx; b.vy -= 2 * vn * ny; const sp = Math.hypot(b.vx, b.vy), need = 1100; if (sp < need) { b.vx *= need / sp; b.vy *= need / sp; }
+      const j = (rnd() - .5) * .3, c = Math.cos(j), s = Math.sin(j); [b.vx, b.vy] = [b.vx * c - b.vy * s, b.vx * s + b.vy * c];
+      b.r = Math.min(R, b.r + S.grow); S.n++; S.bump = 1; S.rings.push({ x: CX + nx * R, y: CY + ny * R, t: S.t }); EV.push({ t: S.t, k: 'note', n: S.n % 15 });
+      if (b.r >= R * 0.985 && S.endT === null) { S.endT = S.t; EV.push({ t: S.t + .2, k: 'win' }); } } } }
+function draw() { const t = S.t, b = S.b; bg('#10263b', '#03080e');
+  X.lineWidth = 10; X.strokeStyle = '#e8f6ff'; X.shadowColor = b.col; X.shadowBlur = 30; X.beginPath(); X.arc(CX, CY, R + 5, 0, 7); X.stroke(); X.shadowBlur = 0;
+  S.trail.push([b.x, b.y, b.r]); if (S.trail.length > 14) S.trail.shift(); S.trail.forEach(([x, y, r], i) => { X.globalAlpha = i / 40; X.fillStyle = b.col; X.beginPath(); X.arc(x, y, r, 0, 7); X.fill(); }); X.globalAlpha = 1;
+  for (const r of S.rings) { const k = t - r.t; if (k > .5) continue; X.strokeStyle = 'rgba(255,255,255,' + (1 - k / .5) + ')'; X.lineWidth = 6; X.beginPath(); X.arc(r.x, r.y, 10 + k * 160, 0, 7); X.stroke(); }
+  ball(b.x, b.y, b.r, b.col);
+  txt('EVERY BOUNCE', W / 2, 200, 80, '#fff'); txt('= BIGGER BALL', W / 2, 290, 80, b.col);
+  const pc = Math.min(100, Math.round(b.r * b.r / (R * R) * 100)); X.save(); X.translate(W / 2, 450); const s = 1 + S.bump * .12; X.scale(s, s); txt(pc + '%', 0, 0, 150, '#fff', 8); X.restore(); S.bump *= .85;
+  txt('of the circle filled', W / 2, 520, 40, 'rgba(255,255,255,.7)'); txt('Bounces: ' + S.n, W / 2, 1580, 52, '#ffd23f', 6);
+  txt('How many bounces to fill it? 👇', W / 2, 1680, 38, 'rgba(255,255,255,.8)'); wm();
+  if (S.endT !== null) endCard(t - S.endT, S.n + ' BOUNCES! 🎉', b.col, 'Was your guess close? 👇'); }
+window.frame = (fast) => { if (S.f / FPS >= S.intro && S.endT === null) { for (let i = 0; i < SUB; i++) { step(); S.t += DT; if (S.endT !== null) break; } if (S.t > 58 && S.endT === null) S.endT = S.t; } else S.t += 1 / FPS; if (!fast) draw(); return out(fast, S.endT !== null && S.t - S.endT > 3.5, { ok: S.b.r >= R * .98 }); };
+</script></body></html>

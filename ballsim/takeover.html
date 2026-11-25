@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body><canvas id="c" width="1080" height="1920"></canvas><script src="common.js"></script><script>
+// "Color takeover" — each team's ball paints the grid; bouncing off enemy cells converts them. Most cells at the bell wins.
+const GX = 60, GY = 440, CS = 40, NC = 24, NR = 28, SUB = 4, DT = 1 / (FPS * SUB), TL = 40;
+window.DUR = [40, 50];
+window.init = (cfg) => { rnd = mulberry(cfg.seed || 7); const nt = rnd() < .5 ? 2 : 4; const pick = [0, 1, 2, 3, 4, 5, 6, 7].sort(() => rnd() - .5).slice(0, nt);
+  const g = []; for (let r = 0; r < NR; r++) { g.push([]); for (let c = 0; c < NC; c++) g[r].push(nt === 2 ? (c < NC / 2 ? 0 : 1) : (r < NR / 2 ? 0 : 2) + (c < NC / 2 ? 0 : 1)); }
+  const balls = []; for (let k = 0; k < nt; k++) { const cx = nt === 2 ? (k ? .75 : .25) : (k % 2 ? .75 : .25), cy = nt === 2 ? .5 : (k < 2 ? .25 : .75), a = rnd() * 6.28;
+    balls.push({ k, x: GX + cx * NC * CS, y: GY + cy * NR * CS, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, r: 16 }); }
+  S = { t: 0, f: 0, nt, team: pick.map(i => ({ col: COLS[i], name: NAMES[i] })), g, balls, endT: null, intro: 1.2, lastT: 0, flips: [] }; };
+function count() { const n = new Array(S.nt).fill(0); for (const row of S.g) for (const v of row) n[v]++; return n; }
+function step() { for (const b of S.balls) { b.x += b.vx * DT; b.y += b.vy * DT;
+  if (b.x < GX + b.r) { b.x = GX + b.r; b.vx = Math.abs(b.vx); } if (b.x > GX + NC * CS - b.r) { b.x = GX + NC * CS - b.r; b.vx = -Math.abs(b.vx); }
+  if (b.y < GY + b.r) { b.y = GY + b.r; b.vy = Math.abs(b.vy); } if (b.y > GY + NR * CS - b.r) { b.y = GY + NR * CS - b.r; b.vy = -Math.abs(b.vy); }
+  for (const [ox, oy, ax] of [[b.r, 0, 'x'], [-b.r, 0, 'x'], [0, b.r, 'y'], [0, -b.r, 'y']]) { const c = Math.floor((b.x + ox - GX) / CS), r = Math.floor((b.y + oy - GY) / CS);
+    if (c < 0 || r < 0 || c >= NC || r >= NR || S.g[r][c] === b.k) continue; S.g[r][c] = b.k; S.flips.push({ c, r, t: S.t });
+    if (ax === 'x') b.vx = -b.vx; else b.vy = -b.vy; const j = (rnd() - .5) * .08, cs = Math.cos(j), sn = Math.sin(j); [b.vx, b.vy] = [b.vx * cs - b.vy * sn, b.vx * sn + b.vy * cs];
+    if (S.t - S.lastT > .03) { S.lastT = S.t; EV.push({ t: S.t, k: 'tick', p: .7 + b.k * .15 }); } break; } }
+  if (S.t >= TL && S.endT === null) { S.endT = S.t; EV.push({ t: S.t + .2, k: 'win' }); } }
+function draw() { const t = S.t; bg('#151522', '#050508'); const n = count(), tot = NC * NR;
+  for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) { X.fillStyle = S.team[S.g[r][c]].col; X.fillRect(GX + c * CS, GY + r * CS, CS - 2, CS - 2); }
+  for (const f of S.flips) { const k = t - f.t; if (k > .3) continue; X.fillStyle = 'rgba(255,255,255,' + (0.7 * (1 - k / .3)) + ')'; X.fillRect(GX + f.c * CS, GY + f.r * CS, CS - 2, CS - 2); } if (S.flips.length > 400) S.flips.splice(0, 200);
+  for (const b of S.balls) { X.fillStyle = '#fff'; X.shadowColor = '#fff'; X.shadowBlur = 20; X.beginPath(); X.arc(b.x, b.y, b.r + 4, 0, 7); X.fill(); X.shadowBlur = 0; X.fillStyle = S.team[b.k].col; X.beginPath(); X.arc(b.x, b.y, b.r, 0, 7); X.fill(); }
+  txt('COLOR TAKEOVER', W / 2, 190, 84, '#fff'); txt('Who owns the most at 0?', W / 2, 260, 40, 'rgba(255,255,255,.75)');
+  const left = Math.max(0, Math.ceil(TL - t)); txt('⏱ ' + left + 's', W / 2, 370, 70, left <= 5 ? '#ff4d6d' : '#ffd23f', 6);
+  let x = GX; const bw = NC * CS; S.team.forEach((tm, i) => { const w = bw * n[i] / tot; X.fillStyle = tm.col; X.fillRect(x, 1600, w, 50); x += w; });
+  S.team.forEach((tm, i) => { const cx = GX + bw * (i + .5) / S.nt; txt(Math.round(n[i] / tot * 100) + '%', cx, 1720, 46, tm.col, 5); });
+  txt('Pick a color 👇', W / 2, 1790, 38, 'rgba(255,255,255,.8)'); wm();
+  if (S.f / FPS < S.intro) { X.fillStyle = 'rgba(0,0,0,.4)'; X.fillRect(0, 0, W, H); txt('PICK A COLOR!', W / 2, 1050, 120, '#ffd23f', 10); }
+  if (S.endT !== null) { const w = n.indexOf(Math.max(...n)); endCard(t - S.endT, S.team[w].name + ' WINS! 🏆', S.team[w].col, Math.round(n[w] / tot * 100) + '% of the board 👇'); } }
+window.frame = (fast) => { if (S.f / FPS >= S.intro && S.endT === null) { for (let i = 0; i < SUB; i++) { step(); S.t += DT; } } else S.t += 1 / FPS; if (!fast) draw(); return out(fast, S.endT !== null && S.t - S.endT > 3.5, { ok: true }); };
+</script></body></html>
