@@ -1,0 +1,59 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body><canvas id="c" width="1080" height="1920"></canvas><script src="common.js"></script><script>
+// FOCUS TEST — "Don't lose the white ball": white ball hides among red ones inside a shape, all turn the same colour,
+// bounce, stop, numbers appear → viewers comment the number → reveal. Two looks: mono (white/red) and neon (follow the red).
+const SUB = 4, DT = 1 / (FPS * SUB), CX = 540, CY = 1030, R = 26;
+window.DUR = [17, 24];
+const DIST = ['Did you blink?', 'Still with it?', 'Your phone buzzed.', 'Was that the doorbell?', 'Did you lock the door?', 'Don\'t look away…', 'Focus. Focus.', 'Almost there…', 'Which one was it?', 'Is it the left one?', 'Breathe.', 'Eyes on the ball.', 'You missed a text.', 'Water. You need water.', 'Did you reply to that?'];
+function shapePts(kind) { const P = [], add = (x, y) => P.push([CX + x, CY + y]);
+  if (kind === 'circle') for (let i = 0; i < 48; i++) add(Math.cos(i / 48 * 6.283) * 380, Math.sin(i / 48 * 6.283) * 380);
+  if (kind === 'stadium') { for (let i = 0; i <= 16; i++) { const a = -1.5708 + i / 16 * 3.1416; add(220 + Math.cos(a) * 200, Math.sin(a) * 200); } for (let i = 0; i <= 16; i++) { const a = 1.5708 + i / 16 * 3.1416; add(-220 + Math.cos(a) * 200, Math.sin(a) * 200); } }
+  if (kind === 'heart') for (let i = 0; i < 60; i++) { const t = i / 60 * 6.283; add(16 * Math.pow(Math.sin(t), 3) * 25, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * 25 - 20); }
+  if (kind === 'star') for (let i = 0; i < 10; i++) { const a = -1.5708 + i / 10 * 6.283, r = i % 2 ? 190 : 430; add(Math.cos(a) * r, Math.sin(a) * r + 30); }
+  if (kind === 'octagon' || kind === 'hexagon' || kind === 'triangle' || kind === 'diamond') { const n = { octagon: 8, hexagon: 6, triangle: 3, diamond: 4 }[kind], off = kind === 'octagon' ? 3.1416 / 8 : kind === 'triangle' ? -1.5708 : kind === 'diamond' ? -1.5708 : 0; for (let i = 0; i < n; i++) { const a = off + i / n * 6.283; add(Math.cos(a) * 420, Math.sin(a) * 420 + (kind === 'triangle' ? 80 : 0)); } }
+  if (kind === 'cross') [[-120, -400], [120, -400], [120, -120], [400, -120], [400, 120], [120, 120], [120, 400], [-120, 400], [-120, 120], [-400, 120], [-400, -120], [-120, -120]].forEach(([x, y]) => add(x, y));
+  if (kind === 'arrow') [[-420, -130], [60, -130], [60, -330], [430, 0], [60, 330], [60, 130], [-420, 130]].forEach(([x, y]) => add(x, y));
+  if (kind === 'hourglass') [[-360, -400], [360, -400], [60, 0], [360, 400], [-360, 400], [-60, 0]].forEach(([x, y]) => add(x, y * 0.95));
+  if (kind === 'trapezoid') [[-220, -330], [220, -330], [420, 330], [-420, 330]].forEach(([x, y]) => add(x, y));
+  // force clockwise order so the inside normal is consistent
+  let s = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; s += (b[0] - a[0]) * (b[1] + a[1]); } if (s > 0) P.reverse(); return P; }
+function inside(P, x, y) { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; }
+const SHAPES = ['circle', 'heart', 'star', 'octagon', 'hexagon', 'diamond', 'cross', 'arrow', 'hourglass', 'stadium', 'trapezoid', 'triangle'];
+window.init = (cfg) => { rnd = mulberry(cfg.seed || 7); const shape = SHAPES[Math.floor(rnd() * SHAPES.length)], neon = rnd() < 0.35, P = shapePts(shape), n = 10 + Math.floor(rnd() * 6);
+  const balls = []; const ring = (k) => k === 0 ? [0, 0] : [Math.cos(k * 2.4) * 30 * Math.sqrt(k), Math.sin(k * 2.4) * 30 * Math.sqrt(k)];
+  const cy0 = shape === 'hourglass' ? -200 : shape === 'triangle' ? 160 : 0;
+  for (let k = 0; k < n; k++) { const [ox, oy] = ring(k); balls.push({ x: CX + ox, y: CY + cy0 + oy, vx: 0, vy: 0, id: k }); }
+  const target = 0; const order = balls.map((b, i) => i).sort(() => rnd() - 0.5); balls.forEach((b, i) => b.num = order[i] + 1);
+  const lines = [...DIST].sort(() => rnd() - 0.5).slice(0, 3);
+  S = { t: 0, f: 0, P, shape, neon, balls, target, lines, sp: 560 + rnd() * 160, endMove: 8.5 + rnd() * 3, phase: 0, stopT: null, done: false, revealT: null }; };
+function physics() { const B = S.balls, P = S.P;
+  for (const b of B) { b.x += b.vx * DT; b.y += b.vy * DT;
+    for (let i = 0; i < P.length; i++) { const [x0, y0] = P[i], [x1, y1] = P[(i + 1) % P.length], ex = x1 - x0, ey = y1 - y0, L = Math.hypot(ex, ey), u = Math.max(0, Math.min(1, ((b.x - x0) * ex + (b.y - y0) * ey) / (L * L))), qx = x0 + ex * u, qy = y0 + ey * u, dx = b.x - qx, dy = b.y - qy, d = Math.hypot(dx, dy);
+      if (d < R + 3) { let nx = dx / (d || 1), ny = dy / (d || 1); if (!inside(P, b.x, b.y)) { nx = -nx; ny = -ny; } b.x = qx + nx * (R + 3); b.y = qy + ny * (R + 3); const vn = b.vx * nx + b.vy * ny; if (vn < 0) { b.vx -= 2 * vn * nx; b.vy -= 2 * vn * ny; EV.push({ t: S.t, k: 'tick', p: 0.8 + rnd() * 0.4 }); } } }
+    if (!inside(P, b.x, b.y)) { b.x += (CX - b.x) * 0.1; b.y += (CY - b.y) * 0.1; } }
+  for (let i = 0; i < B.length; i++) for (let j = i + 1; j < B.length; j++) { const a = B[i], c = B[j], dx = c.x - a.x, dy = c.y - a.y, d = Math.hypot(dx, dy); if (d < 2 * R && d > 0) { const nx = dx / d, ny = dy / d, ov = (2 * R - d) / 2; a.x -= nx * ov; a.y -= ny * ov; c.x += nx * ov; c.y += ny * ov; const rv = (c.vx - a.vx) * nx + (c.vy - a.vy) * ny; if (rv < 0) { a.vx += rv * nx; a.vy += rv * ny; c.vx -= rv * nx; c.vy -= rv * ny; } } }
+  // keep a steady speed while moving, slow to a stop at the end
+  const k = S.t < S.endMove ? 1 : Math.max(0, 1 - (S.t - S.endMove) / 1.2);
+  for (const b of B) { const s = Math.hypot(b.vx, b.vy) || 1; const want = S.sp * k; b.vx *= want / s; b.vy *= want / s; } }
+function step() { const t = S.t;
+  if (S.phase === 0 && t >= 1.0) { S.phase = 1; for (const b of S.balls) { const a = rnd() * 6.283; b.vx = Math.cos(a) * S.sp; b.vy = Math.sin(a) * S.sp; } EV.push({ t, k: 'pop' }); }
+  if (S.phase >= 1 && S.stopT === null) physics();
+  if (S.phase >= 1 && S.stopT === null && t > S.endMove + 1.25) { S.stopT = t; for (const b of S.balls) { b.vx = b.vy = 0; } EV.push({ t, k: 'note', n: 4 }); }
+  if (S.stopT !== null && S.revealT === null && t > S.stopT + 3.2) { S.revealT = t; EV.push({ t, k: 'win' }); } }
+function draw() { const t = S.t, neon = S.neon, P = S.P; bg(neon ? '#05070d' : '#141418', neon ? '#000' : '#0b0b0e');
+  X.save(); X.lineWidth = neon ? 6 : 3; if (neon) { const g = X.createLinearGradient(0, CY - 450, 0, CY + 450); g.addColorStop(0, '#ff4fd8'); g.addColorStop(0.5, '#3fd0ff'); g.addColorStop(1, '#c6ff5a'); X.strokeStyle = g; X.shadowColor = '#7fd0ff'; X.shadowBlur = 25; } else X.strokeStyle = 'rgba(255,255,255,.55)';
+  X.beginPath(); P.forEach(([x, y], i) => i ? X.lineTo(x, y) : X.moveTo(x, y)); X.closePath(); X.stroke(); X.restore();
+  const fade = Math.max(0, Math.min(1, (t - 1.3) / 1.4)), tc = neon ? [255, 60, 70] : [255, 255, 255], oc = neon ? [40, 200, 255] : [235, 50, 60], all = neon ? [40, 200, 255] : [255, 255, 255];
+  for (const b of S.balls) { const isT = b.id === S.target; let c = isT ? tc : oc; if (!isT) c = c.map((v, i) => Math.round(v + (all[i] - v) * fade)); else c = c.map((v, i) => Math.round(v + (all[i] - v) * fade));
+    const col = `rgb(${c})`; if (S.phase >= 1 && S.stopT === null) { X.globalAlpha = 0.18; X.fillStyle = col; X.beginPath(); X.arc(b.x - b.vx * 0.03, b.y - b.vy * 0.03, R * 0.9, 0, 7); X.fill(); X.globalAlpha = 1; }
+    X.fillStyle = col; if (neon) { X.shadowColor = col; X.shadowBlur = 22; } X.beginPath(); X.arc(b.x, b.y, R, 0, 7); X.fill(); X.shadowBlur = 0;
+    if (S.stopT !== null) { X.font = '900 24px Arial'; X.textAlign = 'center'; X.fillStyle = '#111'; X.fillText(String(b.num), b.x, b.y + 9); } }
+  if (S.revealT !== null) { const b = S.balls[S.target], k = Math.min(1, (t - S.revealT) / 0.35); X.strokeStyle = '#ffd23f'; X.lineWidth = 7; X.beginPath(); X.arc(b.x, b.y, R + 14 + 30 * (1 - k), 0, 7); X.stroke(); }
+  X.textAlign = 'left';
+  const head = (a, b, y) => { X.fillStyle = '#fff'; X.font = '900 92px Arial'; X.fillText(a, 70, y); if (b) { X.font = '700 44px Arial'; X.fillStyle = 'rgba(255,255,255,.85)'; X.fillText(b, 72, y + 62); } };
+  if (S.phase === 0 || t < 3) head('FOCUS TEST', neon ? 'Follow the red ball.' : 'Don\'t lose the white ball.', 250);
+  else if (S.stopT === null) { const i = Math.min(S.lines.length - 1, Math.floor((t - 3) / ((S.endMove - 3) / S.lines.length))); X.globalAlpha = 0.9; X.font = '800 58px Arial'; X.fillStyle = '#fff'; X.fillText(S.lines[i], 70, 260); X.globalAlpha = 1; }
+  else { head('Which number', null, 230); head('was it?', null, 325); if (S.revealT === null) { X.font = '800 54px Arial'; X.fillStyle = '#fff'; X.fillText('Comment your number.', 70, 1610); X.font = '600 34px Arial'; X.fillStyle = 'rgba(255,255,255,.7)'; X.fillText('Answer in 3… 2… 1…', 72, 1665); }
+    else { X.font = '900 70px Arial'; X.fillStyle = '#ffd23f'; X.fillText('It was #' + S.balls[S.target].num + '!', 70, 1620); X.font = '600 36px Arial'; X.fillStyle = 'rgba(255,255,255,.8)'; X.fillText('Did you get it? Tell us below 👇', 72, 1680); } }
+  X.textAlign = 'center'; wm(); }
+window.frame = (fast) => { for (let i = 0; i < SUB; i++) { step(); S.t += DT; } if (!fast) draw(); return out(fast, S.revealT !== null && S.t - S.revealT > 2.8, { ok: true }); };
+</script></body></html>
