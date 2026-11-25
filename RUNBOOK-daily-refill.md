@@ -60,3 +60,8 @@ anything that failed. If something could not be fixed, say so plainly.
   Next: DAY 3 (2934981732) from 2000. Don't run >3 streamer_short.py renders in parallel (OOM kill).
 - streamer_short.py: caption pages are now half-open intervals (no 1-frame double captions).
 - Dom clips: dom-crying + dom-details still held ("ruckus clip limit") — ask Himanshu before scheduling them.
+- DAY 3 scanned (25 Nov): 2000-12000 (kreek-d3a), 12000-22000 (kreek-d3b). Used: d3a kc3/kc4/kc6/kc8, d3b kc4/kc6.
+  Skip: d3a kc5/kc7 + d3b kc8 (crude/NSFW), d3b kc3/kc7 (giveaway). Unused OK-ish: d3a kc1/kc2, d3b kc1/kc2/kc5. Next: DAY 3 from 22000.
+- Hook text: no emoji (Anton font shows tofu). edge-tts flaky (NoAudioReceived): ggb/tts.py now retries per line.
+- 25 Nov: Gemini prepaid credits depleted (HTTP 402) → BHOOT / Golu Bunty / Tiklu autopilot stop making new videos
+  (errors are only logged, ap_note stays old). Check with diag-gm1.sql + diag-gm2.sql (key stays server-side).
