@@ -1,0 +1,19 @@
+name: align
+# Whisper word timings for an audio file in the repo → release asset <file>.words.json (studio-debug)
+on:
+  workflow_dispatch:
+    inputs:
+      path: { description: "repo path of mp3", required: true }
+permissions: { contents: write, id-token: write }
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env: { GH_TOKEN: "${{ github.token }}", P: "${{ inputs.path }}" }
+        run: |
+          TOK=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=setup-radar-shorts" | python3 -c "import json,sys;print(json.load(sys.stdin)['value'])")
+          python3 -c "import base64,json,os;json.dump({'action':'align','mp3':base64.b64encode(open(os.environ['P'],'rb').read()).decode()},open('body.json','w'))"
+          N=$(basename "$P").words.json
+          curl -s -X POST https://setup-radar.vercel.app/api/shorts -H "Content-Type: application/json" -H "Authorization: Bearer $TOK" --data @body.json > "$N"
+          head -c 300 "$N"; gh release upload studio-debug "$N" --clobber -R ${{ github.repository }}
