@@ -8,10 +8,10 @@ const P = JSON.parse(fs.readFileSync(W('story.json'), 'utf8'));
 const ff = (args) => execFileSync('ffmpeg', ['-y', '-v', 'error', ...args]);
 const dur = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString().trim());
 const FX = {
-  N: { tempo: 1.12, af: 'highpass=f=70,equalizer=f=140:t=q:w=1:g=4,acompressor=threshold=-20dB:ratio=3:makeup=3,aecho=0.8:0.5:45|90:0.18|0.1' },
-  F: { tempo: 1.08, af: 'acompressor=threshold=-20dB:ratio=3:makeup=3,aecho=0.8:0.4:30:0.12' },
-  M: { tempo: 1.08, af: 'acompressor=threshold=-20dB:ratio=3:makeup=3,aecho=0.8:0.4:30:0.12' },
-  G: { tempo: 1.0, af: 'asetrate=44100*0.88,aresample=44100,vibrato=f=4:d=0.15,aecho=0.8:0.75:140|280|420:0.4|0.28|0.18,equalizer=f=200:t=q:w=1:g=4' },
+  N: { tempo: 1.22, af: 'highpass=f=70,equalizer=f=140:t=q:w=1:g=4,acompressor=threshold=-20dB:ratio=3:makeup=3,aecho=0.8:0.5:45|90:0.18|0.1' },
+  F: { tempo: 1.14, af: 'acompressor=threshold=-20dB:ratio=3:makeup=3,aecho=0.8:0.4:30:0.12' },
+  M: { tempo: 1.14, af: 'acompressor=threshold=-20dB:ratio=3:makeup=3,aecho=0.8:0.4:30:0.12' },
+  G: { tempo: 1.05, af: 'asetrate=44100*0.88,aresample=44100,vibrato=f=4:d=0.15,aecho=0.8:0.75:140|280|420:0.4|0.28|0.18,equalizer=f=200:t=q:w=1:g=4' },
 };
 const segs = P.lines.map((l) => ({ ...l }));
 let t = 1.5; const knocks = [], steps = [], rings = [], whispers = []; const parts = [];

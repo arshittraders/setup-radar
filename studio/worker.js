@@ -148,7 +148,8 @@ async function one() {
         M: { voice: 'Puck', style: 'Speak in Hindi as a nervous young Indian man, tense and scared. Say exactly:' },
         G: { voice: 'Leda', style: 'Speak in Hindi as a ghost: very slow, cold, eerie whisper, drawn-out words. Say exactly:' } };
       for (let i = 0; i < plan.lines.length; i++) { const l = plan.lines[i], v = HV[l.who] || HV.N;
-        let j; for (let k = 1; k <= 3; k++) { j = await sup({ action: 'w_tts', job_id: J.id, text: l.text, voice: v.voice, style: v.style }).catch((e) => ({ error: String(e) })); if (j && j.pcm) break; await new Promise((r) => setTimeout(r, 5000 * k)); }
+        let j; const tries = [[v.voice, v.style], [v.voice, ''], ['Charon', HV.N.style], ['Charon', '']];   // Gemini sometimes refuses a styled scary line → retry plainer
+        for (let k = 0; k < tries.length; k++) { j = await sup({ action: 'w_tts', job_id: J.id, text: l.text, voice: tries[k][0], style: tries[k][1] }).catch((e) => ({ error: String(e) })); if (j && j.pcm) break; await new Promise((r) => setTimeout(r, 4000)); }
         if (!j || !j.pcm) throw new Error('horror voice: ' + JSON.stringify(j).slice(0, 200));
         fs.writeFileSync(path.join(job, `a${i}.pcm`), Buffer.from(j.pcm, 'base64'));
         sh('ffmpeg', ['-y', '-v', 'error', '-f', 's16le', '-ar', String((/rate=(\d+)/.exec(j.mime || '') || [0, 24000])[1]), '-ac', '1', '-i', path.join(job, `a${i}.pcm`), path.join(job, `a${i}.wav`)]); }
