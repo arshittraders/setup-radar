@@ -177,7 +177,11 @@ async function one() {
     process.env.COST_FILE = cf; sh('node', [path.join(__dirname, '..', 'story', 'render.js'), job]);
     try { const a = fs.readFileSync(cf, 'utf8').split('\n').filter(Boolean).reduce((x, y) => x + Number(y), 0); COST.usd += a; COST.steps.align = (COST.steps.align || 0) + a; } catch (_) { }
     }
-    // 6) upload + done
+    // 6) shrink before upload (less Supabase storage + egress): >18 MB → re-encode ~3 Mbps (still sharp 1080p for Shorts/Reels)
+    try { const f = path.join(job, 'out.mp4'), mb = fs.statSync(f).size / 1e6;
+      if (mb > 18) { const t = path.join(job, 'small.mp4'); sh('ffmpeg', ['-y', '-v', 'error', '-i', f, '-c:v', 'libx264', '-preset', 'medium', '-crf', '24', '-maxrate', '3M', '-bufsize', '6M', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', t]);
+        const m2 = fs.statSync(t).size / 1e6; if (m2 < mb) { fs.renameSync(t, f); console.log('shrunk', mb.toFixed(1), '→', m2.toFixed(1), 'MB'); } } } catch (e) { console.log('shrink skipped', e.message); }
+    // 6b) upload + done
     const u = await sup({ action: 'w_upload', job_id: J.id });
     for (const [k, f, ct] of [['video', 'out.mp4', 'video/mp4'], ['thumb', 'thumb.jpg', 'image/jpeg']]) {
       console.log('upload to', new URL(u[k].url).host, new URL(u[k].url).pathname.slice(0, 60));
