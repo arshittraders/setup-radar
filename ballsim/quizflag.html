@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body><canvas id="c" width="1080" height="1920"></canvas><script src="common.js"></script><script>
+// "Guess the flag": test tubes fill with a flag's colours in its exact proportions → reveal the flag.
+window.DUR = [15, 22];
+function ctext(s, x, y) { const a = X.textAlign; X.textAlign = 'left'; X.fillText(s, x - X.measureText(s).width / 2, y); X.textAlign = a; }
+
+const R_ = '#d52b1e', W_ = '#f4f4f4', B_ = '#0a3a9c', G_ = '#138a36', Y_ = '#ffcd00', K_ = '#111111', O_ = '#ff9933', L_ = '#4aa3df';
+// stripes: [dir, colours...] equal stripes; or custom drawer + colour shares
+const FLAGS = [
+  ['France', 'v', [B_, W_, R_]], ['Italy', 'v', [G_, W_, R_]], ['Ireland', 'v', [G_, W_, O_]], ['Belgium', 'v', [K_, Y_, R_]], ['Romania', 'v', [B_, Y_, R_]], ['Nigeria', 'v', [G_, W_, G_]], ['Mali', 'v', [G_, Y_, R_]], ['Peru', 'v', [R_, W_, R_]],
+  ['Germany', 'h', [K_, R_, Y_]], ['Netherlands', 'h', [R_, W_, B_]], ['Russia', 'h', [W_, B_, R_]], ['Austria', 'h', [R_, W_, R_]], ['Hungary', 'h', [R_, W_, G_]], ['Bulgaria', 'h', [W_, G_, R_]], ['Estonia', 'h', [L_, K_, W_]], ['Lithuania', 'h', [Y_, G_, R_]], ['Ukraine', 'h', [L_, Y_]], ['Poland', 'h', [W_, R_]], ['Indonesia', 'h', [R_, W_]], ['Yemen', 'h', [R_, W_, K_]],
+  ['India', 'h', [O_, W_, G_], 'chakra'], ['Japan', 'disc', [W_, R_]], ['Bangladesh', 'disc', [G_, R_]],
+];
+function shares(f) { const n = f[2].length, m = {}; if (f[1] === 'disc') { const d = f[0] === 'Japan' ? 0.188 : 0.2; m[f[2][0]] = 1 - d; m[f[2][1]] = d; } else f[2].forEach((c) => (m[c] = (m[c] || 0) + 1 / n)); if (f[3]) { m[B_] = 0.012; m[W_] -= 0.012; } return Object.entries(m).sort((a, b) => b[1] - a[1]); }
+function flag(f, x, y, w, h) { X.save(); X.translate(x, y); const c = f[2];
+  if (f[1] === 'v') c.forEach((col, i) => { X.fillStyle = col; X.fillRect(i * w / c.length, 0, w / c.length + 1, h); });
+  else if (f[1] === 'h') c.forEach((col, i) => { X.fillStyle = col; X.fillRect(0, i * h / c.length, w, h / c.length + 1); });
+  else { X.fillStyle = c[0]; X.fillRect(0, 0, w, h); X.fillStyle = c[1]; X.beginPath(); X.arc(f[0] === 'Bangladesh' ? w * 0.45 : w / 2, h / 2, h * 0.3, 0, 7); X.fill(); }
+  if (f[3] === 'chakra') { X.strokeStyle = '#06038d'; X.lineWidth = 4; X.beginPath(); X.arc(w / 2, h / 2, h * 0.14, 0, 7); X.stroke(); for (let i = 0; i < 24; i++) { const a = i / 24 * 6.283; X.beginPath(); X.moveTo(w / 2, h / 2); X.lineTo(w / 2 + Math.cos(a) * h * 0.14, h / 2 + Math.sin(a) * h * 0.14); X.lineWidth = 1.5; X.stroke(); } }
+  X.strokeStyle = 'rgba(0,0,0,.25)'; X.lineWidth = 3; X.strokeRect(0, 0, w, h); X.restore(); }
+window.init = (cfg) => { rnd = mulberry(cfg.seed || 7); const f = FLAGS[Math.floor(rnd() * FLAGS.length)]; S = { t: 0, f: 0, fl: f, sh: shares(f), revealT: 11.5, dark: rnd() < 0.4 }; };
+function draw() { const t = S.t, dark = S.dark; bg(dark ? '#232842' : '#f3f5fb', dark ? '#12152a' : '#dde3f0'); X.textAlign = 'center'; const ink = dark ? '#fff' : '#26304d';
+  X.fillStyle = ink; X.font = '900 84px Arial'; ctext('GUESS THE FLAG', W / 2, 250); X.font = '600 36px Arial'; X.fillStyle = dark ? 'rgba(255,255,255,.65)' : '#6b7593'; ctext('by its colour mix 🎨', W / 2, 305);
+  const n = S.sh.length, tw = 130, gap = 60, x0 = W / 2 - (n * tw + (n - 1) * gap) / 2, top = 470, th = 640;
+  S.sh.forEach(([col, p], i) => { const x = x0 + i * (tw + gap), k = Math.max(0, Math.min(1, (t - 0.8 - i * 0.7) / 3.2)), lv = p * ease(k);
+    X.fillStyle = ink; X.font = '800 40px Arial'; X.fillText((lv * 100).toFixed(1) + '%', x + tw / 2, top - 30);
+    X.save(); X.beginPath(); X.moveTo(x, top); X.lineTo(x, top + th - tw / 2); X.arc(x + tw / 2, top + th - tw / 2, tw / 2, 3.1416, 0, true); X.lineTo(x + tw, top); X.closePath(); X.fillStyle = dark ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.75)'; X.fill(); X.clip();
+    const lh = (th + 10) * lv, ly = top + th - lh + Math.sin(t * 4 + i) * 4 * (k < 1 ? 1 : 0.3); X.fillStyle = col; X.fillRect(x, ly, tw, lh + 20); X.fillStyle = 'rgba(255,255,255,.25)'; X.fillRect(x + 14, top, 16, th); X.restore();
+    X.strokeStyle = dark ? 'rgba(255,255,255,.5)' : 'rgba(40,50,80,.35)'; X.lineWidth = 5; X.beginPath(); X.moveTo(x, top); X.lineTo(x, top + th - tw / 2); X.arc(x + tw / 2, top + th - tw / 2, tw / 2, 3.1416, 0, true); X.lineTo(x + tw, top); X.stroke();
+    if (k > 0 && k < 1) { X.fillStyle = col; X.fillRect(x + tw / 2 - 6, 380, 12, top + th - lh - 380); } });
+  // funnel + flag reveal
+  const fy = 1250; X.strokeStyle = dark ? 'rgba(255,255,255,.4)' : 'rgba(40,50,80,.3)'; X.lineWidth = 4; X.beginPath(); X.moveTo(300, fy); X.lineTo(780, fy); X.lineTo(580, fy + 200); X.lineTo(580, fy + 260); X.lineTo(500, fy + 260); X.lineTo(500, fy + 200); X.closePath(); X.stroke();
+  if (t < S.revealT) { X.fillStyle = ink; X.font = '800 50px Arial'; X.fillText('Comment the country 👇', W / 2, 1640); const left = Math.max(0, Math.ceil(S.revealT - t)); if (t > 5) { X.font = '900 60px Arial'; X.fillStyle = left <= 3 ? '#ff4d6d' : ink; X.fillText('⏱ ' + left, W / 2, 1730); } }
+  else { const k = Math.min(1, (t - S.revealT) / 0.5); X.save(); X.translate(W / 2, 1380); X.scale(back(k), back(k)); X.shadowColor = 'rgba(0,0,0,.3)'; X.shadowBlur = 30; flag(S.fl, -240, -160, 480, 320); X.shadowBlur = 0; X.restore(); X.fillStyle = ink; X.font = '900 80px Arial'; X.fillText(S.fl[0] + '!', W / 2, 1660); X.font = '600 38px Arial'; X.fillText('Did you guess it? 👇', W / 2, 1720); }
+  wm(); }
+window.frame = (fast) => { const t0 = S.t; S.t += 1 / FPS; if (Math.floor(t0 * 4) !== Math.floor(S.t * 4) && S.t > 0.8 && S.t < 5.5) EV.push({ t: S.t, k: 'hit', soft: 1 }); if (t0 < S.revealT && S.t >= S.revealT) EV.push({ t: S.t, k: 'win' }); if (!fast) draw(); return out(fast, S.t > S.revealT + 3, { ok: true }); };
+</script></body></html>
