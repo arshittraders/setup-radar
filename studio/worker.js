@@ -139,7 +139,7 @@ async function one() {
     }
     }
     if (J.kind === 'sim') {   // Physics Royale: pure code video (free) — a fresh battle every time
-      process.env.BRAND = plan.brand || 'PHYSICS ROYALE ARENA'; process.env.SKIN = String(plan.skin || 0); process.env.HMODE = plan.hmode != null ? String(plan.hmode) : '';   // watermark = this channel's own name
+      process.env.BRAND = String(CH.name || plan.brand || 'PHYSICS ROYALE ARENA').toUpperCase(); process.env.SKIN = String(plan.skin || 0); process.env.HMODE = plan.hmode != null ? String(plan.hmode) : '';   // watermark = this channel's own name
       sh('node', [path.join(__dirname, '..', 'ballsim', 'render.js'), path.join(job, 'out.mp4'), plan.format || 'country']);
       sh('ffmpeg', ['-y', '-v', 'error', '-ss', '6', '-i', path.join(job, 'out.mp4'), '-frames:v', '1', '-q:v', '3', path.join(job, 'thumb.jpg')]);
     } else if (J.kind === 'horror') {   // free code-drawn horror: Gemini voice per line, scenes drawn in horror2/
