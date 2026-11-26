@@ -64,7 +64,7 @@ const OBJ = {
     X.fillStyle = '#b9864e'; X.fillRect(-48, -16, 96, 62); X.fillStyle = '#d4a065'; X.beginPath(); X.moveTo(-48, -16); X.lineTo(48, -16); X.lineTo(38, -34); X.lineTo(-38, -34); X.closePath(); X.fill();
     X.fillStyle = '#9c6e3c'; X.fillRect(-48, -16, 96, 6); X.fillStyle = 'rgba(255,255,255,.55)'; X.fillRect(-6, -16, 12, 62);
     const fl = 1 - peek; X.fillStyle = '#c99358'; X.save(); X.translate(-48, -16); X.rotate(-0.9 * (1 - fl) - 0.15); X.fillRect(0, -20, 46, 20); X.restore(); X.save(); X.translate(48, -16); X.rotate(0.9 * (1 - fl) + 0.15); X.fillRect(-46, -20, 46, 20); X.restore(); },
-  orb: (o) => { soft(5, 42, 44, 12, 0.55); ball(0, 0, 40, o.col); },
+  orb: (o) => { soft(5, 42, 44, 12, 0.55); ball(0, 0, 40, o.col, X.globalAlpha); },
 };
 function planeShape(c, d, sh) { X.fillStyle = sh ? 'rgba(0,0,0,.35)' : c;
   X.beginPath(); X.moveTo(0, -62); X.bezierCurveTo(9, -56, 9, -40, 9, -30); X.lineTo(60, 4); X.lineTo(60, 13); X.lineTo(9, 0); X.lineTo(8, 36); X.lineTo(24, 50); X.lineTo(24, 57); X.lineTo(0, 52); X.lineTo(-24, 57); X.lineTo(-24, 50); X.lineTo(-8, 36); X.lineTo(-9, 0); X.lineTo(-60, 13); X.lineTo(-60, 4); X.lineTo(-9, -30); X.bezierCurveTo(-9, -40, -9, -56, 0, -62); X.fill();
