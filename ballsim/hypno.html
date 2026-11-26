@@ -1,0 +1,48 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1080" height="1920"></canvas><canvas id="g" width="720" height="1280" style="display:none"></canvas>
+<script src="common.js"></script><script>
+// HYPNO — endless 3D-looking tunnels / mandalas drawn with a GLSL shader (free, no AI). 12 patterns × palettes × twist/speed per seed.
+window.DUR = [28, 34];
+const G = document.getElementById('g').getContext('webgl', { preserveDrawingBuffer: true });
+const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0,1);}';
+const FS = `precision highp float;uniform float t,tw,sp,cn,ph,sat;uniform int mode,pal;uniform vec2 R;
+vec3 hue(float h){vec3 c=0.5+0.5*cos(6.2832*(h+vec3(0.,.33,.67)));return mix(vec3(dot(c,vec3(.33))),c,sat);}
+vec3 P(float h){ if(pal==1)return mix(vec3(.95,.35,.55),vec3(.35,.85,.95),.5+.5*cos(6.2832*h)); if(pal==2)return mix(vec3(.95,.6,.15),vec3(.15,.35,.85),.5+.5*cos(6.2832*h)); if(pal==3)return vec3(.85+.15*cos(6.2832*h)); if(pal==4)return mix(vec3(.1,.9,.6),vec3(.6,.2,.9),.5+.5*cos(6.2832*h)); return hue(h);}
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p);
+float fbm(vec2 q){return noise(q*.6)*.6+noise(q*1.3)*.3+noise(q*2.8)*.1;}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+vec3 ball(vec2 f,vec3 b,float rad,vec2 sc){f*=sc;float d=length(f);float s=smoothstep(rad,rad-.07,d);vec3 n=normalize(vec3(f,sqrt(max(0.,rad*rad-d*d))));vec3 L=normalize(vec3(-.4,.5,.8));float l=max(dot(n,L),0.);float spc=pow(max(dot(reflect(-L,n),vec3(0,0,1)),0.),28.);return s*(b*(.22+.9*l)+spc*.7);}
+void main(){vec2 uv=(gl_FragCoord.xy-.5*R)/R.x;float r=length(uv),a=atan(uv.y,uv.x);
+ float z=.32/max(r,.001)+t*sp; a+=tw*z*.15+t*.05*tw;
+ vec3 col=vec3(0); float N=cn;
+ if(mode==0||mode==1||mode==7){ vec2 g=vec2(a/6.2832*N,z*N/6.2832); vec2 id=floor(g); vec2 f=fract(g)-.5; if(mod(id.y,2.)>.5){f.x=fract(g.x+.5)-.5;id.x+=.5;}
+   vec2 sc=mode==7?vec2(1.5,.75):vec2(1.); float hh=mode==1?id.x/N+id.y*.02:id.y*.035; col=ball(f,P(hh+ph),.48,sc); }
+ else if(mode==2){ vec2 g=vec2(a/6.2832*N,z*N/6.2832*1.15); vec2 q=vec2(g.x+.5*mod(floor(g.y),2.),g.y); vec2 f=fract(q)-.5; float e=max(abs(f.x)*1.1,abs(f.y)); float w=smoothstep(.5,.4,e)-smoothstep(.36,.3,e); col=P(floor(g.y)*.04+ph)*(w*1.2)+vec3(.05)*smoothstep(.3,.1,e); }
+ else if(mode==3){ vec2 g=vec2(a/6.2832*N*.5,z*2.5); float c=mod(floor(g.x)+floor(g.y),2.); vec2 f=fract(g)-.5; float bev=1.-1.6*max(abs(f.x),abs(f.y))*.5; col=mix(vec3(.08),vec3(.95,.93,.98),c)*bev; col=mix(col,P(ph)*col,.25); }
+ else if(mode==4){ float k=floor(N/8.); float aa=abs(mod(a+t*.12,6.2832/k)-3.1416/k); float w=.5+.5*sin(z*7.+aa*k*3.); float band=floor(z*2.5); float pet=smoothstep(.1,.0,abs(fract(z*2.5)-.5-.3*sin(aa*k))-.25); col=P(band*.11+ph)*(.25+.9*w)*(.6+.6*pet); }
+ else if(mode==5){ float a0=atan(uv.y,uv.x); float u=a0/6.2832+.5; float y=log(r)*3.-t*sp*.9; float sw=y*.12*(tw+.6); vec2 q=vec2(u*12.,y); float n=mix(fbm(vec2(fract(u+sw)*12.,y)+vec2(t*.3,0.)),fbm(vec2((fract(u+sw)-1.)*12.,y)+vec2(t*.3,0.)),fract(u+sw)); col=P(n*.7+q.y*.05+ph)*(.25+1.1*n)*(.7+.5*smoothstep(.3,.9,fract(q.x*1.5+n*2.))); }
+ else if(mode==6){ float s=fract((a/6.2832)*N*.25+z*1.2); float rib=smoothstep(.0,.08,s)*smoothstep(.5,.42,s); float sh=.4+.6*sin(s*3.1416*2.); col=P(mod(floor((a/6.2832)*N*.25+z*1.2),floor(N*.25))*.07+ph)*rib*sh+P(.5+ph)*.15*(1.-rib); }
+ else if(mode==8){ vec2 g=vec2(a/6.2832*N*.5,z*N/6.2832*.5); g.x+=.5*mod(floor(g.y),2.); vec2 id=floor(g),f=fract(g)-.5; float e=max(abs(f.x),abs(f.y)); float h=hash(vec2(mod(id.x,N*.5),id.y)); vec3 b=h<.25?vec3(.85,.15,.15):h<.5?vec3(.15,.35,.85):h<.75?vec3(.95,.75,.1):vec3(.92); col=b*(smoothstep(.5,.44,e))*(.55+.6*(f.y+.5)*.8+.25*f.x); }
+ else if(mode==9){ float k=floor(N/6.); float aa=abs(mod(a,6.2832/k)-3.1416/k); float star=fract(z*1.6+aa*1.2); float ring=floor(z*1.6+aa*1.2); col=P(ring*.09+ph)*(smoothstep(0.,.1,star)*smoothstep(.6,.5,star))*(.6+.5*cos(aa*k*6.)); }
+ else if(mode==10){ vec2 g=vec2(a/6.2832*N,z*N/6.2832); vec2 id=floor(g),f=fract(g); float tri=step(f.x,f.y); float h=hash(vec2(mod(id.x,N),id.y)+tri); col=P(h*.3+id.y*.03+ph)*(.35+.75*(tri>.5?f.y:1.-f.x)); }
+ else { float w=.5+.5*sin(z*9.+sin(a*floor(N/8.)+t)*1.5); col=P(z*.15+ph)*pow(w,3.)*1.4+P(z*.15+ph+.5)*.08; }
+ float fog=smoothstep(.0,.07,r); col*=fog*(.55+.6*smoothstep(.02,.5,r)); col+=P(ph+t*.05)*.15*smoothstep(.06,.0,r);
+ gl_FragColor=vec4(col,1);}`;
+function sh(type, src) { const s = G.createShader(type); G.shaderSource(s, src); G.compileShader(s); if (!G.getShaderParameter(s, G.COMPILE_STATUS)) throw new Error(G.getShaderInfoLog(s)); return s; }
+const PR = G.createProgram(); G.attachShader(PR, sh(G.VERTEX_SHADER, VS)); G.attachShader(PR, sh(G.FRAGMENT_SHADER, FS)); G.linkProgram(PR); G.useProgram(PR);
+const BUF = G.createBuffer(); G.bindBuffer(G.ARRAY_BUFFER, BUF); G.bufferData(G.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), G.STATIC_DRAW);
+const LOC = G.getAttribLocation(PR, 'p'); G.enableVertexAttribArray(LOC); G.vertexAttribPointer(LOC, 2, G.FLOAT, false, 0, 0);
+const U = (n) => G.getUniformLocation(PR, n); G.uniform2f(U('R'), 720, 1280); G.viewport(0, 0, 720, 1280);
+const MODES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], LINES = [['Stare at the center', 'for 30 seconds 😵‍💫'], ['Watch till the end…', 'then look at your hand ✋'], ['Your brain on', 'satisfying 🌀'], ['Relax.', 'Just watch. 🧘'], ['Can you stare', 'without blinking? 👀'], ['Most satisfying', 'loop ever? 🔁']];
+window.init = (cfg) => { rnd = mulberry(cfg.seed || 7); const forced = cfg.mode !== undefined ? cfg.mode : null;
+  const mode = forced !== null ? forced : MODES[Math.floor(rnd() * MODES.length)];
+  S = { t: 0, f: 0, mode, pal: mode === 3 ? 3 : Math.floor(rnd() * 5), tw: (rnd() < .5 ? -1 : 1) * (rnd() < .4 ? 0 : 0.4 + rnd()), sp: 0.8 + rnd() * 0.9, cn: [36, 40, 48, 56, 64][Math.floor(rnd() * 5)], ph: rnd(), sat: 0.85 + rnd() * .15, line: LINES[Math.floor(rnd() * LINES.length)], len: 29 + rnd() * 3, chord: Math.floor(rnd() * 4) };
+  G.uniform1i(U('mode'), S.mode); G.uniform1i(U('pal'), S.pal); G.uniform1f(U('tw'), S.tw); G.uniform1f(U('sp'), S.sp); G.uniform1f(U('cn'), S.cn); G.uniform1f(U('ph'), S.ph); G.uniform1f(U('sat'), S.sat); };
+function draw() { G.uniform1f(U('t'), S.t); G.drawArrays(G.TRIANGLE_STRIP, 0, 4); X.drawImage(G.canvas, 0, 0, W, H);
+  const k = Math.min(1, S.t / 0.6) * Math.max(0, Math.min(1, (4.2 - S.t) / 0.6));
+  if (k > 0) { X.save(); X.globalAlpha = k; X.textAlign = 'center'; X.font = '900 76px Arial'; X.lineWidth = 10; X.strokeStyle = 'rgba(0,0,0,.65)'; X.strokeText(S.line[0], W / 2, 330); X.fillStyle = '#fff'; X.fillText(S.line[0], W / 2, 330); X.strokeText(S.line[1], W / 2, 420); X.fillStyle = '#ffe14d'; X.fillText(S.line[1], W / 2, 420); X.restore(); }
+  X.textAlign = 'center'; wm(); }
+window.frame = (fast) => { const t0 = S.t; S.t += 1 / FPS; if (Math.floor(t0 / 4) !== Math.floor(S.t / 4) || S.f === 0) EV.push({ t: S.t, k: 'pad', n: S.chord + Math.floor(S.t / 4) }); if (Math.floor(t0 * 0.75) !== Math.floor(S.t * 0.75)) EV.push({ t: S.t, k: 'chime', n: Math.floor(rnd() * 5) });
+  if (!fast) draw(); return out(fast, S.t >= S.len, { ok: true }); };
+</script></body></html>
