@@ -1,0 +1,67 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body><canvas id="c" width="1080" height="1920"></canvas><script src="common.js"></script><script>
+// ODD ONE OUT — "Which one breaks physics?" 7×8 grid (A–G × 1–8) of moving objects; exactly one breaks the rule
+// (liquid tilts with the glass, flame follows the candle, sand falls UP, clock runs backwards). Viewers comment letter+number.
+// Short (≈14 s) loop-style video → high rewatch. All drawn in code; only the Anton font is loaded.
+window.DUR = [12, 18];
+window.FONTS = (async () => { try { const f = new FontFace('Anton', 'url(../clip/anton.woff2)'); await f.load(); document.fonts.add(f); } catch (e) {} })();
+const TF = '"Anton", Impact, "Arial Black", Arial';
+const GC = 7, GR = 8, CW = 128, CH = 126, GX = (W - GC * CW) / 2 + 22, GY = 520;
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const KINDS = [
+  { k: 'glass', head: ['WHICH ONE', 'BREAKS PHYSICS?'], liq: [['#ff9f2e', '#c45f00'], ['#ff4d6d', '#a3122e'], ['#36c8ff', '#0b6fae'], ['#7cf08a', '#1f9b3a']] },
+  { k: 'candle', head: ['WHICH FLAME', 'BREAKS PHYSICS?'] },
+  { k: 'sand', head: ['WHICH HOURGLASS', 'BREAKS PHYSICS?'] },
+  { k: 'clock', head: ['WHICH CLOCK', 'RUNS BACKWARDS?'] },
+];
+window.init = (cfg) => { rnd = mulberry(cfg.seed || 7); EV = [];
+  const ri = Math.floor(rnd() * KINDS.length), ki = window.KIND != null ? window.KIND : cfg.mode != null && KINDS[cfg.mode] ? cfg.mode : ri, K = KINDS[ki];
+  const oc = 1 + Math.floor(rnd() * (GC - 2)), orow = 1 + Math.floor(rnd() * (GR - 2));
+  const cells = []; for (let r = 0; r < GR; r++) for (let c = 0; c < GC; c++) cells.push({ c, r, x: GX + (c + 0.5) * CW, y: GY + (r + 0.5) * CH, ph: rnd() * 6.283, fq: 0.55 + rnd() * 0.35, amp: 0.22 + rnd() * 0.22, s0: 0.15 + rnd() * 0.7, h0: rnd() * 12, odd: c === oc && r === orow });
+  const liq = K.liq ? K.liq[Math.floor(rnd() * K.liq.length)] : null;
+  S = { t: 0, f: 0, K, cells, liq, len: 13 + rnd() * 3, brand: String(window.BRAND || '').trim(), nextPad: 0, padN: 0, nextTick: 0 };
+};
+function step() { const t = S.t; if (t >= S.nextPad) { EV.push({ t, k: 'pad', n: S.padN++ }); S.nextPad = t + 4.4; }
+  if (S.K.k === 'clock' && t >= S.nextTick) { EV.push({ t, k: 'tick', p: 0.8 }); S.nextTick = t + 0.5; } }
+function glass(o, t) { const a = Math.sin(t * o.fq * 6.283 + o.ph) * o.amp; X.save(); X.translate(o.x, o.y + 42); X.rotate(a);
+  const tw = 34, bw = 26, h = 84, lv = 46;   // half widths, height, liquid height from bottom
+  X.save(); X.beginPath(); X.moveTo(-tw, -h); X.lineTo(tw, -h); X.lineTo(bw, 0); X.lineTo(-bw, 0); X.closePath(); X.clip();
+  X.save(); X.translate(0, -lv); if (!o.odd) X.rotate(-a);   // the rule: the liquid surface stays level with the world
+  const g = X.createLinearGradient(0, 0, 0, 120); g.addColorStop(0, S.liq[0]); g.addColorStop(1, S.liq[1]); X.fillStyle = g; X.fillRect(-120, 0, 240, 160);
+  X.fillStyle = 'rgba(255,255,255,.35)'; X.fillRect(-120, -1, 240, 4); X.restore(); X.restore();
+  X.strokeStyle = 'rgba(235,240,255,.85)'; X.lineWidth = 3; X.beginPath(); X.moveTo(-tw, -h); X.lineTo(-bw, 0); X.lineTo(bw, 0); X.lineTo(tw, -h); X.stroke();
+  X.strokeStyle = 'rgba(255,255,255,.35)'; X.lineWidth = 2; X.beginPath(); X.moveTo(-tw + 7, -h + 8); X.lineTo(-bw + 6, -8); X.stroke(); X.restore(); }
+function candle(o, t) { const a = Math.sin(t * o.fq * 6.283 + o.ph) * o.amp * 0.9; X.save(); X.translate(o.x, o.y + 44); X.rotate(a);
+  const g = X.createLinearGradient(-12, 0, 12, 0); g.addColorStop(0, '#d9cbb3'); g.addColorStop(0.5, '#fff7e8'); g.addColorStop(1, '#c9b99c'); X.fillStyle = g; X.fillRect(-12, -66, 24, 66);
+  X.fillStyle = '#e9dcc4'; X.beginPath(); X.ellipse(0, -66, 12, 4, 0, 0, 7); X.fill(); X.strokeStyle = '#2b2219'; X.lineWidth = 2; X.beginPath(); X.moveTo(0, -66); X.lineTo(0, -74); X.stroke();
+  X.translate(0, -74); if (!o.odd) X.rotate(-a);   // the rule: a flame always points straight up
+  const fl = 1 + 0.12 * Math.sin(t * 23 + o.ph * 3) + 0.06 * Math.sin(t * 37 + o.ph);
+  X.save(); X.globalCompositeOperation = 'lighter'; const gl = X.createRadialGradient(0, -14, 2, 0, -14, 46); gl.addColorStop(0, 'rgba(255,190,90,.55)'); gl.addColorStop(1, 'rgba(255,120,0,0)'); X.fillStyle = gl; X.fillRect(-46, -60, 92, 92); X.restore();
+  X.scale(1, fl); const fg = X.createLinearGradient(0, -30, 0, 0); fg.addColorStop(0, '#fff3c4'); fg.addColorStop(0.5, '#ffb43a'); fg.addColorStop(1, '#ff6a00');
+  X.fillStyle = fg; X.beginPath(); X.moveTo(0, -32); X.bezierCurveTo(9, -18, 9, -4, 0, 0); X.bezierCurveTo(-9, -4, -9, -18, 0, -32); X.fill();
+  X.fillStyle = 'rgba(80,140,255,.7)'; X.beginPath(); X.ellipse(0, -3, 3, 4, 0, 0, 7); X.fill(); X.restore(); }
+function sand(o, t) { const P = (o.s0 + (o.odd ? -1 : 1) * t / 40), p = ((P % 1) + 1) % 1;   // p = share of sand already in the bottom
+  X.save(); X.translate(o.x, o.y + 2); const w = 30, h = 46;
+  X.fillStyle = '#6b4a2e'; X.fillRect(-36, -h - 8, 72, 8); X.fillRect(-36, h, 72, 8); X.fillStyle = '#8c6440'; X.fillRect(-32, -h, 6, 2 * h); X.fillRect(26, -h, 6, 2 * h);
+  const bulb = (dir) => { X.beginPath(); X.moveTo(-w + 6, dir * h); X.quadraticCurveTo(-w + 2, dir * h * 0.35, -4, dir * 6); X.lineTo(4, dir * 6); X.quadraticCurveTo(w - 2, dir * h * 0.35, w - 6, dir * h); X.closePath(); };
+  X.save(); bulb(-1); X.clip(); X.fillStyle = '#e8b85c'; const top = (1 - p) * (h - 8); X.fillRect(-w, -6 - top, 2 * w, top); X.restore();
+  X.save(); bulb(1); X.clip(); X.fillStyle = '#e8b85c'; const bot = p * (h - 6); X.beginPath(); X.moveTo(-w, h); X.lineTo(w, h); X.lineTo(w, h - bot + 6); X.quadraticCurveTo(0, h - bot - 8, -w, h - bot + 6); X.fill(); X.restore();
+  // falling stream with moving grains: normal falls down, odd one flows UP
+  X.fillStyle = '#f3c873'; X.fillRect(-1.5, -6, 3, h - bot - 6 + 6); for (let i = 0; i < 4; i++) { const k = ((t * 1.6 + i / 4 + o.ph) % 1), y = o.odd ? (h - bot) - k * (h - bot + 6) : -6 + k * (h - bot); X.fillRect(-2.5, y, 5, 4); }
+  X.strokeStyle = 'rgba(220,235,255,.7)'; X.lineWidth = 2.5; bulb(-1); X.stroke(); bulb(1); X.stroke(); X.restore(); }
+function clock(o, t) { X.save(); X.translate(o.x, o.y + 2); const R = 46, dir = o.odd ? -1 : 1, m = o.h0 * 6.283 / 12 * 12 + dir * t * 6.283 / 3, hh = o.h0 * 6.283 / 12 + dir * t * 6.283 / 36;
+  X.fillStyle = 'rgba(0,0,0,.4)'; X.beginPath(); X.arc(3, 5, R + 4, 0, 7); X.fill(); const g = X.createRadialGradient(-12, -14, 4, 0, 0, R); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#d8d2c6'); X.fillStyle = g; X.beginPath(); X.arc(0, 0, R, 0, 7); X.fill();
+  X.strokeStyle = '#3a2d22'; X.lineWidth = 5; X.stroke(); X.fillStyle = '#3a2d22'; for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283; X.fillRect(Math.cos(a) * 36 - 2, Math.sin(a) * 36 - 2, 4, 4); }
+  X.lineCap = 'round'; X.strokeStyle = '#1b1b1b'; X.lineWidth = 5; X.beginPath(); X.moveTo(0, 0); X.lineTo(Math.sin(hh) * 22, -Math.cos(hh) * 22); X.stroke();
+  X.lineWidth = 3.5; X.beginPath(); X.moveTo(0, 0); X.lineTo(Math.sin(m) * 34, -Math.cos(m) * 34); X.stroke(); X.fillStyle = '#c0392b'; X.beginPath(); X.arc(0, 0, 4, 0, 7); X.fill(); X.restore(); }
+function draw() { const t = S.t; bg('#2a221c', '#0b0907'); const v = X.createRadialGradient(W / 2, 1000, 300, W / 2, 1000, 1200); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.6)'); X.fillStyle = v; X.fillRect(0, 0, W, H);
+  X.textAlign = 'center'; X.shadowColor = 'rgba(0,0,0,.7)'; X.shadowBlur = 16; const k = ease(clamp(t / 0.5));
+  X.globalAlpha = k; X.fillStyle = '#fff5e6'; X.font = `400 96px ${TF}`; X.fillText(S.K.head[0], W / 2, 210); X.fillStyle = '#ffb347'; X.font = `400 ${S.K.head[1].length > 15 ? 92 : 104}px ${TF}`; X.fillText(S.K.head[1], W / 2, 320); X.globalAlpha = 1; X.shadowBlur = 0;
+  X.fillStyle = 'rgba(255,230,200,.75)'; X.font = `400 40px ${TF}`; for (let c = 0; c < GC; c++) X.fillText('ABCDEFG'[c], GX + (c + 0.5) * CW, GY - 22);
+  X.textAlign = 'right'; for (let r = 0; r < GR; r++) X.fillText(String(r + 1), GX - 18, GY + (r + 0.5) * CH + 14); X.textAlign = 'center';
+  for (let r = 0; r < GR; r++) { const y = GY + (r + 1) * CH - 10; const g = X.createLinearGradient(0, y, 0, y + 12); g.addColorStop(0, '#7a5434'); g.addColorStop(1, '#3d2919'); X.fillStyle = g; X.fillRect(GX - 6, y, GC * CW + 12, 12); X.fillStyle = 'rgba(0,0,0,.35)'; X.fillRect(GX - 6, y + 12, GC * CW + 12, 8); }
+  const fn = { glass, candle, sand, clock }[S.K.k]; for (const o of S.cells) { const pop = back(clamp((t - (o.r * GC + o.c) * 0.008) / 0.35)); X.save(); X.translate(o.x, o.y); X.scale(pop, pop); X.translate(-o.x, -o.y); fn(o, t); X.restore(); }
+  const y0 = GY + GR * CH + 80; X.fillStyle = '#fff'; X.font = `400 62px ${TF}`; X.fillText('COMMENT ITS LETTER + NUMBER', W / 2, y0);
+  X.fillStyle = 'rgba(255,220,180,.8)'; X.font = 'italic 700 38px Georgia, serif'; X.fillText('Like it if you found it', W / 2, y0 + 62);
+  if (S.brand) { X.fillStyle = 'rgba(255,255,255,.4)'; X.font = '800 30px Arial'; X.fillText('@' + S.brand.toLowerCase().replace(/[^a-z0-9]/g, ''), W / 2, 1860); } }
+window.frame = (fast) => { step(); S.t += 1 / FPS; if (!fast) draw(); return out(fast, S.t >= S.len, { ok: true }); };
+</script></body></html>

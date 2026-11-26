@@ -5,7 +5,7 @@ const { spawn, execFileSync } = require('child_process');
 const fs = require('fs'), path = require('path');
 const OUT = path.resolve(process.argv[2] || 'ball.mp4'), FPS = 30, SR = 44100; let SEED = Number(process.argv[4]) || 0;
 const HM = process.env.HMODE ? { mode: Number(process.env.HMODE) } : {};
-const FORMATS = ['country', 'floors', 'rings', 'breakout', 'hex', 'overflow', 'lastin', 'grow', 'takeover', 'plinko', 'race', 'quizgrid', 'quiztrack', 'quizmissing', 'quizflag', 'hypno'];
+const FORMATS = ['country', 'floors', 'rings', 'breakout', 'hex', 'overflow', 'lastin', 'grow', 'takeover', 'plinko', 'race', 'quizgrid', 'quiztrack', 'quizmissing', 'quizflag', 'hypno', 'follow', 'oddone'];
 let FMT = process.argv[3] || 'country'; if (!FORMATS.includes(FMT)) FMT = FORMATS[Math.floor(Math.random() * FORMATS.length)];
 const PAGE = FMT === 'country' ? 'sim.html' : FMT + '.html';
 
@@ -21,6 +21,7 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
     if (e.k === 'pad') { const roots = [[220, 277.2, 329.6], [196, 246.9, 293.7], [174.6, 220, 261.6], [196, 261.6, 329.6]][e.n % 4]; add(t, 4.4, (x) => { const env = Math.min(1, x / 1.2) * Math.min(1, (4.4 - x) / 1.2); return 0.07 * env * roots.reduce((s, f) => s + Math.sin(2 * Math.PI * f * x) + 0.3 * Math.sin(2 * Math.PI * f * 2 * x + Math.sin(x * 3)), 0) * (0.8 + 0.2 * Math.sin(x * 4)); }); continue; }
     if (e.k === 'chime') { const f = 880 * Math.pow(2, [0, 3, 5, 7, 10][e.n % 5] / 12); add(t, 1.6, (x) => 0.05 * Math.sin(2 * Math.PI * f * x) * Math.exp(-x * 2.2)); continue; }
     if (e.k === 'note') { const f = 523.25 * Math.pow(2, [0, 2, 4, 7, 9][e.n % 5] / 12 + Math.floor(e.n / 5) / 2); add(t, 0.5, (x) => 0.2 * (Math.sin(2 * Math.PI * f * x) + 0.3 * Math.sin(4 * Math.PI * f * x)) * Math.exp(-x * 7)); continue; }
+    if (e.k === 'swoosh') { const L = 0.18 + 0.32 * (e.d || 1); let lp = 0; add(t, L, (x) => { lp += 0.18 * (rn() - lp); const env = Math.sin(Math.PI * Math.min(1, x / L)); return 0.22 * lp * env * env; }); continue; }
     if (e.k === 'hit' && e.soft) { add(t, 0.08, (x) => 0.2 * Math.sin(2 * Math.PI * 220 * x) * Math.exp(-x * 40)); continue; }
     if (e.k === 'tick') { if (t - lastTick < 0.035) continue; lastTick = t; const f = 900 * (e.p || 1); add(t, 0.06, (x) => 0.16 * Math.sin(2 * Math.PI * f * x) * Math.exp(-x * 70)); }
     else if (e.k === 'hit') add(t, 0.14, (x) => 0.35 * (Math.sin(2 * Math.PI * (140 - 300 * x) * x) * Math.exp(-x * 25) + 0.4 * rn() * Math.exp(-x * 60)));
@@ -38,6 +39,7 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
 (async () => {
   const br = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] }); const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } });
   await pg.goto('file://' + path.join(__dirname, PAGE)); await pg.evaluate(([b, k]) => { window.BRAND = b; window.SKIN = k; }, [process.env.BRAND || '', Number(process.env.SKIN || 0)]); await pg.addScriptTag({ path: path.join(__dirname, 'theme.js') }); await pg.addScriptTag({ path: path.join(__dirname, 'kintext.js') });
+  await pg.evaluate(async () => { if (window.FONTS) await window.FONTS; await document.fonts.ready; });
   const [D0, D1] = await pg.evaluate(() => window.DUR || [35, 55]);
   if (!SEED) for (let k = 0; k < 40; k++) {   // pick a seed whose video lasts D0-D1 s and ends properly (dry run, no drawing)
     const sd = 1 + Math.floor(Math.random() * 1e6); await pg.evaluate((s) => window.init(s), { seed: sd, n: 7, ...HM });
@@ -73,9 +75,11 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   const dt = (t, y, size, col) => `drawtext=fontfile=${FONT}:text='${t}':fontsize=${size}:fontcolor=${col}:x=(w-text_w)/2:y=${y}:enable='gte(t,${D})'`;
   const vf = `[0:v]tpad=stop_mode=clone:stop_duration=${END},drawbox=x=0:y=1470:w=iw:h=450:color=black@0.8:t=fill:enable='gte(t,${D})',${dt(L[0], 1510, 62, 'white')},${dt(L[1], 1595, 50, '0xffd23f')},drawbox=x=110:y=1690:w=860:h=125:color=0xff2d55@1:t=fill:enable='gte(t,${D})',${dt(L[2], 1724, 60, 'white')}[v]`;
   const af = ding ? `[1:a]apad=pad_dur=${END}[a1];[2:a]adelay=${Math.round(dur * 1000)}|${Math.round(dur * 1000)},volume=0.6[a2];[a1][a2]amix=inputs=2:duration=first:normalize=0[a]` : `[1:a]apad=pad_dur=${END}[a]`;
+  const OWN_END = ['follow', 'oddone'].includes(FMT);   // these pages draw their own question/CTA ending
   try {
+    if (OWN_END) throw new Error('own ending');
     execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', vid, '-i', wav, ...(ding ? ['-i', ding] : []), '-filter_complex', vf + ';' + af, '-map', '[v]', '-map', '[a]', '-t', (dur + END).toFixed(2), '-c:v', 'libx264', '-preset', 'medium', '-crf', '21', '-maxrate', '5500k', '-bufsize', '11M', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', OUT]);
-  } catch (e) { console.log('end card failed, plain mux', e.message);
+  } catch (e) { if (!OWN_END) console.log('end card failed, plain mux', e.message);
     execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', vid, '-i', wav, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', OUT]); }
   fs.unlinkSync(vid); fs.unlinkSync(wav);
   console.log('done', OUT, 'format', FMT, 'seed', SEED, 'sec', dur.toFixed(1), 'events', events.length);
