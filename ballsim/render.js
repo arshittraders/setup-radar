@@ -16,7 +16,7 @@ function hashStr(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.ch
 function music(a, N, brand, vseed) {
   const H = hashStr(brand || 'KIWTECH'), pick = (arr, k) => arr[(H >>> k) % arr.length];
   let vs = (vseed || 1) >>> 0; const vr = () => ((vs = (Math.imul(vs, 1103515245) + 12345) >>> 0) / 4294967296);
-  const bpm = pick([116, 120, 124, 126, 128, 122], 3), beat = 60 / bpm, bar = beat * 4;
+  const bpm = pick([120, 124, 126, 128, 122, 125], 3), beat = 60 / bpm, bar = beat * 4;
   const root = pick([57, 60, 62, 55, 59, 64, 53], 7);   // MIDI
   const MIN = [0, 2, 3, 5, 7, 8, 10], MAJ = [0, 2, 4, 5, 7, 9, 11];
   const prof = pick([{ sc: MIN, ch: [0, 5, 2, 6] }, { sc: MAJ, ch: [0, 4, 5, 3] }, { sc: MIN, ch: [0, 3, 5, 4] }, { sc: MAJ, ch: [5, 3, 0, 4] }, { sc: MIN, ch: [0, 6, 5, 6] }], 11);
