@@ -1,0 +1,26 @@
+function chip(s,cx,cy,a,col='#fff',bg='rgba(0,0,0,.55)'){x.save();x.globalAlpha=a;x.font='800 62px BD';const w=x.measureText(s).width+70;x.fillStyle=bg;x.beginPath();x.roundRect(cx-w/2,cy-55,w,100,50);x.fill();x.fillStyle=col;x.textAlign='center';x.fillText(s,cx,cy+18);x.restore()}
+function ground(y,col='#8a7a4a'){x.fillStyle=col;x.fillRect(-W,y,W*3,H)}
+function idol(cx,by,s,col='#7a5a30'){x.save();x.translate(cx,by);x.scale(s,s);x.strokeStyle=col;x.lineWidth=6;x.beginPath();x.arc(0,-110,34,Math.PI,0);x.stroke();x.fillStyle=col;x.beginPath();x.arc(0,-110,18,0,7);x.fill();x.beginPath();x.moveTo(-14,-128);x.lineTo(0,-150);x.lineTo(14,-128);x.fill();x.fillRect(-16,-92,32,50);x.fillRect(-46,-86,30,10);x.fillRect(16,-86,30,10);x.fillRect(-46,-110,10,30);x.fillRect(36,-110,10,30);x.beginPath();x.moveTo(-22,-42);x.lineTo(22,-42);x.lineTo(28,0);x.lineTo(-28,0);x.fill();x.restore()}
+// stepwell cross-section: 7 stepped levels down to water. walk = 0..1 man position, silt = 0..1 earth fill
+function vav(cx,top,s,walk=-1,silt=0,t=0){x.save();x.translate(cx,top);x.scale(s,s);const SW=100,SH=72,N=7,B=N*SH;
+ x.fillStyle='#6a4a2a';x.fillRect(-520,0,1040,B+80);
+ x.fillStyle='#d8b888';x.beginPath();x.moveTo(-480,0);for(let i=0;i<N;i++){x.lineTo(-480+(i+1)*SW,i*SH);x.lineTo(-480+(i+1)*SW,(i+1)*SH)}x.lineTo(480,B);x.lineTo(480,0);x.closePath();x.fill();
+ x.fillStyle='#c8a474';x.fillRect(-380,-10,860,B*.55);for(let r=0;r<3;r++)for(let k=0;k<7;k++)idol(-300+k*120,60+r*110,.6,'rgba(110,70,30,.55)');
+ for(let i=1;i<N;i++){const fx=-480+(i+1)*SW,fy=(i+1)*SH;x.fillStyle='#b08850';x.fillRect(fx+6,fy-150,16,150);x.fillRect(fx+SW*2-22,fy-150,16,150);x.fillStyle='#e8c898';x.fillRect(fx,fy-166,SW*2+8,18)}
+ x.fillStyle='#3a8ac0';x.fillRect(-480+N*SW,B-40,480-(-480+N*SW),40);x.fillStyle='rgba(255,255,255,.3)';for(let k=0;k<4;k++)x.fillRect(-480+N*SW+((t*40+k*60)%200),B-34,40,5);
+ x.fillStyle='#e8d0a0';x.fillRect(-520,-14,1040,14);
+ if(walk>=0){const i=Math.min(N-1,Math.floor(walk*N)),f=walk*N-i;man(-480+(i+f)*SW+SW*.5,(i+1)*SH- (i<N?0:0),1.3,0)}
+ if(silt>0){x.fillStyle='#7a5a32';x.fillRect(-500,B+10-(B+30)*silt,1000,(B+30)*silt);x.fillStyle='#8a6a3a';for(let k=0;k<12;k++)x.fillRect(-480+k*80,B+10-(B+30)*silt,50,6)}
+ x.restore()}
+function note(cx,cy,s,a){x.save();x.globalAlpha=a;x.translate(cx,cy);x.scale(s,s);x.rotate(-.06);x.fillStyle='#b9a3d6';x.beginPath();x.roundRect(-400,-190,800,380,20);x.fill();x.strokeStyle='#7a5aa6';x.lineWidth=6;x.strokeRect(-380,-170,760,340);x.fillStyle='#4a2a7a';x.font='800 110px BD';x.textAlign='left';x.fillText('₹100',-360,-50);x.restore();x.save();x.globalAlpha=a;x.translate(cx+40*s,cy-10*s);x.rotate(-.06);vav(30,0,.32*s);x.restore()}
+window.EP={title:'रानी की वाव:<br>₹100 वाली बावड़ी 💧',badges:['500+ मूर्तियाँ 🛕','दशावतार ✨'],badgeScene:4,em:'सौ|नोट|सीढ़ियों|रानी|वाव,|वाव|गुजरात|पाटन|कुआँ,|बावड़ी!|ग्यारहवीं|सदी|भीमदेव|उदयमती|सात|मंज़िल|पानी|मूर्तियाँ|विष्णु|दशावतार|बाढ़|मिट्टी|खुदाई|यूनेस्को',capTop:{},SC:[
+ (u,d,t)=>{cam(1.12-.08*eo(cl(u/d)));sky(t,'#0a0c24','#2a1a40','#c46b2c');ground(1150,'#2a2a18');note(540,1000,1,pr(u,.2,.5));rays(t,540,1000,'220,190,255',.08)},
+ (u,d,t)=>{cam(1.04);sky(t,'#3a7ac0','#b0d0f0','#f0e0c0');ground(700,'#8a7a4a');vav(540,700,.95,-1,0,t);x.setTransform(1,0,0,1,0,0);txt('पाटन, गुजरात 📍',540,360,100,'#ffd23f',pr(u,.3,.4));txt('वाव = बावड़ी 💧',540,500,84,'#fff',pr(u,1,.4))},
+ (u,d,t)=>{cam(1.03+.04*eo(cl(u/d)));sky(t,'#f0a060','#f8c890','#f0e0c0');sun(840,640,70,.9);ground(700,'#8a7a4a');vav(540,700,.95,-1,0,t);x.setTransform(1,0,0,1,0,0);txt('11वीं सदी 👑',540,360,110,'#ffd23f',pr(u,.3,.4));txt('राजा भीमदेव प्रथम की याद में',540,500,66,'#fff',pr(u,1,.4))},
+ (u,d,t)=>{cam(1.04);sky(t,'#3a7ac0','#b0d0f0','#f0e0c0');ground(700,'#8a7a4a');vav(540,700,.95,cl(pr(u,.3,d*.8)*.99),0,t);x.setTransform(1,0,0,1,0,0);txt('7 मंज़िल गहरी ⬇️',540,360,100,'#ffd23f',pr(u,.3,.4));txt('सीधे पानी तक 💧',540,500,80,'#fff',pr(u,1,.4))},
+ (u,d,t)=>{cam(1.03+.04*eo(cl(u/d)));x.fillStyle='#c8a474';x.fillRect(-W,-H,W*3,H*3);for(let r=0;r<5;r++){x.fillStyle='rgba(90,60,30,.25)';x.fillRect(-W,820+r*230,W*3,14);for(let k=0;k<6;k++){x.fillStyle='rgba(120,80,40,.18)';x.beginPath();x.roundRect(30+k*175,830+r*230-200,140,196,20);x.fill();idol(100+k*175,820+r*230,1.2,'#7a5a30')}}},
+ (u,d,t)=>{cam(1.04);sky(t,'#5a6a7a','#9aa8b0','#c0b8a0');ground(700,'#8a7a4a');const sp=pr(u,.2,d*.4),dg=pr(u,d*.55,d*.35);vav(540,700,.95,-1,sp*(1-dg),t);x.setTransform(1,0,0,1,0,0);txt('बाढ़ की मिट्टी 🌊',540,360,96,'#ffd23f',pr(u,.3,.4));txt('➜ खुदाई ⛏️',540,500,88,'#fff',pr(u,d*.55,.4))},
+ (u,d,t)=>{cam(1.04);sky(t,'#3a7ac0','#b0d0f0','#f0e0c0');ground(700,'#8a7a4a');vav(540,700,.95,-1,0,t);x.setTransform(1,0,0,1,0,0);txt('2014 🏆',540,360,116,'#ffd23f',pr(u,.3,.4));txt('UNESCO विश्व धरोहर',540,500,80,'#fff',pr(u,1,.4))},
+ (u,d,t)=>{cam(1.04);sky(t,'#0a0c24','#2a1a40','#c46b2c');ground(1100,'#4a3a22');vav(540,1100,.85,-1,0,t);x.setTransform(1,0,0,1,0,0);
+   txt('पता था? 👇',540,330,110,'#ffd23f',pr(u,.3,.4));const p=pr(u,1.2,.4);x.globalAlpha=p;x.fillStyle='#fff';x.beginPath();x.roundRect(240,430,600,120,60);x.fill();x.font='800 60px BD';x.textAlign='center';x.fillStyle='#b5341a';x.fillText('🔔 Follow करो',540,510);x.globalAlpha=1}
+]};
