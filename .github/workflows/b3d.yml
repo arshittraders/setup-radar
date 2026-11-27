@@ -1,0 +1,144 @@
+name: B3D Night Render (Blender)
+# 01:00 IST every night: claim one queued Studio job of kind "b3d" → Blender 4.2 LTS Cycles (CPU) renders the
+# 45 s 1080x1920 video split over 10 matrix jobs → ffmpeg joins frames + code-made sound + counters → upload to Studio.
+# After a job it re-dispatches itself to take the next one (stops when the queue is empty or after 06:00 IST).
+# Sample mode (no Studio job): manual run with "sample" seed, or any push to branch b3d-format → video committed to review/.
+on:
+  schedule:
+    - cron: '30 19 * * *'
+  workflow_dispatch:
+    inputs:
+      sample: { description: 'sample seed (empty = take a queued Studio job)', required: false, default: '' }
+      material: { description: 'sample material (cheese, soap, jelly, marble, wood, chocolate, clay, crystal, rainbow, cake)', required: false, default: '' }
+  push:
+    branches: [b3d-format]
+    paths: ['b3d/**', '.github/workflows/b3d.yml']
+permissions:
+  contents: write
+  actions: write
+  id-token: write
+concurrency:
+  group: b3d-render
+  cancel-in-progress: false
+env:
+  BLENDER_V: '4.2.3'
+  NCH: '10'
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      go: ${{ steps.p.outputs.go }}
+      job_id: ${{ steps.p.outputs.job_id }}
+      seed: ${{ steps.p.outputs.seed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Claim a b3d job (or sample)
+        id: p
+        run: |
+          mkdir -p work
+          SAMPLE="${{ inputs.sample }}"; MAT="${{ inputs.material }}"
+          if [ "${{ github.event_name }}" = "push" ] && [ -z "$SAMPLE" ]; then SAMPLE=$(( ${{ github.run_id }} % 99991 + 1 )); fi
+          JOB=""; SEED=""
+          if [ -n "$SAMPLE" ]; then SEED="$SAMPLE"; echo '{"job":null}' > work/claim.json
+          else
+            node b3d/studio_io.js claim > work/claim.json || echo '{"job":null}' > work/claim.json
+            JOB=$(jq -r '.job.id // empty' work/claim.json); SEED=$(jq -r '.job.plan.seed // empty' work/claim.json); MAT=$(jq -r '.job.plan.material // empty' work/claim.json)
+            [ -z "$SEED" ] && SEED=$(( RANDOM * 7 + 11 ))
+          fi
+          if [ -z "$SAMPLE" ] && [ -z "$JOB" ]; then echo "no queued b3d job"; echo "go=0" >> $GITHUB_OUTPUT; exit 0; fi
+          python3 - "$SEED" "$MAT" <<'PY'
+          import json, sys
+          sys.path.insert(0, 'b3d'); import cc_plan
+          p = cc_plan.make(int(sys.argv[1]), sys.argv[2] or None); p['assets'] = 'work/assets'
+          json.dump(p, open('work/params.json', 'w')); print(p['material'], p['nx'], p['ny'], p['nz'], len(p['events']), 'cuts', p['total'], 'cubes')
+          PY
+          MATR=$(jq -r .material work/params.json)
+          python3 b3d/polyhaven.py "$SEED" "$MATR" work/assets || echo '{"hdri":null,"board":null,"mat":null,"credits":[]}' > work/assets/manifest.json
+          echo "go=1" >> $GITHUB_OUTPUT; echo "job_id=$JOB" >> $GITHUB_OUTPUT; echo "seed=$SEED" >> $GITHUB_OUTPUT
+      - if: steps.p.outputs.go == '1'
+        uses: actions/cache@v4
+        with: { path: ~/blender, key: 'blender-${{ env.BLENDER_V }}-linux-x64' }
+      - if: steps.p.outputs.go == '1'
+        run: bash b3d/get_blender.sh
+      - if: steps.p.outputs.go == '1'
+        uses: actions/upload-artifact@v4
+        with: { name: b3d-work, path: work, retention-days: 1 }
+
+  render:
+    needs: prep
+    if: needs.prep.outputs.go == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix: { chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: b3d-work, path: work }
+      - uses: actions/cache@v4
+        with: { path: ~/blender, key: 'blender-${{ env.BLENDER_V }}-linux-x64' }
+      - name: Blender (free, official build)
+        run: |
+          bash b3d/get_blender.sh
+          sudo apt-get update -qq && sudo apt-get install -y -qq libxrender1 libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libsm6 libgl1 libegl1 >/dev/null
+          ~/blender/blender --version | head -1
+      - name: Render chunk ${{ matrix.chunk }}
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] && [ "$(cat b3d/push_mode 2>/dev/null)" = "quick" ]; then export B3D_PCT=30 B3D_SAMPLES=10; echo "QUICK test mode"; fi
+          set +e; T0=$(date +%s)
+          ~/blender/blender -b --factory-startup -noaudio --python b3d/cutting_cubes.py -- work/params.json ${{ matrix.chunk }} $NCH frames > blender.log 2>&1; RC=$?
+          set -e; grep -E "B3D|Error|Traceback|Exception" blender.log | tail -n 40 || true
+          grep -E "^ *Time: [0-9]" blender.log | awk '{split($2,a,":"); s+=a[1]*60+a[2]; n++} END {if(n) printf "avg %.1f s/frame over %d frames\n", s/n, n}' || true
+          [ $RC -eq 0 ] || { tail -n 80 blender.log; exit $RC; }
+          N=$(ls frames/*.jpg | wc -l); echo "chunk ${{ matrix.chunk }}: $N frames in $(( $(date +%s) - T0 )) s"; [ "$N" -gt 0 ]
+      - uses: actions/upload-artifact@v4
+        with: { name: 'frames-${{ matrix.chunk }}', path: frames, retention-days: 1, compression-level: 0 }
+
+  finish:
+    needs: [prep, render]
+    if: always() && needs.prep.outputs.go == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/download-artifact@v4
+        with: { name: b3d-work, path: work }
+      - uses: actions/download-artifact@v4
+        with: { pattern: 'frames-*', path: all, merge-multiple: true }
+      - name: Join frames + sound + counters
+        id: mk
+        run: |
+          set -e
+          N=$(ls all/*.jpg | wc -l); W=$(jq -r .frames work/params.json); echo "frames $N / $W"; [ "$N" -ge "$W" ] || { echo "missing frames"; exit 1; }
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          pip install -q numpy fonttools brotli
+          mkdir -p fonts && python3 -c "from fontTools.ttLib import TTFont; f=TTFont('clip/anton.woff2'); f.flavor=None; f.save('fonts/Anton.ttf')"
+          python3 b3d/sound.py work/params.json work/a.wav
+          python3 b3d/overlay.py work/params.json work/o.ass
+          ffmpeg -y -v error -framerate 30 -start_number 1 -i all/f_%04d.jpg -i work/a.wav -vf "scale=1080:1920:flags=lanczos,ass=work/o.ass:fontsdir=fonts,format=yuv420p" \
+            -c:v libx264 -preset medium -crf 20 -maxrate 7M -bufsize 14M -c:a aac -b:a 160k -t 45 -movflags +faststart work/out.mp4
+          ffmpeg -y -v error -ss 41 -i work/out.mp4 -frames:v 1 -q:v 3 work/thumb.jpg
+          ls -la work/out.mp4; jq -r '.credits[]?' work/assets/manifest.json || true
+      - name: Hand to Studio
+        if: needs.prep.outputs.job_id != ''
+        run: node b3d/studio_io.js done "${{ needs.prep.outputs.job_id }}" work
+      - name: Sample → review/ (committed to this branch)
+        if: needs.prep.outputs.job_id == ''
+        run: |
+          F=review/b3d-cutting-cubes-${{ needs.prep.outputs.seed }}.mp4; mkdir -p review; cp work/out.mp4 "$F"
+          git config user.name "b3d-bot"; git config user.email "b3d-bot@users.noreply.github.com"
+          git add "$F" && git commit -m "b3d sample seed ${{ needs.prep.outputs.seed }} [skip ci]" && (git push || (git pull --rebase && git push))
+      - name: Mark Studio job failed
+        if: failure() && needs.prep.outputs.job_id != ''
+        run: node b3d/studio_io.js fail "${{ needs.prep.outputs.job_id }}" "b3d render failed (run ${{ github.run_id }})"
+      - name: Next job (until 06:00 IST)
+        if: always() && needs.prep.outputs.job_id != ''
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          H=$(TZ=Asia/Kolkata date +%H); if [ "$H" -lt 6 ]; then gh workflow run b3d.yml -R ${{ github.repository }} --ref ${{ github.ref_name }} || true; fi
