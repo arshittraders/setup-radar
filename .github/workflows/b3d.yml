@@ -59,6 +59,11 @@ jobs:
           python3 b3d/polyhaven.py "$SEED" "$MATR" work/assets || echo '{"hdri":null,"board":null,"mat":null,"credits":[]}' > work/assets/manifest.json
           echo "go=1" >> $GITHUB_OUTPUT; echo "job_id=$JOB" >> $GITHUB_OUTPUT; echo "seed=$SEED" >> $GITHUB_OUTPUT
       - if: steps.p.outputs.go == '1'
+        uses: actions/cache@v4
+        with: { path: ~/blender, key: 'blender-${{ env.BLENDER_V }}-linux-x64' }
+      - if: steps.p.outputs.go == '1'
+        run: bash b3d/get_blender.sh
+      - if: steps.p.outputs.go == '1'
         uses: actions/upload-artifact@v4
         with: { name: b3d-work, path: work, retention-days: 1 }
 
@@ -78,10 +83,7 @@ jobs:
         with: { path: ~/blender, key: 'blender-${{ env.BLENDER_V }}-linux-x64' }
       - name: Blender (free, official build)
         run: |
-          if [ ! -x ~/blender/blender ]; then
-            curl -fsSL -o /tmp/b.tar.xz "https://download.blender.org/release/Blender${BLENDER_V%.*}/blender-${BLENDER_V}-linux-x64.tar.xz"
-            mkdir -p ~/blender && tar -xJf /tmp/b.tar.xz -C ~/blender --strip-components=1
-          fi
+          bash b3d/get_blender.sh
           sudo apt-get update -qq && sudo apt-get install -y -qq libxrender1 libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libsm6 libgl1 libegl1 >/dev/null
           ~/blender/blender --version | head -1
       - name: Render chunk ${{ matrix.chunk }}
@@ -89,7 +91,8 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ] && [ "$(cat b3d/push_mode 2>/dev/null)" = "quick" ]; then export B3D_PCT=30 B3D_SAMPLES=10; echo "QUICK test mode"; fi
           set +e; T0=$(date +%s)
           ~/blender/blender -b --factory-startup -noaudio --python b3d/cutting_cubes.py -- work/params.json ${{ matrix.chunk }} $NCH frames > blender.log 2>&1; RC=$?
-          set -e; grep -E "B3D|Error|Traceback|Exception|Time:" blender.log | tail -n 60 || true
+          set -e; grep -E "B3D|Error|Traceback|Exception" blender.log | tail -n 40 || true
+          grep -E "^ *Time: [0-9]" blender.log | awk '{split($2,a,":"); s+=a[1]*60+a[2]; n++} END {if(n) printf "avg %.1f s/frame over %d frames\n", s/n, n}' || true
           [ $RC -eq 0 ] || { tail -n 80 blender.log; exit $RC; }
           N=$(ls frames/*.jpg | wc -l); echo "chunk ${{ matrix.chunk }}: $N frames in $(( $(date +%s) - T0 )) s"; [ "$N" -gt 0 ]
       - uses: actions/upload-artifact@v4
@@ -118,7 +121,7 @@ jobs:
           mkdir -p fonts && python3 -c "from fontTools.ttLib import TTFont; f=TTFont('clip/anton.woff2'); f.flavor=None; f.save('fonts/Anton.ttf')"
           python3 b3d/sound.py work/params.json work/a.wav
           python3 b3d/overlay.py work/params.json work/o.ass
-          ffmpeg -y -v error -framerate 30 -start_number 1 -i all/f_%04d.jpg -i work/a.wav -vf "ass=work/o.ass:fontsdir=fonts,format=yuv420p" \
+          ffmpeg -y -v error -framerate 30 -start_number 1 -i all/f_%04d.jpg -i work/a.wav -vf "scale=1080:1920:flags=lanczos,ass=work/o.ass:fontsdir=fonts,format=yuv420p" \
             -c:v libx264 -preset medium -crf 20 -maxrate 7M -bufsize 14M -c:a aac -b:a 160k -t 45 -movflags +faststart work/out.mp4
           ffmpeg -y -v error -ss 41 -i work/out.mp4 -frames:v 1 -q:v 3 work/thumb.jpg
           ls -la work/out.mp4; jq -r '.credits[]?' work/assets/manifest.json || true

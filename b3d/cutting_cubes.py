@@ -317,7 +317,7 @@ for (loc, pw, size) in [((-2.5, -2.0, 4.5), 650, 3.0), ((3.0, 2.5, 3.0), 300, 2.
 
 # ---------- render settings ----------
 sc.render.engine = 'CYCLES'; cy = sc.cycles; cy.device = 'CPU'
-cy.samples = int(os.environ.get('B3D_SAMPLES', '40')); cy.use_adaptive_sampling = True; cy.adaptive_threshold = 0.03
+cy.samples = int(os.environ.get('B3D_SAMPLES', '16')); cy.use_adaptive_sampling = True; cy.adaptive_threshold = 0.05
 cy.use_denoising = True
 try:
     cy.denoiser = 'OPENIMAGEDENOISE'
