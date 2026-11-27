@@ -1,0 +1,21 @@
+// stone temple hall: floor at by, roof slab, n pillars; hang = index of hanging pillar, gap px, glow
+function pil(X,top,by,w,col,carve){x.fillStyle=col;x.fillRect(X-w/2,top,w,by-top);x.fillStyle='rgba(0,0,0,.18)';for(let k=0;k<4;k++)x.fillRect(X-w/2,top+40+k*(by-top-80)/3,w,14);
+ if(carve){x.fillStyle='rgba(255,255,255,.12)';x.fillRect(X-w/2+10,top+60,w-20,(by-top)/3)}x.fillStyle='rgba(0,0,0,.25)';x.fillRect(X-w/2-14,top,w+28,30);x.fillRect(X-w/2-14,by-30,w+28,30)}
+function hall(by,s,hang=2,gap=26,glow=0,cols=5){const top=by-760*s,w=120*s,sp=W/(cols);
+ x.fillStyle='#5a4a3c';x.fillRect(-W,by,W*3,H);x.fillStyle='#6a5a4a';for(let k=0;k<12;k++)x.fillRect(-100+k*110,by+20,90,8);
+ x.fillStyle='#7a6a58';x.fillRect(-W,top-90*s,W*3,90*s);x.fillStyle='#8a7a66';x.fillRect(-W,top-20*s,W*3,20*s);
+ for(let i=0;i<cols;i++){const X=sp*(i+.5);const h=i===hang;pil(X,top,h?by-gap:by,w,h?'#a89070':'#968066',1);
+  if(h&&glow>0){const g=x.createRadialGradient(X,by-gap/2,4,X,by-gap/2,180);g.addColorStop(0,`rgba(140,255,120,${.55*glow})`);g.addColorStop(1,'rgba(140,255,120,0)');x.fillStyle=g;x.fillRect(X-200,by-200,400,300)}}
+ return sp*(hang+.5)}
+function cloth(X,by,gap,p,col='#e63946'){const cx=X-260+520*p;x.fillStyle=col;x.beginPath();x.moveTo(cx-140,by-gap*.35);x.quadraticCurveTo(cx,by-gap*.9,cx+140,by-gap*.35);x.lineTo(cx+140,by-2);x.quadraticCurveTo(cx,by-gap*.5,cx-140,by-2);x.fill()}
+function hat(px,py,s){x.fillStyle='#1b0f08';x.fillRect(px-16*s,py-78*s,32*s,6*s);x.fillRect(px-9*s,py-98*s,18*s,22*s)}
+window.EP={title:'लटकता खंभा:<br>ज़मीन छूता ही नहीं! 🏛️',badges:['कपड़ा आर-पार 🧣','क़िस्मत? 🍀'],badgeScene:4,em:'खंभा|खंभा...|छत|ज़मीन|लेपाक्षी|वीरभद्र|मंदिर...|आंध्र|प्रदेश|बेंगलुरु|सोलहवीं|सदी|विजयनगर|विरुपन्ना|वीरन्ना|सत्तर|खंभे|लटकता|कपड़ा|क़िस्मत|अंग्रेज़ों|इंजीनियर|राज़|हिलाने|खिसक|कोना,|भार',capTop:{},SC:[
+ (u,d,t)=>{cam(1.14-.1*eo(cl(u/d)));x.fillStyle='#0a0810';x.fillRect(-W,-H,W*3,H*3);hall(1560,1,2,34,.7+.3*Math.sin(t*2.4));x.fillStyle='rgba(0,0,10,.45)';x.fillRect(-W,-H,W*3,H*3);const X=W/2;const g=x.createRadialGradient(X,1540,4,X,1540,220);g.addColorStop(0,'rgba(160,255,140,.5)');g.addColorStop(1,'rgba(160,255,140,0)');x.fillStyle=g;x.fillRect(X-240,1320,480,440)},
+ (u,d,t)=>{cam(1.04);sky(t,'#3a7ac0','#b0d0f0','#f0e0c0');x.fillStyle='#7a8a4a';x.fillRect(-W,1250,W*3,H);x.save();x.translate(0,250);x.scale(1,.75);hall(1300,.8,2,0,0,5);x.restore();x.setTransform(1,0,0,1,0,0);txt('लेपाक्षी, आंध्र प्रदेश 📍',540,360,86,'#ffd23f',pr(u,.3,.4));txt('बेंगलुरु से ~120 km',540,500,80,'#fff',pr(u,1,.4))},
+ (u,d,t)=>{cam(1.03+.04*eo(cl(u/d)));sky(t,'#f0a060','#f8c890','#f0e0c0');sun(860,720,70,.9);x.fillStyle='#7a6a3a';x.fillRect(-W,1250,W*3,H);x.save();x.translate(0,250);x.scale(1,.75);hall(1300,.8,2,0,0,5);x.restore();man(360,1500,2.4,0);man(720,1500,2.4,0);x.setTransform(1,0,0,1,0,0);txt('16वीं सदी 👑',540,360,108,'#ffd23f',pr(u,.3,.4));txt('विजयनगर साम्राज्य',540,500,80,'#fff',pr(u,1,.4))},
+ (u,d,t)=>{cam(1.04+.04*eo(cl(u/d)));x.fillStyle='#2a2018';x.fillRect(-W,-H,W*3,H*3);for(let r=0;r<3;r++){x.save();const s=.45+r*.25;x.translate(W/2*(1-s),(1560-1560*s)+r*60);x.scale(s,s);hall(1560,1,r===2?2:-1,26,r===2?pr(u,d*.4,.5):0,7);x.restore()}x.setTransform(1,0,0,1,0,0);txt('~70 खंभे 🏛️',540,360,110,'#ffd23f',pr(u,.3,.4));txt('एक लटकता हुआ! 😮',540,500,82,'#fff',pr(u,1,.4))},
+ (u,d,t)=>{cam(1.05);x.fillStyle='#1a140e';x.fillRect(-W,-H,W*3,H*3);const X=hall(1760,1.25,1,110,.6,3);cloth(X,1760,110,cl(pr(u,.6,d*.8)))},
+ (u,d,t)=>{cam(1.04);x.fillStyle='#2a2018';x.fillRect(-W,-H,W*3,H*3);const X=hall(1780,1,2,0,0,5);const push=Math.max(0,Math.sin(t*5))*8;x.fillStyle='rgba(0,0,0,.25)';x.fillRect(-W,-H,W*3,H*3);man(X-120+push*.3,1780,3.4,-.35);hat(X-120+push*.3+18,1780-6,3.4);x.setTransform(1,0,0,1,0,0);txt('अंग्रेज़ इंजीनियर 🎩',540,360,92,'#ffd23f',pr(u,.3,.4));txt('राज़ जानने की कोशिश',540,500,78,'#fff',pr(u,1,.4))},
+ (u,d,t)=>{const z=1+1.2*eo(pr(u,.2,d*.5));cam(z,0,-320*(z-1)/1.2);x.fillStyle='#2a2018';x.fillRect(-W,-H,W*3,H*3);const X=hall(1560,1,2,30,.5,5);x.strokeStyle='#ffd23f';x.lineWidth=6;x.beginPath();x.moveTo(X-80,1545);x.lineTo(X+80,1545);x.stroke();x.setTransform(1,0,0,1,0,0);txt('खंभा खिसका ↔️',540,360,104,'#ffd23f',pr(u,.3,.4));txt('भार बाक़ी खंभों पर 🏛️',540,500,78,'#fff',pr(u,d*.45,.4))},
+ (u,d,t)=>vs(u,t,['कारीगरी','🛠️'],['रहस्य','❓'],['#3a2a10','#a07a2a'],['#4a0e6a','#9a1fc0'])
+]};
