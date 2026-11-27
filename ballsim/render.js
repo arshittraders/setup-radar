@@ -5,7 +5,7 @@ const { spawn, execFileSync } = require('child_process');
 const fs = require('fs'), path = require('path');
 const OUT = path.resolve(process.argv[2] || 'ball.mp4'), FPS = 30, SR = 44100; let SEED = Number(process.argv[4]) || 0;
 const HM = process.env.HMODE ? { mode: Number(process.env.HMODE) } : {};
-const FORMATS = ['country', 'floors', 'rings', 'breakout', 'hex', 'overflow', 'lastin', 'grow', 'takeover', 'plinko', 'race', 'quizgrid', 'quiztrack', 'quizmissing', 'quizflag', 'hypno', 'follow', 'oddone', 'wyr'];
+const FORMATS = ['country', 'floors', 'rings', 'breakout', 'hex', 'overflow', 'lastin', 'grow', 'takeover', 'plinko', 'race', 'quizgrid', 'quiztrack', 'quizmissing', 'quizflag', 'hypno', 'follow', 'oddone', 'wyr', 'illusion'];
 let FMT = process.argv[3] || 'country'; if (!FORMATS.includes(FMT)) FMT = FORMATS[Math.floor(Math.random() * FORMATS.length)];
 const PAGE = FMT === 'country' ? 'sim.html' : FMT + '.html';
 
@@ -122,7 +122,7 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   }
   // 2.6 s end card: freeze last frame, dim it, ask for a comment + follow (this is what turns viewers into followers)
   const END = 2.6, D = dur.toFixed(2), FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
-  const L = FMT === 'country' ? ['COMMENT YOUR COUNTRY', 'IT JOINS THE NEXT BATTLE', 'FOLLOW FOR TOMORROW'] : FMT === 'overflow' ? ['DID YOU GUESS THE NUMBER?', 'COMMENT YOUR GUESS', 'FOLLOW FOR PART 2'] : ['quizgrid', 'quiztrack', 'quizmissing', 'quizflag'].includes(FMT) ? ['DID YOU GET IT?', 'COMMENT YOUR ANSWER', 'FOLLOW FOR DAILY TESTS'] : FMT === 'wyr' ? ['WHICH ONES DID YOU PICK?', 'COMMENT YOUR A / B ANSWERS', 'FOLLOW FOR MORE'] : ['lastin', 'race', 'takeover', 'plinko'].includes(FMT) ? ['WAS IT YOUR PICK?', 'COMMENT YOUR PICK', 'FOLLOW FOR THE REMATCH'] : ['DID YOU GUESS RIGHT?', 'COMMENT YOUR PICK', 'FOLLOW FOR PART 2'];
+  const L = FMT === 'country' ? ['COMMENT YOUR COUNTRY', 'IT JOINS THE NEXT BATTLE', 'FOLLOW FOR TOMORROW'] : FMT === 'overflow' ? ['DID YOU GUESS THE NUMBER?', 'COMMENT YOUR GUESS', 'FOLLOW FOR PART 2'] : ['quizgrid', 'quiztrack', 'quizmissing', 'quizflag'].includes(FMT) ? ['DID YOU GET IT?', 'COMMENT YOUR ANSWER', 'FOLLOW FOR DAILY TESTS'] : FMT === 'illusion' ? ['DID IT WORK ON YOU?', 'COMMENT WHAT YOU SAW', 'FOLLOW FOR MORE'] : FMT === 'wyr' ? ['WHICH ONES DID YOU PICK?', 'COMMENT YOUR A / B ANSWERS', 'FOLLOW FOR MORE'] : ['lastin', 'race', 'takeover', 'plinko'].includes(FMT) ? ['WAS IT YOUR PICK?', 'COMMENT YOUR PICK', 'FOLLOW FOR THE REMATCH'] : ['DID YOU GUESS RIGHT?', 'COMMENT YOUR PICK', 'FOLLOW FOR PART 2'];
   let ding = null; try { const LIB = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sfx', 'library.json'), 'utf8')).filter((x) => x.cat === 'ding'); if (LIB.length) ding = path.join(__dirname, '..', LIB[SEED % LIB.length].file); } catch (e) {}
   const dt = (t, y, size, col) => `drawtext=fontfile=${FONT}:text='${t}':fontsize=${size}:fontcolor=${col}:x=(w-text_w)/2:y=${y}:enable='gte(t,${D})'`;
   const vf = `[0:v]tpad=stop_mode=clone:stop_duration=${END},drawbox=x=0:y=1470:w=iw:h=450:color=black@0.8:t=fill:enable='gte(t,${D})',${dt(L[0], 1510, 62, 'white')},${dt(L[1], 1595, 50, '0xffd23f')},drawbox=x=110:y=1690:w=860:h=125:color=0xff2d55@1:t=fill:enable='gte(t,${D})',${dt(L[2], 1724, 60, 'white')}[v]`;
