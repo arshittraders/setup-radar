@@ -90,7 +90,7 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
 
 (async () => {
   const br = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] }); const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } });
-  await pg.goto('file://' + path.join(__dirname, PAGE)); await pg.evaluate(([b, k]) => { window.BRAND = b; window.SKIN = k; }, [process.env.BRAND || '', Number(process.env.SKIN || 0)]); await pg.addScriptTag({ path: path.join(__dirname, 'theme.js') }); if (process.env.LANGX === 'hi') await pg.addScriptTag({ path: path.join(__dirname, 'hinglish.js') }); await pg.addScriptTag({ path: path.join(__dirname, 'kintext.js') });
+  await pg.goto('file://' + path.join(__dirname, PAGE)); await pg.evaluate(([b, k]) => { window.BRAND = b; window.SKIN = k; }, [process.env.BRAND || '', Number(process.env.SKIN || 0)]); await pg.addScriptTag({ path: path.join(__dirname, 'theme.js') }); await pg.addScriptTag({ path: path.join(__dirname, 'kintext.js') }); if (process.env.LANGX === 'hi') await pg.addScriptTag({ path: path.join(__dirname, 'hinglish.js') });
   await pg.evaluate(async () => { if (window.FONTS) await window.FONTS; await document.fonts.ready; });
   const [D0, D1] = await pg.evaluate(() => window.DUR || [35, 55]);
   if (!SEED) for (let k = 0; k < 40; k++) {   // pick a seed whose video lasts D0-D1 s and ends properly (dry run, no drawing)
