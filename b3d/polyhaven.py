@@ -21,7 +21,7 @@ def pick(kind, words, r, prefer=()):
     ok = []
     for aid, a in assets.items():
         hay = ' '.join([aid] + list(a.get('tags', [])) + list(a.get('categories', []))).lower()
-        if any(w in hay for w in words):
+        if any(w in hay for w in words) and not any(x in hay for x in ('wall', 'bark', 'tree', 'roof', 'fence', 'rough')):
             ok.append(aid)
     ok.sort()
     pre = [p for p in prefer if p in assets]
@@ -62,7 +62,7 @@ def main():
     except Exception as e:
         print('hdri fallback:', e)
     try:
-        bid = pick('textures', ['wood_table', 'plank', 'wood'], r)
+        bid = pick('textures', ['wood_table', 'plank', 'veneer', 'wood_floor'], r, prefer=('wood_table_001', 'wood_table_worn', 'kitchen_wood', 'oak_veneer_01', 'wood_planks'))
         man['board'] = fetch_tex(bid, out, '2k') if bid else None
         if man['board']:
             man['credits'].append(f'Texture {bid} — Poly Haven (CC0)')

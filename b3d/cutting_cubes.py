@@ -106,9 +106,10 @@ def block_material():
         setin(bsdf, 'Base Color', hsv(h, 0.35, 0.95)); setin(bsdf, 'Roughness', 0.22)
         setin(bsdf, 'Subsurface Weight', 0.6); setin(bsdf, 'Subsurface Scale', 0.08)
         no = nt.nodes.new('ShaderNodeTexNoise'); no.inputs['Scale'].default_value = 30; nt.links.new(vec, no.inputs['Vector']); bump(nt, bsdf, no.outputs['Fac'], 0.05)
-    elif kind in ('jelly', 'crystal'):
-        setin(bsdf, 'Base Color', hsv(h, 0.75 if kind == 'jelly' else 0.25, 0.95)); setin(bsdf, 'Transmission Weight', 1.0)
-        setin(bsdf, 'Roughness', 0.08 if kind == 'jelly' else 0.02); setin(bsdf, 'IOR', 1.35 if kind == 'jelly' else 1.55)
+    elif kind in ('jelly', 'crystal'):   # gummy / ice look via subsurface (real glass through ~200 cubes runs out of light bounces → black)
+        setin(bsdf, 'Base Color', hsv(h, 0.8, 0.95) if kind == 'jelly' else hsv(0.55 + 0.1 * h, 0.18, 0.97))
+        setin(bsdf, 'Subsurface Weight', 1.0); setin(bsdf, 'Subsurface Scale', 0.25 if kind == 'jelly' else 0.4)
+        setin(bsdf, 'Roughness', 0.12 if kind == 'jelly' else 0.05); setin(bsdf, 'Coat Weight', 0.6); setin(bsdf, 'Coat Roughness', 0.05)
     elif kind == 'marble':
         setin(bsdf, 'Roughness', 0.12); setin(bsdf, 'Coat Weight', 0.3)
         if MAN.get('mat'):
@@ -156,7 +157,7 @@ def plain(name, col, rough=0.5, metal=0.0):
 
 
 # ---------- world: Poly Haven HDRI lights the scene, camera sees a clean colour backdrop ----------
-bg_col = hsv(P['bg_hue'], 0.35, 0.55)
+bg_col = hsv(P['bg_hue'], 0.45, 0.62)
 wd = bpy.data.worlds.new('World'); sc.world = wd; wd.use_nodes = True; wn = wd.node_tree
 for n in list(wn.nodes):
     wn.nodes.remove(n)
@@ -173,7 +174,7 @@ wn.links.new(mix.outputs['Shader'], outw.inputs['Surface'])
 
 # floor (same colour as the backdrop → seamless studio look)
 bpy.ops.mesh.primitive_plane_add(size=60, location=(0, 0, -0.09))
-fm, _, fb = plain('Floor', hsv(P['bg_hue'], 0.35, 0.5), 0.85); bpy.context.object.data.materials.append(fm)
+fm, _, fb = plain('Floor', hsv(P['bg_hue'], 0.45, 0.55), 0.85); bpy.context.object.data.materials.append(fm)
 
 # cutting board
 bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, -0.045)); board = bpy.context.object; board.scale = (W + 1.5, D + 1.3, 0.09)
@@ -222,7 +223,7 @@ for a in range(4):
     b.faces.new([vs[a][0], vs[a][1], vs[c2][1], vs[c2][0]])
 b.to_mesh(me); b.free()
 blade = bpy.data.objects.new('blade', me); sc.collection.objects.link(blade); blade.parent = kn
-blm, _, _ = plain('Steel', (0.85, 0.86, 0.88, 1), 0.14, 1.0); me.materials.append(blm)
+blm, _, _ = plain('Steel', (0.55, 0.56, 0.6, 1), 0.22, 1.0); me.materials.append(blm)
 bpy.ops.mesh.primitive_cube_add(size=1, location=(L / 2 + 0.33, 0, HB * 0.55)); hd = bpy.context.object; hd.scale = (0.66, 0.075, 0.2)
 bpy.ops.object.transform_apply(scale=True); hd.modifiers.new('bev', 'BEVEL').width = 0.025; hd.parent = kn
 hcol = [(0.02, 0.02, 0.02, 1), (0.28, 0.14, 0.06, 1), hsv(P['hue'] + 0.5, 0.7, 0.6)][P['knife_style']]
@@ -309,7 +310,7 @@ def cam_at(t, dist, ang, h):
     cam.keyframe_insert('location', frame=fr(t))
 
 
-cam_at(0, 5.9, 28, 3.6); cam_at(tl, 5.2, 18, 3.3); cam_at(TR + 1.5, 5.6, 12, 4.4); cam_at(P['dur'], 5.6, 9, 4.5)
+cam_at(0, 4.9, 28, 3.1); cam_at(tl, 4.4, 18, 2.9); cam_at(TR + 1.5, 4.9, 12, 3.9); cam_at(P['dur'], 4.9, 9, 4.0)
 for (loc, pw, size) in [((-2.5, -2.0, 4.5), 650, 3.0), ((3.0, 2.5, 3.0), 300, 2.0)]:
     ld = bpy.data.lights.new('L', 'AREA'); ld.energy = pw; ld.size = size
     lo = bpy.data.objects.new('L', ld); sc.collection.objects.link(lo); lo.location = loc
@@ -328,7 +329,7 @@ cy.caustics_reflective = False; cy.caustics_refractive = False; cy.blur_glossy =
 sc.render.resolution_x, sc.render.resolution_y, sc.render.resolution_percentage = 1080, 1920, int(os.environ.get('B3D_PCT', '100'))
 sc.render.fps = FPS; sc.render.use_persistent_data = True
 try:
-    sc.view_settings.view_transform = 'AgX'; sc.view_settings.look = 'AgX - Medium High Contrast'
+    sc.view_settings.view_transform = 'Standard'; sc.view_settings.look = 'None'
 except Exception:
     pass
 sc.render.image_settings.file_format = 'JPEG'; sc.render.image_settings.quality = 94
