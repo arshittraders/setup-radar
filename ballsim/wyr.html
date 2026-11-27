@@ -1,0 +1,142 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body><canvas id="c" width="1080" height="1920"></canvas><script src="common.js"></script><script src="wyr_q.js"></script><script>
+// WOULD YOU RATHER (This or That) — 4–5 questions per video, option A on top, B below, 5 s ticking timer, then "COMMENT A OR B".
+// No voice, no fake percentages. Every video looks different: palette × card style × timer style × background × OR badge (all picked from the seed).
+// Questions never repeat inside a channel until the whole bank (≈230) is used: cfg.mode = video number n → block n of a per-channel shuffle.
+window.DUR = [26, 50];
+window.FONTS = (async () => { try { const f = new FontFace('Anton', 'url(../clip/anton.woff2)'); await f.load(); document.fonts.add(f); } catch (e) {} })();
+const TF = '"Anton", Impact, "Arial Black", Arial';
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const PAL = [   // [A colours, B colours, accent]
+  [['#ff4d6d', '#c9184a'], ['#4dabff', '#1d5fd1'], '#ffd23f'],
+  [['#ff9f1c', '#e85d04'], ['#2ec4b6', '#0f8b80'], '#ffffff'],
+  [['#9b5de5', '#6a2bbd'], ['#00f5d4', '#00a896'], '#fee440'],
+  [['#f72585', '#b5179e'], ['#4cc9f0', '#4361ee'], '#ffffff'],
+  [['#ef476f', '#b8274a'], ['#06d6a0', '#05976f'], '#ffd166'],
+  [['#ffbe0b', '#f77f00'], ['#8338ec', '#5a189a'], '#ffffff'],
+  [['#e63946', '#a4161a'], ['#457b9d', '#1d3557'], '#f1faee'],
+  [['#ff6b6b', '#e03e3e'], ['#51cf66', '#2b8a3e'], '#fff3bf'],
+  [['#fb5607', '#c13d00'], ['#3a86ff', '#1b4fb5'], '#ffbe0b'],
+  [['#ff70a6', '#e0457b'], ['#70d6ff', '#2ba3d6'], '#ffd670'],
+];
+const BGS = [['#1a1033', '#06030f'], ['#0d1b2a', '#02060b'], ['#2b0f2e', '#0a020b'], ['#102a1f', '#020a06'], ['#2a1a08', '#0b0602'], ['#0f1f3d', '#03060f'], ['#201a3a', '#05030d'], ['#2d0a14', '#0a0204']];
+const CAT = { food: 'FOOD', travel: 'TRAVEL', power: 'SUPERPOWER', fun: 'JUST FOR FUN', animal: 'ANIMALS', life: 'LIFE', school: 'SCHOOL', sport: 'SPORTS', tech: 'TECH', weird: 'WEIRD ONE' };
+const T_IN = 0.75, T_TIMER = 5, T_ASK = 1.5, T_Q = T_IN + T_TIMER + T_ASK, T_OPEN = 1.6;
+
+function hashStr(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function pickQuestions(cfg, n) {
+  const Q = window.WYR_Q, L = Q.length;
+  if (cfg.mode == null || isNaN(cfg.mode)) { const idx = Q.map((_, i) => i); for (let i = L - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; } return idx.slice(0, n).map((i) => Q[i]); }
+  // per-channel order: block k of a shuffle seeded by (brand, cycle) → no repeats for ~46 videos, then a fresh order
+  const per = 5, blocks = Math.floor(L / per), v = Math.max(0, cfg.mode | 0), cyc = Math.floor(v / blocks), blk = v % blocks;
+  const r2 = mulberry(hashStr(String(window.BRAND || 'wyr')) + cyc * 7919), idx = Q.map((_, i) => i);
+  for (let i = L - 1; i > 0; i--) { const j = Math.floor(r2() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+  return idx.slice(blk * per, blk * per + n).map((i) => Q[i]);
+}
+window.init = (cfg) => { rnd = mulberry(cfg.seed || 7); EV = [];
+  const nq = rnd() < 0.5 ? 4 : 5, qs = pickQuestions(cfg, nq);
+  S = { t: 0, f: 0, qs, nq, pal: PAL[Math.floor(rnd() * PAL.length)], bgc: BGS[Math.floor(rnd() * BGS.length)], card: Math.floor(rnd() * 4), timer: Math.floor(rnd() * 3), orb: Math.floor(rnd() * 3), deco: Math.floor(rnd() * 3),
+    flip: rnd() < 0.5, len: T_OPEN + nq * T_Q, brand: String(window.BRAND || '').trim(), sparks: Array.from({ length: 40 }, () => ({ x: rnd() * W, y: rnd() * H, s: 2 + rnd() * 5, v: 10 + rnd() * 40, p: rnd() * 6 })),
+    fired: {} };
+  if (S.flip) S.pal = [S.pal[1], S.pal[0], S.pal[2]];
+};
+const once = (k) => (S.fired[k] ? false : (S.fired[k] = true));
+function step() { const t = S.t;
+  if (t < T_OPEN) { if (once('open')) EV.push({ k: 'pop' }); return; }
+  const qi = Math.min(S.nq - 1, Math.floor((t - T_OPEN) / T_Q)), lt = t - T_OPEN - qi * T_Q;
+  if (once('in' + qi)) EV.push({ k: 'swoosh', d: 0.6 });
+  if (lt >= T_IN) { const s = Math.floor(lt - T_IN); if (s < T_TIMER && once('tk' + qi + '_' + s)) EV.push({ k: 'tick', p: s >= T_TIMER - 2 ? 1.5 : 1 }); }
+  if (lt >= T_IN + T_TIMER && once('ask' + qi)) EV.push({ k: 'chime', n: qi });
+}
+
+// ---------- drawing helpers ----------
+function rr(x, y, w, h, r) { X.beginPath(); X.moveTo(x + r, y); X.arcTo(x + w, y, x + w, y + h, r); X.arcTo(x + w, y + h, x, y + h, r); X.arcTo(x, y + h, x, y, r); X.arcTo(x, y, x + w, y, r); X.closePath(); }
+function wrap(s, maxW, size) { X.font = `400 ${size}px ${TF}`; const words = s.split(' '), lines = []; let cur = '';
+  for (const w of words) { const tr = cur ? cur + ' ' + w : w; if (X.measureText(tr).width > maxW && cur) { lines.push(cur); cur = w; } else cur = tr; } if (cur) lines.push(cur); return lines; }
+function fitText(s, maxW, maxH) { for (let size = 124; size >= 44; size -= 4) { const L = wrap(s, maxW, size); if (L.length * size * 1.12 <= maxH && L.every((l) => X.measureText(l).width <= maxW)) return [L, size]; } return [wrap(s, maxW, 44), 44]; }
+function icon(cat, x, y, s, col) { X.save(); X.translate(x, y); X.scale(s / 40, s / 40); X.fillStyle = col; X.strokeStyle = col; X.lineWidth = 5; X.lineCap = 'round'; X.lineJoin = 'round'; X.beginPath();
+  if (cat === 'food') { X.moveTo(0, -22); X.lineTo(20, 18); X.quadraticCurveTo(0, 26, -20, 18); X.closePath(); X.fill(); X.fillStyle = 'rgba(0,0,0,.35)'; [[-4, 2], [6, 10], [-8, 13]].forEach(([a, b]) => { X.beginPath(); X.arc(a, b, 4, 0, 7); X.fill(); }); }
+  else if (cat === 'travel') { X.moveTo(-22, 4); X.lineTo(22, -6); X.lineTo(24, 0); X.lineTo(-20, 10); X.closePath(); X.fill(); X.beginPath(); X.moveTo(0, -1); X.lineTo(-10, -20); X.lineTo(-4, -20); X.lineTo(10, -3); X.fill(); X.beginPath(); X.moveTo(-2, 6); X.lineTo(-8, 22); X.lineTo(-2, 22); X.lineTo(8, 4); X.fill(); }
+  else if (cat === 'power') { X.moveTo(6, -24); X.lineTo(-14, 4); X.lineTo(0, 4); X.lineTo(-6, 24); X.lineTo(14, -4); X.lineTo(0, -4); X.closePath(); X.fill(); }
+  else if (cat === 'animal') { X.ellipse(0, 10, 13, 11, 0, 0, 7); X.fill(); [[-15, -6], [-6, -16], [6, -16], [15, -6]].forEach(([a, b]) => { X.beginPath(); X.ellipse(a, b, 5, 7, 0, 0, 7); X.fill(); }); }
+  else if (cat === 'life') { X.moveTo(0, 20); X.bezierCurveTo(-30, 0, -14, -26, 0, -10); X.bezierCurveTo(14, -26, 30, 0, 0, 20); X.fill(); }
+  else if (cat === 'school') { X.moveTo(-22, -14); X.lineTo(0, -8); X.lineTo(22, -14); X.lineTo(22, 16); X.lineTo(0, 22); X.lineTo(-22, 16); X.closePath(); X.stroke(); X.beginPath(); X.moveTo(0, -8); X.lineTo(0, 22); X.stroke(); }
+  else if (cat === 'sport') { X.arc(0, 0, 20, 0, 7); X.stroke(); X.beginPath(); X.moveTo(-20, 0); X.lineTo(20, 0); X.moveTo(0, -20); X.quadraticCurveTo(14, 0, 0, 20); X.moveTo(0, -20); X.quadraticCurveTo(-14, 0, 0, 20); X.stroke(); }
+  else if (cat === 'tech') { rr(-13, -22, 26, 44, 6); X.stroke(); X.beginPath(); X.arc(0, 15, 2.5, 0, 7); X.fill(); }
+  else if (cat === 'weird') { for (let a = 0; a < 14; a += 0.2) { const r = a * 1.5; X.lineTo(Math.cos(a) * r, Math.sin(a) * r); } X.stroke(); }
+  else { for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 - Math.PI / 2, r = i % 2 ? 9 : 22; X.lineTo(Math.cos(a) * r, Math.sin(a) * r); } X.closePath(); X.fill(); }
+  X.restore(); }
+function background(t) { const [a, b] = S.bgc; bg(a, b);
+  if (S.deco === 0) for (const p of S.sparks) { const y = (p.y - t * p.v) % H; X.fillStyle = `rgba(255,255,255,${0.12 + 0.18 * Math.abs(Math.sin(t * 2 + p.p))})`; X.beginPath(); X.arc(p.x, y < 0 ? y + H : y, p.s, 0, 7); X.fill(); }
+  else if (S.deco === 1) { X.save(); X.translate(W / 2, H / 2); X.rotate(t * 0.05); for (let i = 0; i < 24; i++) { X.rotate(Math.PI / 12); X.fillStyle = i % 2 ? 'rgba(255,255,255,.035)' : 'rgba(255,255,255,0)'; X.beginPath(); X.moveTo(0, 0); X.lineTo(-140, -1500); X.lineTo(140, -1500); X.fill(); } X.restore(); }
+  else { X.strokeStyle = 'rgba(255,255,255,.05)'; X.lineWidth = 3; for (let i = 0; i < 12; i++) { const r = ((i * 120 + t * 60) % 1440); X.beginPath(); X.arc(W / 2, H / 2, r, 0, 7); X.stroke(); } }
+  const v = X.createRadialGradient(W / 2, H / 2, 400, W / 2, H / 2, 1250); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.55)'); X.fillStyle = v; X.fillRect(0, 0, W, H); }
+
+const CX = 80, CWID = W - 160, CHT = 600, AY = 370, BY = 1100;
+function card(which, q, k, lt, pulse) {   // which 0=A 1=B; k = entry progress 0..1
+  const [c1, c2] = S.pal[which], y = which ? BY : AY, dir = which ? 1 : -1, off = (1 - back(k)) * 1200 * dir;
+  X.save(); X.translate(off, 0);
+  const tilt = S.card === 1 ? (which ? 0.025 : -0.025) : 0; X.translate(W / 2, y + CHT / 2); X.rotate(tilt); X.scale(1 + pulse, 1 + pulse); X.translate(-W / 2, -(y + CHT / 2));
+  X.shadowColor = 'rgba(0,0,0,.45)'; X.shadowBlur = 40; X.shadowOffsetY = 18;
+  const g = X.createLinearGradient(CX, y, CX + CWID, y + CHT); g.addColorStop(0, c1); g.addColorStop(1, c2); X.fillStyle = g;
+  const rad = S.card === 2 ? 18 : S.card === 3 ? 70 : 46; rr(CX, y, CWID, CHT, rad); X.fill(); X.shadowColor = 'transparent';
+  X.save(); rr(CX, y, CWID, CHT, rad); X.clip();
+  if (S.card === 2) { X.fillStyle = 'rgba(255,255,255,.08)'; for (let i = -10; i < 20; i++) X.fillRect(CX + i * 90 + (lt * 30 % 90), y - 50, 36, CHT + 100); }   // moving stripes
+  else if (S.card === 3) { X.fillStyle = 'rgba(255,255,255,.10)'; for (let r = 0; r < 9; r++) for (let c = 0; c < 14; c++) { X.beginPath(); X.arc(CX + 30 + c * 66, y + 30 + r * 66, 7, 0, 7); X.fill(); } }   // polka dots
+  else { X.fillStyle = 'rgba(255,255,255,.12)'; X.beginPath(); X.ellipse(CX + CWID * 0.2, y + 10, CWID * 0.55, 130, -0.1, 0, 7); X.fill(); }   // gloss
+  X.restore();
+  X.strokeStyle = 'rgba(255,255,255,.55)'; X.lineWidth = 6; rr(CX + 3, y + 3, CWID - 6, CHT - 6, rad - 3); X.stroke();
+  // letter badge
+  const bx = CX + 80, by = y + 84; X.fillStyle = '#fff'; X.beginPath(); X.arc(bx, by, 52, 0, 7); X.fill(); X.fillStyle = c2; X.font = `400 70px ${TF}`; X.textAlign = 'center'; X.fillText(which ? 'B' : 'A', bx, by + 25);
+  // category chip
+  const cat = q[0], cl = CAT[cat] || 'FUN'; X.font = `400 34px ${TF}`; const cw = X.measureText(cl).width + 90; X.fillStyle = 'rgba(0,0,0,.22)'; rr(CX + CWID - cw - 40, y + 50, cw, 66, 33); X.fill();
+  icon(cat, CX + CWID - cw - 40 + 38, y + 83, 30, '#fff'); X.fillStyle = '#fff'; X.textAlign = 'left'; X.fillText(cl, CX + CWID - cw - 40 + 66, y + 96);
+  // option text
+  const [L, size] = fitText(q[which + 1].toUpperCase(), CWID - 120, CHT - 210); X.textAlign = 'center'; X.fillStyle = '#fff'; X.font = `400 ${size}px ${TF}`;
+  X.shadowColor = 'rgba(0,0,0,.35)'; X.shadowBlur = 10; X.shadowOffsetY = 5; const y0 = y + 150 + (CHT - 150) / 2 - (L.length - 1) * size * 0.56 + size * 0.36;
+  L.forEach((l, i) => X.fillText(l, W / 2, y0 + i * size * 1.12)); X.restore(); }
+function orBadge(k, lt) { const y = (AY + CHT + BY) / 2, s = back(k), wob = Math.sin(lt * 6) * 0.04; X.save(); X.translate(W / 2, y); X.scale(s + wob, s + wob); const acc = S.pal[2];
+  X.shadowColor = 'rgba(0,0,0,.5)'; X.shadowBlur = 24;
+  if (S.orb === 0) { X.fillStyle = '#111'; X.beginPath(); X.arc(0, 0, 88, 0, 7); X.fill(); X.shadowBlur = 0; X.strokeStyle = acc; X.lineWidth = 10; X.stroke(); X.fillStyle = acc; }
+  else if (S.orb === 1) { X.fillStyle = acc; X.beginPath(); for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8, r = i % 2 ? 74 : 104; X.lineTo(Math.cos(a) * r, Math.sin(a) * r); } X.closePath(); X.fill(); X.shadowBlur = 0; X.fillStyle = '#111'; }
+  else { X.rotate(Math.PI / 4); X.fillStyle = '#fff'; rr(-76, -76, 152, 152, 26); X.fill(); X.rotate(-Math.PI / 4); X.shadowBlur = 0; X.fillStyle = '#111'; }
+  X.font = `400 80px ${TF}`; X.textAlign = 'center'; X.fillText('OR', 0, 28); X.restore(); }
+function timerUI(p, lt) {   // p = 0..1 elapsed of the 5 s timer
+  const left = Math.max(0, Math.ceil(T_TIMER * (1 - p) - 1e-6)), y = (AY + CHT + BY) / 2, acc = S.pal[2], urgent = left <= 2 && p < 1;
+  if (S.timer === 0) {   // ring around the OR badge
+    X.save(); X.translate(W / 2, y); X.lineWidth = 14; X.strokeStyle = 'rgba(255,255,255,.18)'; X.beginPath(); X.arc(0, 0, 122, 0, 7); X.stroke();
+    X.strokeStyle = urgent ? '#ff3b3b' : acc; X.lineCap = 'round'; X.beginPath(); X.arc(0, 0, 122, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - p)); X.stroke(); X.restore();
+    X.fillStyle = urgent ? '#ff3b3b' : '#fff'; X.font = `400 64px ${TF}`; X.textAlign = 'center'; X.fillText(String(left), W - 140, y + 22);
+    X.font = `400 26px ${TF}`; X.fillStyle = 'rgba(255,255,255,.7)'; X.fillText('SEC', W - 140, y + 54);
+  } else if (S.timer === 1) {   // bar across the bottom
+    const bx = 120, bw = W - 240, by = 1760; X.fillStyle = 'rgba(255,255,255,.15)'; rr(bx, by, bw, 34, 17); X.fill();
+    X.fillStyle = urgent ? '#ff3b3b' : acc; rr(bx, by, Math.max(34, bw * (1 - p)), 34, 17); X.fill();
+    X.fillStyle = '#fff'; X.font = `400 54px ${TF}`; X.textAlign = 'center'; X.fillText(`${left}`, W / 2, by - 22);
+  } else {   // 5 dots that go out one by one
+    for (let i = 0; i < 5; i++) { const on = i < left, x = W / 2 + (i - 2) * 92, yy = 1770, pul = on && i === left - 1 ? 1 + 0.15 * Math.sin(lt * 18) : 1;
+      X.fillStyle = on ? (urgent ? '#ff3b3b' : acc) : 'rgba(255,255,255,.15)'; X.beginPath(); X.arc(x, yy, 26 * pul, 0, 7); X.fill(); }
+  } }
+function header(t, qi) { X.textAlign = 'center'; X.fillStyle = '#fff'; X.shadowColor = 'rgba(0,0,0,.6)'; X.shadowBlur = 14; X.font = `400 92px ${TF}`; X.fillText('WOULD YOU RATHER', W / 2, 160); X.shadowBlur = 0;
+  for (let i = 0; i < S.nq; i++) { const x = W / 2 + (i - (S.nq - 1) / 2) * 64, done = i < qi, cur = i === qi; X.fillStyle = cur ? S.pal[2] : done ? 'rgba(255,255,255,.75)' : 'rgba(255,255,255,.2)'; rr(x - 24, 214, 48, cur ? 16 : 12, 8); X.fill(); }
+  X.fillStyle = 'rgba(255,255,255,.8)'; X.font = `400 40px ${TF}`; X.fillText(`QUESTION ${qi + 1} / ${S.nq}`, W / 2, 300); }
+function askBanner(k, lt) { if (k <= 0) return; const s = back(k), y = 1780; X.save(); X.translate(W / 2, y); X.scale(s, s); X.fillStyle = '#fff'; X.shadowColor = 'rgba(0,0,0,.5)'; X.shadowBlur = 24; rr(-400, -78, 800, 130, 65); X.fill(); X.shadowBlur = 0;
+  X.fillStyle = '#111'; X.font = `400 70px ${TF}`; X.textAlign = 'center'; X.fillText('COMMENT  A  OR  B', -20, 12);
+  const ay = 10 + Math.sin(lt * 9) * 8; X.fillStyle = S.pal[0][0]; X.beginPath(); X.moveTo(330, ay - 26); X.lineTo(350, ay - 26); X.lineTo(350, ay + 2); X.lineTo(366, ay + 2); X.lineTo(340, ay + 32); X.lineTo(314, ay + 2); X.lineTo(330, ay + 2); X.closePath(); X.fill(); X.restore(); }
+function draw() { const t = S.t; background(t);
+  if (t < T_OPEN) { const k = clamp(t / 0.6), s = back(k); X.save(); X.translate(W / 2, 860); X.scale(s, s); X.rotate(-0.04);
+      X.fillStyle = S.pal[0][0]; rr(-460, -230, 920, 200, 40); X.fill(); X.fillStyle = S.pal[1][0]; rr(-460, 10, 920, 200, 40); X.fill();
+      X.fillStyle = '#fff'; X.font = `400 140px ${TF}`; X.textAlign = 'center'; X.fillText('WOULD YOU', 0, -75); X.fillText('RATHER?', 0, 165); X.restore();
+      X.globalAlpha = clamp((t - 0.5) / 0.4); X.fillStyle = '#fff'; X.font = `400 58px ${TF}`; X.textAlign = 'center'; X.fillText(`${S.nq} QUESTIONS  ·  5 SECONDS EACH`, W / 2, 1220); X.fillStyle = S.pal[2]; X.font = `400 46px ${TF}`; X.fillText('REMEMBER YOUR ANSWERS', W / 2, 1300); X.globalAlpha = 1;
+  } else {
+    const qi = Math.min(S.nq - 1, Math.floor((t - T_OPEN) / T_Q)), lt = t - T_OPEN - qi * T_Q, q = S.qs[qi] || S.qs[0];
+    const kin = clamp(lt / T_IN), kout = qi === S.nq - 1 ? 0 : clamp((lt - (T_Q - 0.3)) / 0.3), p = clamp((lt - T_IN) / T_TIMER), ask = lt - T_IN - T_TIMER;
+    header(t, qi); X.globalAlpha = 1 - kout;
+    const pul = ask > 0 ? 0.015 * Math.sin(ask * 10) : 0;
+    card(0, q, kin, lt, pul); card(1, q, clamp((lt - 0.12) / T_IN), lt, -pul);
+    orBadge(clamp((lt - 0.35) / 0.4), lt);
+    if (ask < 0) timerUI(p, lt); else askBanner(clamp(ask / 0.35), lt);
+    X.globalAlpha = 1;
+  }
+  if (S.brand) { X.fillStyle = 'rgba(255,255,255,.45)'; X.font = '800 30px Arial'; X.textAlign = 'center'; X.fillText('@' + S.brand.toLowerCase().replace(/[^a-z0-9]/g, ''), W / 2, 1870); } }
+window.frame = (fast) => { step(); S.t += 1 / FPS; if (!fast) draw(); return out(fast, S.t >= S.len, { ok: true }); };
+</script></body></html>
