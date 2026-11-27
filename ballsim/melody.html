@@ -1,0 +1,79 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body><canvas id="c" width="1080" height="1920"></canvas><script src="common.js"></script><script src="melody_tunes.js"></script><script>
+// MELODY BOUNCE — a ball plays a public-domain melody: every hit = the next note, exactly on the beat (hit times come from the score).
+// cfg.mode = tune index (studio rotates it). Seed picks design (ring string-art / falling tiles / xylophone), key, tempo, colours, instrument.
+// Sound: events {k:'mn'} (melody note) + {k:'mc'} (soft chord pad) are synthesised in render.js. No voice.
+window.DUR = [18, 48];
+window.FONTS = (async () => { try { const f = new FontFace('Anton', 'url(../clip/anton.woff2)'); await f.load(); document.fonts.add(f); } catch (e) {} })();
+const TF = '"Anton", Impact, "Arial Black", Arial';
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const T0 = 1.6, OUTRO = 3.4, BR = 24;
+const BGS = [['#1b0f3a', '#05020f'], ['#06263a', '#010a12'], ['#2a0b26', '#0a0209'], ['#0b2a1c', '#020a06'], ['#2a1906', '#0a0602'], ['#101a40', '#03050f']];
+const hueOf = (m) => ((m % 12) * 30 + S.hs) % 360;
+function T(s, x, y, size, col, a = 1, stroke = 0) { X.save(); X.globalAlpha = a; X.font = `400 ${size}px ${TF}`; X.textAlign = 'center'; if (stroke) { X.lineWidth = stroke; X.lineJoin = 'round'; X.strokeStyle = 'rgba(0,0,0,.8)'; X.strokeText(s, x, y); } X.fillStyle = col; X.fillText(s, x, y); X.restore(); }
+function rr(x, y, w, h, r) { X.beginPath(); X.moveTo(x + r, y); X.arcTo(x + w, y, x + w, y + h, r); X.arcTo(x + w, y + h, x, y + h, r); X.arcTo(x, y + h, x, y, r); X.arcTo(x, y, x + w, y, r); X.closePath(); }
+
+window.init = (cfg) => { rnd = mulberry(cfg.seed || 7); EV = [];
+  const TU = window.MELODY_TUNES, ti = cfg.mode != null && !isNaN(cfg.mode) ? ((cfg.mode | 0) % TU.length + TU.length) % TU.length : Math.floor(rnd() * TU.length), tune = TU[ti];
+  const tr = [0, 2, -1, 3, 1, -2][Math.floor(rnd() * 6)], spb = 60 / (tune.bpm * (0.94 + rnd() * 0.12)), oct = tune.id === 'elise' || tune.id === 'canon' ? 0 : 12;
+  let b = 0; const notes = tune.notes.map(([m, d]) => { const n = { t: T0 + b * spb, m: m + tr + oct, d: d * spb, beat: b }; b += d; return n; });
+  const chords = tune.chords.map(([cb, nm], i, A) => ({ t: T0 + cb * spb, ms: window.chordMidis(nm).map((x) => x + tr), d: ((A[i + 1] ? A[i + 1][0] : b) - cb) * spb }));
+  S = { t: 0, f: 0, tune, notes, chords, ni: 0, ci: 0, end: T0 + b * spb, len: T0 + b * spb + OUTRO, design: cfg.design != null ? cfg.design : Math.floor(rnd() * 3), inst: Math.floor(rnd() * 4), hs: Math.floor(rnd() * 360),
+    bgc: BGS[Math.floor(rnd() * BGS.length)], brand: String(window.BRAND || '').trim(), fx: [], trail: [] };
+  const ms = notes.map((n) => n.m); S.mmin = Math.min(...ms); S.mmax = Math.max(...ms);
+  layout();
+};
+// ---------- hit points per design ----------
+function layout() { const N = S.notes;
+  if (S.design === 0) {   // RING: hit angle from the pitch → the tune draws its own string-art star
+    S.cx = 540; S.cy = 1010; S.R = 430; S.rot = rnd() * 6.283; S.drift = (rnd() < 0.5 ? 1 : -1) * (0.05 + rnd() * 0.05); let prev = null;
+    N.forEach((n, i) => { let a = S.rot + ((n.m - S.mmin) % 12) / 12 * 6.283 + Math.floor((n.m - S.mmin) / 12) * 0.26 + i * S.drift;
+      if (prev != null && Math.abs(((a - prev + 9.42) % 6.283) - 3.14) > 2.9) a += (i % 2 ? 0.5 : -0.5);   // same spot twice → hop beside it
+      n.a = a; prev = a; n.x = S.cx + Math.cos(a) * (S.R - BR); n.y = S.cy + Math.sin(a) * (S.R - BR); });
+    S.start = { x: S.cx, y: S.cy };
+  } else if (S.design === 1) {   // TILES: x = pitch (like a piano roll), every note one step lower, camera follows
+    N.forEach((n, i) => { n.x = 170 + (n.m - S.mmin) / Math.max(1, S.mmax - S.mmin) * 740; n.y = 900 + i * 92; });
+    S.start = { x: N[0].x, y: N[0].y - 520 };
+  } else {   // XYLOPHONE: one bar per distinct pitch
+    const P = [...new Set(N.map((n) => n.m))].sort((a, b) => a - b); S.bars = P.map((m, i) => ({ m, x: 90 + (i + 0.5) * (900 / P.length), w: Math.min(110, 900 / P.length - 14), len: 330 - i * (170 / Math.max(1, P.length - 1)), hit: -9 }));
+    S.barTop = 1180; N.forEach((n) => { const bb = S.bars.find((x) => x.m === n.m); n.x = bb.x; n.y = S.barTop - BR; n.bar = bb; });
+    S.start = { x: N[0].x, y: 500 };
+  } }
+function ballAt(t) { const N = S.notes;
+  if (t <= N[0].t) { const k = clamp((t - (N[0].t - 1.1)) / 1.1); return { x: S.start.x + (N[0].x - S.start.x) * k, y: S.start.y + (N[0].y - S.start.y) * k * k }; }
+  let i = S.seg || 0; while (i < N.length - 1 && N[i + 1].t <= t) i++; while (i > 0 && N[i].t > t) i--; S.seg = i;
+  if (i >= N.length - 1) { const a = N[N.length - 1], k = t - a.t; return S.design === 0 ? { x: a.x + (S.cx - a.x) * clamp(k / 1.2), y: a.y + (S.cy - a.y) * clamp(k / 1.2) } : { x: a.x, y: a.y - 160 * Math.abs(Math.sin(k * 3)) * Math.exp(-k * 1.4) }; }
+  const a = N[i], b = N[i + 1], u = (t - a.t) / (b.t - a.t), dt = b.t - a.t;
+  if (S.design === 0) return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u };
+  const h = clamp(dt * (S.design === 1 ? 300 : 340), 70, 420); return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u - h * 4 * u * (1 - u) }; }
+// ---------- sound + hit effects ----------
+function step() { const t = S.t;
+  while (S.ni < S.notes.length && S.notes[S.ni].t <= t) { const n = S.notes[S.ni]; EV.push({ k: 'mn', m: n.m, d: n.d, inst: S.inst }); S.fx.push({ x: n.x, y: n.y, t0: t, h: hueOf(n.m), a: n.a }); if (n.bar) n.bar.hit = t; n.hitT = t; S.ni++; }
+  while (S.ci < S.chords.length && S.chords[S.ci].t <= t) { const c = S.chords[S.ci]; EV.push({ k: 'mc', ms: c.ms, d: c.d }); S.ci++; }
+  if (S.t >= S.end + 0.4 && !S.rev) { S.rev = 1; EV.push({ k: 'win' }); } }
+function draw() { const t = S.t; bg(S.bgc[0], S.bgc[1]); const b = ballAt(t); let camY = 0;
+  if (S.design === 1) { S.cam = S.cam == null ? b.y - 980 : S.cam + (b.y - 980 - S.cam) * 0.12; camY = S.cam; }
+  X.save(); X.translate(0, -camY);
+  if (S.design === 0) { X.strokeStyle = 'rgba(255,255,255,.85)'; X.lineWidth = 8; X.shadowColor = `hsl(${S.hs},90%,60%)`; X.shadowBlur = 30; X.beginPath(); X.arc(S.cx, S.cy, S.R, 0, 7); X.stroke(); X.shadowBlur = 0;
+    X.lineWidth = 3; X.globalCompositeOperation = 'lighter'; for (let i = 1; i < S.ni; i++) { const a = S.notes[i - 1], c = S.notes[i]; X.strokeStyle = `hsla(${hueOf(c.m)},90%,60%,.38)`; X.beginPath(); X.moveTo(a.x, a.y); X.lineTo(c.x, c.y); X.stroke(); } X.globalCompositeOperation = 'source-over';
+    for (const f of S.fx) { const k = (t - f.t0) / 0.6; if (k > 1) continue; X.strokeStyle = `hsla(${f.h},100%,65%,${1 - k})`; X.lineWidth = 22 * (1 - k) + 6; X.beginPath(); X.arc(S.cx, S.cy, S.R, f.a - 0.22, f.a + 0.22); X.stroke(); } }
+  else if (S.design === 1) { for (let i = 0; i < S.notes.length; i++) { const n = S.notes[i]; if (n.y - camY < -100 || n.y - camY > 2050) continue; const lit = n.hitT != null, k = lit ? clamp((t - n.hitT) / 0.25) : 0, sq = lit ? 1 - 0.3 * Math.sin(k * Math.PI) : 1;
+      X.save(); X.translate(n.x, n.y + BR); X.scale(1 / sq, sq); X.fillStyle = lit ? `hsl(${hueOf(n.m)},90%,62%)` : `hsla(${hueOf(n.m)},60%,45%,.55)`; if (lit) { X.shadowColor = X.fillStyle; X.shadowBlur = 30; } rr(-80, 0, 160, 30, 15); X.fill(); X.restore(); } }
+  else { for (const bb of S.bars) { const k = clamp((t - bb.hit) / 0.35), wob = bb.hit > 0 && k < 1 ? Math.sin(k * 30) * 6 * (1 - k) : 0, lit = k < 1 && bb.hit > 0;
+      X.save(); X.translate(bb.x, S.barTop + wob); X.fillStyle = `hsl(${hueOf(bb.m)},${lit ? 95 : 70}%,${lit ? 66 : 50}%)`; if (lit) { X.shadowColor = X.fillStyle; X.shadowBlur = 40; } rr(-bb.w / 2, 0, bb.w, bb.len, 16); X.fill(); X.shadowBlur = 0;
+      X.fillStyle = 'rgba(255,255,255,.25)'; rr(-bb.w / 2 + 8, 8, bb.w * 0.22, bb.len - 16, 8); X.fill(); X.fillStyle = 'rgba(0,0,0,.35)'; [26, bb.len - 26].forEach((y) => { X.beginPath(); X.arc(0, y, 7, 0, 7); X.fill(); }); X.restore(); }
+    X.fillStyle = 'rgba(255,255,255,.12)'; X.fillRect(60, S.barTop + 30, 960, 10); X.fillRect(60, S.barTop + 250, 960, 10); }
+  // burst particles on every hit
+  for (const f of S.fx) { const k = (t - f.t0) / 0.7; if (k > 1) continue; for (let j = 0; j < 10; j++) { const q = j / 10 * 6.283 + f.h, r = 30 + 120 * k; X.fillStyle = `hsla(${f.h},100%,70%,${1 - k})`; X.beginPath(); X.arc(f.x + Math.cos(q) * r, f.y + Math.sin(q) * r, 7 * (1 - k) + 2, 0, 7); X.fill(); } }
+  // ball + trail
+  S.trail.push(b); if (S.trail.length > 10) S.trail.shift(); const bh = S.ni ? hueOf(S.notes[S.ni - 1].m) : S.hs;
+  S.trail.forEach((p, i) => { X.fillStyle = `hsla(${bh},100%,70%,${(i + 1) / S.trail.length * 0.25})`; X.beginPath(); X.arc(p.x, p.y, BR * (0.5 + 0.5 * (i + 1) / S.trail.length), 0, 7); X.fill(); });
+  ball(b.x, b.y, BR, `hsl(${bh},100%,72%)`); X.restore();
+  // header / song progress / reveal
+  const p = clamp((t - T0) / (S.end - T0)), rev = t > S.end + 0.4;
+  X.fillStyle = 'rgba(0,0,0,.35)'; X.fillRect(0, 0, W, 330);
+  if (!rev) { T('SOUND ON', W / 2, 140, 64, '#fff', clamp(t / 0.4)); T('GUESS THE SONG', W / 2, 250, 104, `hsl(${S.hs},95%,68%)`, 1, 8); }
+  else { const k = back(clamp((t - S.end - 0.4) / 0.5)); X.save(); X.translate(W / 2, 200); X.scale(k, k); T(S.tune.name, 0, 20, S.tune.name.length > 12 ? 104 : 124, `hsl(${S.hs},95%,68%)`, 1, 8); T('BY ' + S.tune.by, 0, 100, 52, '#fff'); X.restore(); }
+  X.fillStyle = 'rgba(255,255,255,.15)'; rr(140, 1760, 800, 14, 7); X.fill(); X.fillStyle = `hsl(${S.hs},95%,65%)`; rr(140, 1760, Math.max(14, 800 * p), 14, 7); X.fill();
+  if (S.brand) { X.fillStyle = 'rgba(255,255,255,.45)'; X.font = '800 30px Arial'; X.textAlign = 'center'; X.fillText('@' + S.brand.toLowerCase().replace(/[^a-z0-9]/g, ''), W / 2, 1870); } }
+window.frame = (fast) => { step(); if (!fast) draw(); S.t += 1 / FPS; if (fast) EV = []; return out(fast, S.t >= S.len, { ok: true }); };
+</script></body></html>

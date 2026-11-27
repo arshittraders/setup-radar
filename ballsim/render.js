@@ -5,7 +5,7 @@ const { spawn, execFileSync } = require('child_process');
 const fs = require('fs'), path = require('path');
 const OUT = path.resolve(process.argv[2] || 'ball.mp4'), FPS = 30, SR = 44100; let SEED = Number(process.argv[4]) || 0;
 const HM = process.env.HMODE ? { mode: Number(process.env.HMODE) } : {};
-const FORMATS = ['country', 'floors', 'rings', 'breakout', 'hex', 'overflow', 'lastin', 'grow', 'takeover', 'plinko', 'race', 'quizgrid', 'quiztrack', 'quizmissing', 'quizflag', 'hypno', 'follow', 'oddone', 'wyr'];
+const FORMATS = ['country', 'floors', 'rings', 'breakout', 'hex', 'overflow', 'lastin', 'grow', 'takeover', 'plinko', 'race', 'quizgrid', 'quiztrack', 'quizmissing', 'quizflag', 'hypno', 'follow', 'oddone', 'wyr', 'melody'];
 let FMT = process.argv[3] || 'country'; if (!FORMATS.includes(FMT)) FMT = FORMATS[Math.floor(Math.random() * FORMATS.length)];
 const PAGE = FMT === 'country' ? 'sim.html' : FMT + '.html';
 
@@ -62,11 +62,20 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   const add = (t0, len, fn) => { const s = Math.floor(t0 * SR); for (let i = 0; i < len * SR && s + i < N; i++) a[s + i] += fn(i / SR); };
   let seed = 1; const rn = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
   // soft ambient pad (two detuned sines, very quiet)
-  const MUSIC = FMT !== 'hypno' && process.env.MUSIC !== '0';
-  if (MUSIC) music(a, N, process.env.BRAND || '', SEED); else for (let i = 0; i < N; i++) { const t = i / SR; a[i] += 0.025 * Math.sin(2 * Math.PI * 110 * t) * (0.6 + 0.4 * Math.sin(t * 0.5)) + 0.02 * Math.sin(2 * Math.PI * 164.8 * t); }
+  const MUSIC = FMT !== 'hypno' && FMT !== 'melody' && process.env.MUSIC !== '0';   // melody plays its own tune
+  if (MUSIC) music(a, N, process.env.BRAND || '', SEED); else if (FMT !== 'melody') for (let i = 0; i < N; i++) { const t = i / SR; a[i] += 0.025 * Math.sin(2 * Math.PI * 110 * t) * (0.6 + 0.4 * Math.sin(t * 0.5)) + 0.02 * Math.sin(2 * Math.PI * 164.8 * t); }
   let lastTick = -1;
   for (const e of events) {
     const t = e.f / FPS;
+    if (e.k === 'mn') {   // melody note: 0 piano · 1 marimba · 2 music box · 3 pluck (all synthesised, no samples)
+      const f = 440 * Math.pow(2, (e.m - 69) / 12), L = Math.max(0.35, e.d) + 1.2, inst = e.inst | 0;
+      if (inst === 3) { const P = Math.max(2, Math.round(SR / f)), bf = new Float32Array(P); for (let i = 0; i < P; i++) bf[i] = rn(); let k = 0; add(t, L, (x) => { const o = bf[k % P], nx = bf[(k + 1) % P]; bf[k % P] = 0.5 * (o + nx) * 0.997; k++; return 0.32 * o * Math.min(1, (L - x) * 8); }); continue; }
+      add(t, L, (x) => { const at = Math.min(1, x * 250), rel = Math.min(1, (L - x) * 6);
+        if (inst === 1) return 0.3 * at * rel * Math.exp(-x * 7) * (Math.sin(2 * Math.PI * f * x) + 0.3 * Math.sin(2 * Math.PI * f * 4 * x) * Math.exp(-x * 25));
+        if (inst === 2) return 0.22 * at * rel * Math.exp(-x * 2.6) * Math.sin(2 * Math.PI * f * 2 * x + 1.6 * Math.exp(-x * 4) * Math.sin(2 * Math.PI * f * 7 * x));
+        let v = 0; for (let h = 1; h <= 6; h++) v += Math.sin(2 * Math.PI * f * h * x * (1 + 0.0004 * h * h)) * Math.exp(-x * (1.6 + h * 0.9)) / Math.pow(h, 1.3); return 0.3 * at * rel * v; });
+      continue; }
+    if (e.k === 'mc') { const L = e.d + 0.4; for (const m of e.ms) { const f = 440 * Math.pow(2, (m - 69) / 12); add(t, L, (x) => { const env = Math.min(1, x / 0.25) * Math.min(1, (L - x) / 0.4); const ph = (f * x) % 1; return 0.035 * env * (Math.sin(2 * Math.PI * f * x) + 0.25 * (4 * Math.abs(ph - 0.5) - 1)); }); } continue; }
     if (e.k === 'pad' && MUSIC) continue;   // the music bed already carries the harmony
     if (e.k === 'pad') { const roots = [[220, 277.2, 329.6], [196, 246.9, 293.7], [174.6, 220, 261.6], [196, 261.6, 329.6]][e.n % 4]; add(t, 4.4, (x) => { const env = Math.min(1, x / 1.2) * Math.min(1, (4.4 - x) / 1.2); return 0.07 * env * roots.reduce((s, f) => s + Math.sin(2 * Math.PI * f * x) + 0.3 * Math.sin(2 * Math.PI * f * 2 * x + Math.sin(x * 3)), 0) * (0.8 + 0.2 * Math.sin(x * 4)); }); continue; }
     if (e.k === 'chime') { const f = 880 * Math.pow(2, [0, 3, 5, 7, 10][e.n % 5] / 12); add(t, 1.6, (x) => 0.05 * Math.sin(2 * Math.PI * f * x) * Math.exp(-x * 2.2)); continue; }
@@ -78,7 +87,8 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
     else if (e.k === 'pop') add(t, 0.5, (x) => 0.5 * (rn() * Math.exp(-x * 12) * 0.6 + Math.sin(2 * Math.PI * (300 + 500 * Math.exp(-x * 8)) * x) * Math.exp(-x * 9)));
     else if (e.k === 'win') [523.3, 659.3, 784, 1046.5].forEach((f, i) => add(t + 0.4 + i * 0.14, 0.9, (x) => 0.22 * Math.sin(2 * Math.PI * f * x) * Math.exp(-x * 3) * (1 + 0.3 * Math.sin(2 * Math.PI * 6 * x))));
   }
-  let mx = 0; for (const v of a) mx = Math.max(mx, Math.abs(v)); let g = mx > 0.95 ? 0.95 / mx : 1;
+  if (FMT === 'melody') { const d1 = Math.round(0.083 * SR), d2 = Math.round(0.131 * SR), d3 = Math.round(0.197 * SR); for (let i = 0; i < N; i++) a[i] += (i >= d1 ? 0.28 * a[i - d1] : 0) + (i >= d2 ? 0.18 * a[i - d2] : 0) + (i >= d3 ? 0.12 * a[i - d3] : 0); }   // small room reverb
+  let mx = 0; for (const v of a) mx = Math.max(mx, Math.abs(v)); let g = mx > 0.95 ? 0.95 / mx : 1; if (FMT === 'melody' && mx > 0) g = 0.9 / mx;
   if (MUSIC) { let ss = 0; for (const v of a) ss += v * v; const rms = Math.sqrt(ss / N) || 1e-6; g = 0.2 / rms;   // ≈ -17 LUFS: lively but not loud
     for (let i = 0; i < N; i++) a[i] = Math.tanh(a[i] * g * 1.1) * 0.92; g = 1; }   // soft limiter keeps peaks clean
   const buf = Buffer.alloc(44 + N * 2);
@@ -122,7 +132,7 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   }
   // 2.6 s end card: freeze last frame, dim it, ask for a comment + follow (this is what turns viewers into followers)
   const END = 2.6, D = dur.toFixed(2), FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
-  const L = FMT === 'country' ? ['COMMENT YOUR COUNTRY', 'IT JOINS THE NEXT BATTLE', 'FOLLOW FOR TOMORROW'] : FMT === 'overflow' ? ['DID YOU GUESS THE NUMBER?', 'COMMENT YOUR GUESS', 'FOLLOW FOR PART 2'] : ['quizgrid', 'quiztrack', 'quizmissing', 'quizflag'].includes(FMT) ? ['DID YOU GET IT?', 'COMMENT YOUR ANSWER', 'FOLLOW FOR DAILY TESTS'] : FMT === 'wyr' ? ['WHICH ONES DID YOU PICK?', 'COMMENT YOUR A / B ANSWERS', 'FOLLOW FOR MORE'] : ['lastin', 'race', 'takeover', 'plinko'].includes(FMT) ? ['WAS IT YOUR PICK?', 'COMMENT YOUR PICK', 'FOLLOW FOR THE REMATCH'] : ['DID YOU GUESS RIGHT?', 'COMMENT YOUR PICK', 'FOLLOW FOR PART 2'];
+  const L = FMT === 'country' ? ['COMMENT YOUR COUNTRY', 'IT JOINS THE NEXT BATTLE', 'FOLLOW FOR TOMORROW'] : FMT === 'overflow' ? ['DID YOU GUESS THE NUMBER?', 'COMMENT YOUR GUESS', 'FOLLOW FOR PART 2'] : ['quizgrid', 'quiztrack', 'quizmissing', 'quizflag'].includes(FMT) ? ['DID YOU GET IT?', 'COMMENT YOUR ANSWER', 'FOLLOW FOR DAILY TESTS'] : FMT === 'melody' ? ['DID YOU GUESS THE SONG?', 'COMMENT THE NEXT SONG', 'FOLLOW FOR MORE'] : FMT === 'wyr' ? ['WHICH ONES DID YOU PICK?', 'COMMENT YOUR A / B ANSWERS', 'FOLLOW FOR MORE'] : ['lastin', 'race', 'takeover', 'plinko'].includes(FMT) ? ['WAS IT YOUR PICK?', 'COMMENT YOUR PICK', 'FOLLOW FOR THE REMATCH'] : ['DID YOU GUESS RIGHT?', 'COMMENT YOUR PICK', 'FOLLOW FOR PART 2'];
   let ding = null; try { const LIB = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sfx', 'library.json'), 'utf8')).filter((x) => x.cat === 'ding'); if (LIB.length) ding = path.join(__dirname, '..', LIB[SEED % LIB.length].file); } catch (e) {}
   const dt = (t, y, size, col) => `drawtext=fontfile=${FONT}:text='${t}':fontsize=${size}:fontcolor=${col}:x=(w-text_w)/2:y=${y}:enable='gte(t,${D})'`;
   const vf = `[0:v]tpad=stop_mode=clone:stop_duration=${END},drawbox=x=0:y=1470:w=iw:h=450:color=black@0.8:t=fill:enable='gte(t,${D})',${dt(L[0], 1510, 62, 'white')},${dt(L[1], 1595, 50, '0xffd23f')},drawbox=x=110:y=1690:w=860:h=125:color=0xff2d55@1:t=fill:enable='gte(t,${D})',${dt(L[2], 1724, 60, 'white')}[v]`;
