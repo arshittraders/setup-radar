@@ -70,3 +70,8 @@ anything that failed. If something could not be fixed, say so plainly.
 - Hook text: no emoji (Anton font shows tofu). edge-tts flaky (NoAudioReceived): ggb/tts.py now retries per line.
 - 25 Nov: Gemini prepaid credits depleted (HTTP 402) → BHOOT / Golu Bunty / Tiklu autopilot stop making new videos
   (errors are only logged, ap_note stays old). Check with diag-gm1.sql + diag-gm2.sql (key stays server-side).
+- 27 Nov: final-mission VOD 2936183180 scanned 2000-12000 (kreek-fm1). Used: fm1 kc3 (proteinbar), kc7 (87percent); also used d3a kc1 (squarebutton),
+  d3b kc1 (goodending). Skip fm1: kc1/kc2 (crude/NSFW), kc4/kc5 (Captain America/Marvel talk), kc6 (slurs), kc8 (giveaway). Next: 2936183180 from 12000.
+- 27 Nov: Supabase project hit egress quota → 402 on storage + edge functions (no posting, media-upload fails). Until fixed, schedule jobs with
+  video_path = https://raw.githubusercontent.com/arshittraders/setup-radar/main/ship/<file> (studio pub() accepts full URLs) — skip media-upload.
+  Check restriction: diag-rf22.sql (net._http_response 402 count, stuck ready jobs).
