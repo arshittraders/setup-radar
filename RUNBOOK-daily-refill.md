@@ -75,3 +75,5 @@ anything that failed. If something could not be fixed, say so plainly.
 - 27 Nov: Supabase project hit egress quota → 402 on storage + edge functions (no posting, media-upload fails). Until fixed, schedule jobs with
   video_path = https://raw.githubusercontent.com/arshittraders/setup-radar/main/ship/<file> (studio pub() accepts full URLs) — skip media-upload.
   Check restriction: diag-rf22.sql (net._http_response 402 count, stuck ready jobs).
+- 28 Nov: final-mission VOD 2936183180 scanned 12000-22000 (kreek-fm2) + 22000-32000 (kreek-fm3). Used: fm2 kc1 (alwaysbroke), kc2 (backdoor), kc3 (itsfine), kc6 (bestending); fm3 kc5 (libertycity, cut 5-27 s before swear), kc8 (moneyglitch).
+  Skip: fm2 kc7/kc8 (story spoilers + swearing), fm3 kc1/kc3/kc6 (crude), fm3 kc4/kc7 (giveaway). Unused weak: fm2 kc4 (coffee/speedrun), kc5 (dogs), fm3 kc2 (workout). Next: 2936183180 from 32000 (spoiler risk high near end) or rescan older VODs in chat mode.
