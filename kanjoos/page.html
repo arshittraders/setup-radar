@@ -67,7 +67,7 @@ window.frame=(t,amp)=>{
   // insert card (pop in, tilt, hold, pop out)
   for(const s of T){ if(!s.ins||!imgs[s.ins.img]) continue; const t0=s.start+(s.end-s.start)*s.ins.at, d=1.7, k=t-t0; if(k<0||k>d) continue;
     const sIn=back(k/0.3), sOut=k>d-0.25?Math.max(0,(d-k)/0.25):1, sc=sIn*sOut; const im=imgs[s.ins.img], sz=540;
-    cx.save(); cx.translate(250,340); cx.rotate(-0.07+0.02*Math.sin(k*6)); cx.scale(sc,sc); cx.shadowColor='rgba(0,0,0,0.35)'; cx.shadowBlur=40; cx.shadowOffsetY=16;
+    cx.save(); cx.translate(W-200,280); cx.rotate(0.07+0.02*Math.sin(k*6)); cx.scale(sc,sc); cx.shadowColor='rgba(0,0,0,0.35)'; cx.shadowBlur=40; cx.shadowOffsetY=16;
     cx.fillStyle='#fff'; cx.beginPath(); cx.roundRect(-sz/2-16,-sz/2-16,sz+32,sz+32,34); cx.fill(); cx.shadowColor='transparent';
     cx.beginPath(); cx.roundRect(-sz/2,-sz/2,sz,sz,22); cx.clip(); cx.drawImage(im,-sz/2,-sz/2,sz,sz); cx.restore(); }
   // coins burst from the potli (around hips, front-left)
