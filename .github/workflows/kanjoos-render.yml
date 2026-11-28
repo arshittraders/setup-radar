@@ -11,6 +11,7 @@ on:
       tag: { description: "output name", default: "ku-fast" }
       script: { description: "kanjoos/<file> with lines (anim, shot, fx, cap, ins, sfx)", default: "script.json" }
       title: { description: "title + end card name", default: "KANJOOS UNCLE" }
+      tagline: { description: "end card line under FOLLOW KARO", default: "" }
       mouth: { description: "mouth offset from Head bone [x,y,z]", default: "[0,0.076,0.124]" }
 permissions: { contents: write, id-token: write }
 jobs:
@@ -37,14 +38,14 @@ jobs:
           cd kanjoos && curl -sSfL -o ku.glb "$(echo "$R" | jq -r '.urls["${{ inputs.glb }}"]')"
           if [ -n "$VOICE_URL" ]; then curl -sSfL -o voice.mp3 "$VOICE_URL"; else curl -sSfL -o voice.mp3 "$(echo "$R" | jq -r '.urls["${{ inputs.voice }}"]')"; fi
           cp "../${{ inputs.bg }}" bg.png; echo '${{ inputs.segs }}' > segs.json; ls -la ku.glb voice.mp3
-          if [ "${{ inputs.segs }}" = "auto" ]; then python3 segs.py voice.mp3 5; fi
+          if [ "${{ inputs.segs }}" = "auto" ]; then python3 segs.py voice.mp3 5 "${{ inputs.script }}"; fi
       - name: Render chunk
         run: |
           cd kanjoos && (node serve.js &) && sleep 1
           N=$(SCRIPT='${{ inputs.script }}' FULL=voice.mp3 SEGS=segs.json MODE=audio node render.js x bg.png x.mp4 | awk "{print \$3}")
           F=$(python3 -c "import math;n=$N;c=math.ceil(n/12);i=${{ matrix.i }};print(i*c,min(n,(i+1)*c))")
           set -- $F; echo "frames $1-$2 of $N"
-          SCRIPT='${{ inputs.script }}' TITLE='${{ inputs.title }}' MOUTH='${{ inputs.mouth }}' FULL=voice.mp3 SEGS=segs.json F0=$1 F1=$2 node render.js x bg.png c${{ matrix.i }}.mp4
+          SCRIPT='${{ inputs.script }}' TITLE='${{ inputs.title }}' TAGLINE='${{ inputs.tagline }}' MOUTH='${{ inputs.mouth }}' FULL=voice.mp3 SEGS=segs.json F0=$1 F1=$2 node render.js x bg.png c${{ matrix.i }}.mp4
       - uses: actions/upload-artifact@v4
         with: { name: "c${{ matrix.i }}", path: "kanjoos/c${{ matrix.i }}.mp4", retention-days: 1 }
   join:
@@ -62,7 +63,7 @@ jobs:
           T=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=studio-worker" | jq -r .value)
           R=$(curl -sS -X POST https://ceoehwleopykotddcxxk.supabase.co/functions/v1/studio -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d "{\"action\":\"w_asset\",\"pats\":[\"${{ inputs.voice }}\"]}")
           cd kanjoos && if [ -n "$VOICE_URL" ]; then curl -sSfL -o voice.mp3 "$VOICE_URL"; else curl -sSfL -o voice.mp3 "$(echo "$R" | jq -r '.urls["${{ inputs.voice }}"]')"; fi && echo '${{ inputs.segs }}' > segs.json
-          if [ "${{ inputs.segs }}" = "auto" ]; then python3 segs.py voice.mp3 5; fi
+          if [ "${{ inputs.segs }}" = "auto" ]; then python3 segs.py voice.mp3 5 "${{ inputs.script }}"; fi
           SCRIPT='${{ inputs.script }}' FULL=voice.mp3 SEGS=segs.json MODE=audio node render.js x x x
           for i in $(seq 0 11); do echo "file '../parts/c$i.mp4'" >> list.txt; done
           ffmpeg -loglevel error -y -f concat -safe 0 -i list.txt -i voice.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 160k -shortest -movflags +faststart ${{ inputs.tag }}.mp4
