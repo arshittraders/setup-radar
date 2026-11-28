@@ -27,9 +27,11 @@ async function put(url, file, ct) {
   if (cmd === 'claim') { const j = await sup({ action: 'w_claim', kind: 'long' }); console.log(JSON.stringify({ job: j.job || null })); return; }
   if (cmd === 'done') {
     const u = await sup({ action: 'w_upload', job_id: a });
-    await put(u.video.url, path.join(b, 'out.mp4'), 'video/mp4'); await put(u.thumb.url, path.join(b, 'thumb.jpg'), 'image/jpeg');
+    // 8-10 min episodes are ~200 MB → too big for Supabase storage; VIDEO_URL = public GitHub release asset (Studio's pub() accepts full URLs, ytUpload streams it)
+    const VIDEO_URL = process.env.VIDEO_URL || ''; if (!VIDEO_URL) await put(u.video.url, path.join(b, 'out.mp4'), 'video/mp4');
+    await put(u.thumb.url, path.join(b, 'thumb.jpg'), 'image/jpeg');
     const meta = JSON.parse(fs.readFileSync(path.join(b, 'meta.json'), 'utf8'));
-    await sup({ action: 'w_done', job_id: a, video_path: u.video.path, thumb_path: u.thumb.path, duration: meta.duration, chapters: fs.readFileSync(path.join(b, 'chapters.txt'), 'utf8'), cost: { usd: 0, steps: { long: 0 } } });
+    await sup({ action: 'w_done', job_id: a, video_path: VIDEO_URL || u.video.path, thumb_path: u.thumb.path, duration: meta.duration, chapters: fs.readFileSync(path.join(b, 'chapters.txt'), 'utf8'), cost: { usd: 0, steps: { long: 0 } } });
     console.log('done', a, meta.duration, 's'); return;
   }
   if (cmd === 'fail') { await sup({ action: 'w_fail', job_id: a, error: String(b || 'long render failed').slice(0, 500), cost: { usd: 0, steps: {} } }); console.log('failed', a); return; }
