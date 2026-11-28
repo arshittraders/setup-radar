@@ -45,5 +45,5 @@ jobs:
       - name: Mux + upload
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          ffmpeg -loglevel error -y -i ls.mp4 -i in.mp4 -map 0:v -map 1:a -vf "unsharp=5:5:0.6:5:5:0" -c:v libx264 -crf 19 -pix_fmt yuv420p -r 30 -c:a aac -b:a 160k -shortest -movflags +faststart ${{ inputs.tag }}.mp4
+          ffmpeg -loglevel error -y -i ls.mp4 -i in.mp4 -map 0:v -map 1:a -c:v libx264 -crf 19 -pix_fmt yuv420p -r 30 -c:a aac -b:a 160k -shortest -movflags +faststart ${{ inputs.tag }}.mp4
           gh release upload studio-debug ${{ inputs.tag }}.mp4 --clobber -R ${{ github.repository }}

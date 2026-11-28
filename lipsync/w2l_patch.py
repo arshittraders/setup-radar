@@ -12,3 +12,15 @@ new = ("_ds = 3; _sm = np.array([cv2.resize(im, (im.shape[1]//_ds, im.shape[0]//
        "predictions.extend([None if r is None else [int(r[0]*_ds), int(r[1]*_ds), int(r[2]*_ds), int(r[3]*_ds)] for r in detector.get_detections_for_batch(_sm)])")
 if old in s3: s3 = s3.replace(old, new); open(p, 'w').write(s3); print('fast-detect patched')
 else: print('fast-detect pattern NOT found')
+# Paste back ONLY the mouth: soft elliptical mask on the lower-middle of the face box, colour-matched to the original skin,
+# sharpened a little. Eyes, nose, hair stay the original crisp render.
+s4 = open(p).read()
+old4 = "f[y1:y2, x1:x2] = p"
+new4 = ("_h, _w = p.shape[:2]; _yy, _xx = np.mgrid[0:_h, 0:_w]; "
+        "_m = 1 - np.clip(np.sqrt(((_xx - _w*0.5)/(_w*0.30))**2 + ((_yy - _h*0.74)/(_h*0.19))**2), 0, 1); _m = np.clip(_m*2.2, 0, 1)[..., None]; "
+        "_o = f[y1:y2, x1:x2].astype(np.float32); _p = p.astype(np.float32); _r = (_m[..., 0] > 0.05); "
+        "_p = _p - _p[_r].mean(0) + _o[_r].mean(0) if _r.sum() > 20 else _p; "
+        "_p = cv2.addWeighted(_p, 1.6, cv2.GaussianBlur(_p, (0, 0), 2.0), -0.6, 0); "
+        "f[y1:y2, x1:x2] = np.clip(_o*(1-_m) + _p*_m, 0, 255).astype(np.uint8)")
+if old4 in s4: s4 = s4.replace(old4, new4); open(p, 'w').write(s4); print('mouth-only paste patched')
+else: print('mouth-only pattern NOT found')
