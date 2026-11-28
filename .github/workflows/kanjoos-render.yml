@@ -12,6 +12,7 @@ on:
       script: { description: "kanjoos/<file> with lines (anim, shot, fx, cap, ins, sfx)", default: "script.json" }
       title: { description: "title + end card name", default: "KANJOOS UNCLE" }
       tagline: { description: "end card line under FOLLOW KARO", default: "" }
+      env: { description: "extra env K=V (LIPS=3d real jaw lips; LIPS= for old 2D mouth; JAWMAX)", default: "LIPS=3d JAWMAX=0.26" }
       mouth: { description: "mouth offset from Head bone [x,y,z]", default: "[0,0.076,0.124]" }
 permissions: { contents: write, id-token: write }
 jobs:
@@ -45,6 +46,7 @@ jobs:
           N=$(SCRIPT='${{ inputs.script }}' FULL=voice.mp3 SEGS=segs.json MODE=audio node render.js x bg.png x.mp4 | awk "{print \$3}")
           F=$(python3 -c "import math;n=$N;c=math.ceil(n/12);i=${{ matrix.i }};print(i*c,min(n,(i+1)*c))")
           set -- $F; echo "frames $1-$2 of $N"
+          export ${{ inputs.env }}
           SCRIPT='${{ inputs.script }}' TITLE='${{ inputs.title }}' TAGLINE='${{ inputs.tagline }}' MOUTH='${{ inputs.mouth }}' FULL=voice.mp3 SEGS=segs.json F0=$1 F1=$2 node render.js x bg.png c${{ matrix.i }}.mp4
       - uses: actions/upload-artifact@v4
         with: { name: "c${{ matrix.i }}", path: "kanjoos/c${{ matrix.i }}.mp4", retention-days: 1 }
