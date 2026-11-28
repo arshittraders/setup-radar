@@ -1,44 +1,44 @@
 [
  {
-  "anim": "Scheming_Hand_Rub",
-  "hi": "[mischievously] अरे भाई, प्रॉब्लम कोई भी हो... जग्गू के पास जुगाड़ है!",
-  "text": "Arre bhai, problem koi bhi ho... Jaggu ke paas jugaad hai!",
-  "cap": "Arre bhai, problem koi bhi ho... Jaggu ke paas JUGAAD hai!",
+  "anim": "Talk_with_Hands_Open",
+  "hi": "[confident] ए.सी. खराब है? कोई बात नहीं! जुगाड़ू जग्गू आ गया... ये तो मेरे बाएँ हाथ का खेल है!",
+  "text": "AC kharab hai? Koi baat nahi! Jugaadu Jaggu aa gaya... yeh toh mere baayein haath ka khel hai!",
+  "cap": "AC kharab? Koi baat nahi! Yeh toh BAAYEIN haath ka khel hai!",
   "shot": "close",
-  "sfx": [{ "at": 0.0, "cat": "whoosh", "n": 1 }, { "at": 0.7, "cat": "pop" }]
+  "sfx": [{ "at": 0.0, "cat": "whoosh", "n": 1 }, { "at": 0.8, "cat": "pop" }]
  },
  {
-  "anim": "Talk_with_Hands_Open",
-  "hi": "[excited] टीवी का रिमोट नहीं चल रहा? दो थप्पड़ मारो... चल पड़ेगा!",
-  "text": "TV ka remote nahi chal raha? Do thappad maaro... chal padega!",
-  "cap": "Remote nahi chal raha? Do THAPPAD maaro... chal padega!",
+  "anim": "Talk_with_Left_Hand_on_Hip",
+  "hi": "[proudly] पहले ए.सी. को उल्टा लटकाओ... फिर रिमोट को तीन बार ज़ोर से हिलाओ! मुझे बहुत एक्सपीरियंस है।",
+  "text": "Pehle AC ko ulta latkao... phir remote ko teen baar zor se hilao! Mujhe bahut experience hai.",
+  "cap": "Pehle AC ULTA latkao... phir remote 3 baar HILAO!",
   "shot": "med",
-  "sfx": [{ "at": 0.6, "cat": "impact", "g": 0.4 }]
+  "sfx": [{ "at": 0.55, "cat": "whoosh", "n": 2 }]
  },
  {
   "anim": "Stand_Talking_Angry",
-  "hi": "[annoyed] मैकेनिक ने पाँच सौ माँगे? पाँच सौ! मैं टेप से जोड़ दूँगा, दस रुपये में!",
-  "text": "Mechanic ne paanch sau maange? Paanch sau! Main tape se jod dunga, das rupaye mein!",
-  "cap": "Mechanic ne 500 maange?! Main TAPE se jod dunga, 10 rupaye mein!",
+  "hi": "[defensive] ये धुआँ? अरे नॉर्मल है! नया ए.सी. ऐसे ही साँस लेता है!",
+  "text": "Yeh dhuaan? Arey normal hai! Naya AC aise hi saans leta hai!",
+  "cap": "Yeh DHUAAN? Arey normal hai! AC saans le raha hai!",
   "shot": "close",
   "fx": "bp",
-  "sfx": [{ "at": 0.0, "cat": "impact", "g": 0.45 }]
+  "sfx": [{ "at": 0.0, "cat": "impact", "g": 0.5 }]
  },
  {
   "anim": "Shrug",
-  "hi": "[laughs] अब पंखा थोड़ा उल्टा घूमता है... पर हवा तो आती है ना!",
-  "text": "Ab pankha thoda ulta ghoomta hai... par hawa toh aati hai na!",
-  "cap": "Ab pankha thoda ULTA ghoomta hai... par hawa toh aati hai na!",
+  "hi": "[laughs] हाँ, अब ठंडी नहीं... गरम हवा देता है। पर सर्दी में काम आएगा ना!",
+  "text": "Haan, ab thandi nahi... garam hawa deta hai. Par sardi mein kaam aayega na!",
+  "cap": "Ab thandi nahi, GARAM hawa deta hai... sardi mein kaam aayega!",
   "shot": "wide",
-  "sfx": [{ "at": 0.5, "cat": "whoosh", "n": 2 }]
+  "sfx": [{ "at": 0.4, "cat": "ding", "n": 1 }]
  },
  {
   "anim": "Half_Squat_with_Thumb_Up",
-  "hi": "[proudly] इंजीनियरिंग नहीं, जुगाड़ पढ़ा है मैंने! फ़ॉलो करो... अगला जुगाड़ पक्का!",
-  "text": "Engineering nahi, jugaad padha hai maine! Follow karo... agla jugaad pakka!",
-  "cap": "Engineering nahi, JUGAAD padha hai maine! Follow karo!",
+  "hi": "[proudly] इसीलिए तो लोग मुझे जुगाड़ू मैकेनिक कहते हैं! फ़ॉलो करो... अगला जुगाड़ पक्का!",
+  "text": "Isiliye toh log mujhe Jugaadu Mechanic kehte hain! Follow karo... agla jugaad pakka!",
+  "cap": "Isiliye log mujhe JUGAADU MECHANIC kehte hain! Follow karo!",
   "shot": "med",
-  "cta": 0.62,
-  "sfx": [{ "at": 0.62, "cat": "ding", "n": 1 }]
+  "cta": 0.6,
+  "sfx": [{ "at": 0.6, "cat": "ding", "n": 1 }]
  }
 ]
