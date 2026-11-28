@@ -114,7 +114,17 @@ window.frame=(t,amp,vis)=>{
   if(jaw){ const P=o=>proj(o), up=P(head.localToWorld(JL.up.clone())), lo=P(jaw.localToWorld(JL.lo.clone())), cl=P(head.localToWorld(JL.cl.clone())), cr=P(head.localToWorld(JL.cr.clone()));
     head.getWorldQuaternion(q); fwd.set(0,0,1).applyQuaternion(q); head.getWorldPosition(v); const facing=fwd.dot(cam.position.clone().sub(v).normalize());
     const WF={A:1,B:0.95,C:1,D:1.05,E:0.78,F:0.6,G:0.95,H:0.9,X:1}, wf=vis&&WF[vis]?WF[vis]:1, gap=Math.hypot(lo[0]-up[0],lo[1]-up[1]);
-    if(facing>0.3&&jawOpen>0.06&&gap>2){ const cxm=(up[0]+lo[0])/2, cym=(up[1]+lo[1])/2, rx=Math.hypot(cr[0]-cl[0],cr[1]-cl[1])/2*wf*(cfg.mouthFill?0.9:0.62), ry=gap*(cfg.mouthFill?0.68:0.5), ang=Math.atan2(cr[1]-cl[1],cr[0]-cl[0]);
+    if(cfg.mouthWhite&&facing>0.3){ // dark mouth inside → teeth colour (model's own white), keeps soft shading; no black hole while talking
+      const xs=[up[0],lo[0],cl[0],cr[0]], ys=[up[1],lo[1],cl[1],cr[1]]; const wdt=Math.max(...xs)-Math.min(...xs);
+      const x0=Math.round(Math.min(...xs)-wdt*0.15), x1=Math.round(Math.max(...xs)+wdt*0.15), y0=Math.round(Math.min(...ys)-wdt*0.35), y1=Math.round(Math.max(...ys)+wdt*0.3);
+      if(x1-x0>4&&y1-y0>4){ try{ const im=cx.getImageData(x0,y0,x1-x0,y1-y0), d=im.data; let tr=0,tg=0,tb=0,tn=0;
+        for(let i=0;i<d.length;i+=4){ const l=(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])/255; if(l>0.72&&Math.abs(d[i]-d[i+2])<40){ tr+=d[i]; tg+=d[i+1]; tb+=d[i+2]; tn++; } }
+        if(tn<10){ tr=242; tg=238; tb=230; tn=1; } tr/=tn; tg/=tn; tb/=tn; const cxw=(x1-x0)/2, cyw=(y1-y0)/2;
+        for(let i=0;i<d.length;i+=4){ const r=d[i],g=d[i+1],b=d[i+2], l=(0.299*r+0.587*g+0.114*b)/255, sat=Math.max(r,g,b)-Math.min(r,g,b);
+          if(l<0.38&&sat<60){ const k=(i/4), px=k%(x1-x0)-cxw, py=Math.floor(k/(x1-x0))-cyw; const e=Math.max(0,1-Math.hypot(px/cxw,py/cyw)); if(e<=0) continue;
+            const f=Math.min(1,e*2.2), sh=0.86+0.14*(l/0.38); d[i]=r+(tr*sh-r)*f; d[i+1]=g+(tg*sh-g)*f; d[i+2]=b+(tb*sh-b)*f; } }
+        cx.putImageData(im,x0,y0); }catch(e){} } }
+    if(!cfg.mouthWhite&&facing>0.3&&jawOpen>0.06&&gap>2){ const cxm=(up[0]+lo[0])/2, cym=(up[1]+lo[1])/2, rx=Math.hypot(cr[0]-cl[0],cr[1]-cl[1])/2*wf*(cfg.mouthFill?0.9:0.62), ry=gap*(cfg.mouthFill?0.68:0.5), ang=Math.atan2(cr[1]-cl[1],cr[0]-cl[0]);
       cx.save(); cx.globalAlpha=Math.min(1,(facing-0.3)*4)*Math.min(1,(jawOpen-0.06)*6); cx.translate(cxm,cym); cx.rotate(ang);
       // colour-matched mouth: sample the model's own mouth/teeth colour under this spot (white teeth stay white, no black hole)
       let sr=200,sg=190,sb=185; try{ const bw=Math.max(4,Math.round(rx*1.4)), bh=Math.max(3,Math.round(gap*0.6+4)); const px=cx.getImageData(Math.round(up[0]-bw/2),Math.round(up[1]-bh),bw,bh).data; const L=[];
