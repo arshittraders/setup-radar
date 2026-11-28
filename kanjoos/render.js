@@ -51,7 +51,7 @@ if (process.env.MODE === 'audio') { console.log('frames total', N); process.exit
   const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } }); pg.on('pageerror', e => console.log('ERR', e.message));
   await pg.goto('http://localhost:8765/page.html'); await pg.waitForFunction('window.ready');
   const ins = {}; const ID = process.env.INS_DIR || 'ins'; for (const k of ['bill', 'fan', 'ac']) if (fs.existsSync(path.join(__dirname, ID, k + '.png'))) ins[k] = `/${ID}/${k}.png`;
-  await pg.evaluate(c => setup(c), { glb: '/' + (process.env.GLB || 'ku.glb'), bg: '/' + BG, timeline: tl, inserts: ins, faceYaw: 0.25, mouth: [0, 0.076, 0.124], mscale: 470, title: process.env.TITLE || 'KANJOOS UNCLE', titleDur: 2.2, endAt: total - 1.3 });
+  await pg.evaluate(c => setup(c), { glb: '/' + (process.env.GLB || 'ku.glb'), bg: '/' + BG, timeline: tl, inserts: ins, faceYaw: 0.25, mouth: [0, 0.076, 0.124], mscale: 470, title: process.env.TITLE || 'KANJOOS UNCLE', titleDur: 2.2, endAt: total - 1.3, wm: process.env.WM ?? '© Studio Kiwtech', tagline: process.env.TAGLINE || 'Roz nayi kanjoosi' });
   const F0 = +(process.env.F0 || 0), F1 = Math.min(N, process.env.F1 ? +process.env.F1 : N), CH = !!process.env.F1;
   const ff = cp.spawn('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', ...(CH ? [] : ['-i', 'voice.wav']), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', ...(CH ? ['-an'] : ['-c:a', 'aac', '-b:a', '160k', '-shortest']), '-movflags', '+faststart', OUT], { stdio: ['pipe', 'inherit', 'inherit'] });
   const t0 = Date.now();

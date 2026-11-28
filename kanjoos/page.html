@@ -95,10 +95,11 @@ window.frame=(t,amp,vis)=>{
   // title
   if(cfg.title&&t<cfg.titleDur){ const a=Math.min(1,t/0.25,(cfg.titleDur-t)/0.3); cx.save(); cx.globalAlpha=a; cx.translate(W/2,150); const s=back(t/0.35); cx.scale(s,s); cx.font='900 92px Arial'; cx.textAlign='center';
     const tw=cx.measureText(cfg.title).width+80; cx.fillStyle='#ffd400'; cx.beginPath(); cx.roundRect(-tw/2,-90,tw,124,28); cx.fill(); cx.fillStyle='#1a1a1a'; cx.fillText(cfg.title,0,4); cx.restore(); }
+  if(cfg.wm){ cx.save(); cx.font='800 34px Arial'; cx.textAlign='right'; cx.globalAlpha=0.75; cx.lineWidth=6; cx.strokeStyle='rgba(0,0,0,0.55)'; cx.strokeText(cfg.wm,W-36,H-250); cx.fillStyle='#fff'; cx.fillText(cfg.wm,W-36,H-250); cx.restore(); }
   if(cfg.endAt&&t>=cfg.endAt){ const k=t-cfg.endAt, a=Math.min(1,k/0.25); cx.save(); cx.globalAlpha=a*0.82; cx.fillStyle='#fffaf0'; cx.fillRect(0,0,W,H); cx.globalAlpha=a;
-    const s=back(k/0.4); cx.translate(W/2,H/2-80); cx.scale(s,s); cx.textAlign='center'; cx.font='900 110px Arial'; cx.fillStyle='#1a1a1a'; cx.fillText('KANJOOS',0,-40); cx.fillStyle='#e0a800'; cx.fillText('UNCLE',0,80);
+    const s=back(k/0.4); cx.translate(W/2,H/2-80); cx.scale(s,s); cx.textAlign='center'; cx.font='900 110px Arial'; cx.fillStyle='#1a1a1a'; const tw=(cfg.title||'KANJOOS UNCLE').split(' '); cx.fillText(tw[0],0,-40); cx.fillStyle='#e0a800'; cx.fillText(tw.slice(1).join(' '),0,80);
     const g=cx.createLinearGradient(-280,0,280,0); g.addColorStop(0,'#ff3d6e'); g.addColorStop(1,'#ff8a00'); cx.fillStyle=g; cx.beginPath(); cx.roundRect(-280,150,560,120,60); cx.fill();
-    cx.fillStyle='#fff'; cx.font='900 60px Arial'; cx.fillText('FOLLOW KARO',0,232); cx.fillStyle='#555'; cx.font='700 44px Arial'; cx.fillText('Roz nayi kanjoosi 😄'.replace(' 😄',''),0,350); cx.restore(); }
+    cx.fillStyle='#fff'; cx.font='900 60px Arial'; cx.fillText('FOLLOW KARO',0,232); cx.fillStyle='#555'; cx.font='700 44px Arial'; cx.fillText(cfg.tagline||'Roz nayi kanjoosi',0,350); if(cfg.wm){ cx.font='800 40px Arial'; cx.fillStyle='#7a5cff'; cx.fillText(cfg.wm,0,430); } cx.restore(); }
   return out.toDataURL('image/jpeg',0.9);
 };
 function drawCap(ws,pop){ cx.save(); cx.font='900 70px Arial'; cx.textAlign='left'; const lines=[[]]; let lw=0; const sp=cx.measureText(' ').width;
