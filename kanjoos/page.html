@@ -33,7 +33,7 @@ const clipActs={}; function act(n){ if(!clipActs[n]){ clipActs[n]=mixer.clipActi
 const v=new THREE.Vector3(), q=new THREE.Quaternion(), fwd=new THREE.Vector3();
 const ease=x=>x<0?0:x>1?1:1-Math.pow(1-x,3), back=x=>{x=Math.min(1,Math.max(0,x)); const c=1.9; return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
 const proj=(p)=>{ const s=p.clone().project(cam); return [(s.x+1)/2*W,(1-s.y)/2*H]; };
-window.frame=(t,amp)=>{
+window.frame=(t,amp,vis)=>{
   const F=0.3; let ws={};
   for(const s of T){ let w=0; if(t>=s.start-F&&t<=s.end+F){ w=Math.min(1,(t-(s.start-F))/F,(s.end+F-t)/F);} if(w>0) ws[s.anim]=Math.max(ws[s.anim]||0,w); }
   const LS=T[T.length-1]; if(t>LS.end){ ws={}; ws[LS.anim]=1; }
@@ -55,11 +55,21 @@ window.frame=(t,amp)=>{
   if(head){ head.getWorldPosition(v); head.getWorldQuaternion(q);
     const m=new THREE.Vector3(...cfg.mouth).applyQuaternion(q).add(v); fwd.set(0,0,1).applyQuaternion(q);
     const facing=fwd.dot(cam.position.clone().sub(m).normalize()); const [sx,sy]=proj(m); const sc=cfg.mscale/cam.position.distanceTo(m);
-    if(amp>0.04&&facing>0.35){ const o=Math.min(1,amp), mw=sc*(0.55+0.15*o), mh=sc*(0.08+0.32*o);
+    // mouth shape: Rhubarb viseme (A closed MBP, B slight, C open, D wide, E round, F pucker, G F/V teeth, H tongue, X rest) blended toward target
+    const VS={A:[0.5,0.05,0,0,0],B:[0.55,0.17,1,0,0],C:[0.62,0.32,1,0,0],D:[0.72,0.5,1,0.4,0],E:[0.46,0.36,0,0,0.6],F:[0.34,0.22,0,0,1],G:[0.58,0.13,1,0,0],H:[0.6,0.3,1,1,0],X:[0.5,0,0,0,0]};
+    let tg=vis&&VS[vis]?VS[vis]:(amp>0.04?[0.55+0.15*Math.min(1,amp),0.08+0.32*Math.min(1,amp),1,0,0]:VS.X);
+    if(!window.__m) window.__m=tg.slice(); const M=window.__m; for(let i=0;i<5;i++) M[i]+= (tg[i]-M[i])*0.6;
+    const talking=(vis&&vis!=='X')||(!vis&&amp>0.04);
+    if(facing>0.35&&(talking||M[1]>0.03)){ const mw=sc*M[0], mh=sc*Math.max(0.03,M[1]);
       cx.save(); cx.globalAlpha=Math.min(1,(facing-0.35)*4); cx.translate(sx,sy);
-      cx.fillStyle='#4a1414'; cx.beginPath(); cx.ellipse(0,mh*0.35,mw/2,mh/2,0,0,7); cx.fill();
-      if(o>0.35){ cx.fillStyle='#f4efe6'; cx.beginPath(); cx.ellipse(0,mh*0.03,mw*0.36,mh*0.14,0,0,7); cx.fill(); }
-      cx.fillStyle='#c0504d'; cx.beginPath(); cx.ellipse(0,mh*0.63,mw*0.3,mh*0.14,0,0,7); cx.fill(); cx.restore(); } }
+      if(vis==='A'){ cx.fillStyle='#b9655a'; cx.beginPath(); cx.ellipse(0,sc*0.1,mw/2,sc*0.075,0,0,7); cx.fill(); cx.strokeStyle='#5a1f1a'; cx.lineWidth=Math.max(2,sc*0.025); cx.beginPath(); cx.moveTo(-mw*0.42,sc*0.1); cx.quadraticCurveTo(0,sc*0.125,mw*0.42,sc*0.1); cx.stroke(); }
+      else { const rx=mw/2*(1-0.35*M[4]), ry=mh/2;
+        cx.fillStyle='#4a1414'; cx.beginPath(); cx.ellipse(0,mh*0.22,rx,ry,0,0,7); cx.fill();
+        cx.save(); cx.beginPath(); cx.ellipse(0,mh*0.22,rx,ry,0,0,7); cx.clip();
+        if(M[2]>0.3){ cx.fillStyle='#f4efe6'; cx.fillRect(-rx,mh*0.22-ry,rx*2,ry*(vis==='G'?0.7:0.32)); }
+        if(M[3]>0.3||M[1]>0.3){ cx.fillStyle='#d0605a'; cx.beginPath(); cx.ellipse(0,mh*0.22+ry*(M[3]>0.5?0.25:0.6),rx*0.6,ry*0.45,0,0,7); cx.fill(); }
+        cx.restore(); cx.strokeStyle='#9c4a42'; cx.lineWidth=Math.max(2,sc*0.03); cx.beginPath(); cx.ellipse(0,mh*0.22,rx,ry,0,0,7); cx.stroke(); }
+      cx.restore(); } }
   // BP fx: red pulsing vignette + "BP ↑" meter
   if(L&&L.fx==='bp'){ const p=0.5+0.5*Math.sin(lt*14), a=Math.min(1,lt/0.2)*Math.max(0,Math.min(1,(ld-lt)/0.4));
     const gr=cx.createRadialGradient(W/2,H/2,H*0.25,W/2,H/2,H*0.75); gr.addColorStop(0,'rgba(255,0,0,0)'); gr.addColorStop(1,`rgba(220,0,0,${0.45*a*(0.6+0.4*p)})`); cx.fillStyle=gr; cx.fillRect(0,0,W,H);

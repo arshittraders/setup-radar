@@ -23,6 +23,7 @@ jobs:
       - name: Install
         run: |
           (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null) &
+          curl -sSfL -o /tmp/rh.zip https://github.com/DanielSWolf/rhubarb-lip-sync/releases/download/v1.13.0/Rhubarb-Lip-Sync-1.13.0-Linux.zip && unzip -oq /tmp/rh.zip -d /tmp/rh && mv /tmp/rh/Rhubarb-Lip-Sync-1.13.0-Linux kanjoos/rhubarb
           cd kanjoos && npm i --no-save three@0.170.0 playwright@1.48.2 >/dev/null && npx playwright install chromium >/dev/null; wait; ffprobe -version | head -1
       - name: Assets
         run: |

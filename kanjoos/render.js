@@ -32,21 +32,30 @@ function buildAudio() {
   let pk = 0; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(mix[i])); const buf = Buffer.alloc(n * 2), g = pk > 0.98 ? 0.98 / pk : 1;
   for (let i = 0; i < n; i++) buf.writeInt16LE(Math.round(Math.max(-1, Math.min(1, mix[i] * g)) * 32767), i * 2);
   fs.writeFileSync('mix.raw', buf); cp.execSync(`ffmpeg -v error -y -f s16le -ar ${SR} -ac 1 -i mix.raw -af loudnorm=I=-14:TP=-1.5 -ar ${SR} voice.wav`); fs.unlinkSync('mix.raw');
+  // voice-only wav for Rhubarb (mouth shapes A–H/X per moment)
+  const vb = Buffer.alloc(n * 2); for (let i = 0; i < n; i++) vb.writeInt16LE(Math.round(Math.max(-1, Math.min(1, voice[i])) * 32767), i * 2);
+  fs.writeFileSync('vo.raw', vb); cp.execSync(`ffmpeg -v error -y -f s16le -ar ${SR} -ac 1 -i vo.raw -ar 16000 vo.wav`); fs.unlinkSync('vo.raw');
   // mouth amplitude per frame from the VOICE only
   const spf = SR / FPS, A = []; for (let k = 0; k < N; k++) { let s = 0, c = 0; for (let j = Math.floor(k * spf); j < Math.min(n, (k + 1) * spf); j++) { s += voice[j] * voice[j]; c++; } A.push(c ? Math.sqrt(s / c) : 0); }
   const mx = A.slice().sort((a, b) => a - b)[Math.floor(N * 0.97)] || 1; const B = A.map(a => Math.min(1, a / mx)); for (let k = 1; k < N; k++) B[k] = Math.max(B[k], B[k - 1] * 0.55); return B;
 }
 const A = buildAudio();
+// visemes per frame (Rhubarb, phonetic recognizer = works for Hindi). Missing binary → falls back to volume-only mouth.
+const V = new Array(N).fill('');
+try { const RB = process.env.RHUBARB || path.join(__dirname, 'rhubarb', 'rhubarb');
+  cp.execSync(`"${RB}" -r phonetic -f json -q vo.wav -o vo.json`, { stdio: 'ignore' });
+  for (const c of JSON.parse(fs.readFileSync('vo.json')).mouthCues) for (let k = Math.floor(c.start * FPS); k < Math.min(N, Math.ceil(c.end * FPS)); k++) V[k] = c.value;
+  console.log('visemes ok', V.filter(Boolean).length); } catch (e) { console.log('rhubarb missing → volume mouth'); }
 if (process.env.MODE === 'audio') { console.log('frames total', N); process.exit(0); }
 (async () => { const { chromium } = require('playwright'); const br = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } }); pg.on('pageerror', e => console.log('ERR', e.message));
   await pg.goto('http://localhost:8765/page.html'); await pg.waitForFunction('window.ready');
   const ins = {}; const ID = process.env.INS_DIR || 'ins'; for (const k of ['bill', 'fan', 'ac']) if (fs.existsSync(path.join(__dirname, ID, k + '.png'))) ins[k] = `/${ID}/${k}.png`;
-  await pg.evaluate(c => setup(c), { glb: '/' + (process.env.GLB || 'ku.glb'), bg: '/' + BG, timeline: tl, inserts: ins, faceYaw: 0.25, mouth: [0, 0.065, 0.12], mscale: 560, title: process.env.TITLE || 'KANJOOS UNCLE', titleDur: 2.2, endAt: total - 1.3 });
+  await pg.evaluate(c => setup(c), { glb: '/' + (process.env.GLB || 'ku.glb'), bg: '/' + BG, timeline: tl, inserts: ins, faceYaw: 0.25, mouth: [0, 0.076, 0.124], mscale: 470, title: process.env.TITLE || 'KANJOOS UNCLE', titleDur: 2.2, endAt: total - 1.3 });
   const F0 = +(process.env.F0 || 0), F1 = Math.min(N, process.env.F1 ? +process.env.F1 : N), CH = !!process.env.F1;
   const ff = cp.spawn('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', ...(CH ? [] : ['-i', 'voice.wav']), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', ...(CH ? ['-an'] : ['-c:a', 'aac', '-b:a', '160k', '-shortest']), '-movflags', '+faststart', OUT], { stdio: ['pipe', 'inherit', 'inherit'] });
   const t0 = Date.now();
-  for (let k = F0; k < F1; k++) { const u = await pg.evaluate(([a, b]) => frame(a, b), [k / FPS, A[k]]);
+  for (let k = F0; k < F1; k++) { const u = await pg.evaluate(([a, b, c]) => frame(a, b, c), [k / FPS, A[k], V[k]]);
     if (!ff.stdin.write(Buffer.from(u.slice(23), 'base64'))) await new Promise(r => ff.stdin.once('drain', r)); if ((k - F0) % 60 == 0) console.log('frame', k, F0, F1, ((Date.now() - t0) / 1000).toFixed(0) + 's'); }
   ff.stdin.end(); await new Promise(r => ff.on('close', r)); await br.close(); console.log('done', OUT, total.toFixed(1) + 's', 'frames', F0, F1, 'of', N);
 })();
