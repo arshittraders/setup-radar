@@ -55,6 +55,7 @@ function buildJaw(){
       const d=Math.min(up,dn)-B.get(k); if(d>0.0015*S&&(!best||d>best.d)) best={k,d}; }
     if(best){ seamY=m.y+best.k*st; how='crease'; }
     else { let g=null; for(let i=1;i<fr.length;i++){ const a=fr[i-1].y, b=fr[i].y; if(Math.abs((a+b)/2-m.y)<0.035*S&&b-a>0.005*S&&(!g||b-a>g[1]-g[0])) g=[a,b]; } if(g){ seamY=(g[0]+g[1])/2; how='gap'; } }
+    if(cfg.dbg) JL.dpts=pts.filter((p,i)=>i%2==0).map(p=>[head.worldToLocal(H2W(p)),(p.z-zf)/(-0.06*S),p.y>m.y?1:0]);
     JL.prof=ks.map(k=>[+(k*st).toFixed(4),+(B.get(k)-m.z).toFixed(4)]);
     if(cfg.lipCut==null){ if(seamY!=null) m.y=seamY; const nz=fr.filter(p=>Math.abs(p.y-m.y)<0.012*S); m.z=(nz.length?Math.max(...nz.map(p=>p.z)):zf)-0.004*S;
       JL.seam=[how,+m.y.toFixed(4),+m.z.toFixed(4)]; } }
@@ -71,7 +72,7 @@ function buildJaw(){
       si.setComponent(i,mk,ji); sw.setComponent(i,mk,Math.max(0,1-rest)); n++; }
     si.needsUpdate=true; sw.needsUpdate=true; me.bind(nsk,me.bindMatrix); }
   const loc=(o,x,y,z)=>o.worldToLocal(H2W(new THREE.Vector3(x,y,z)));
-  const prof=JL.prof, seam=JL.seam; JL={prof,seam,up:loc(head,0,m.y+0.004*S,m.z+0.004*S), lo:loc(jaw,0,m.y-0.012*S,m.z+0.002*S), cl:loc(head,-0.028*S,m.y,m.z), cr:loc(head,0.028*S,m.y,m.z)};
+  const prof=JL.prof, seam=JL.seam, dpts=JL.dpts; JL={prof,seam,dpts,up:loc(head,0,m.y+0.004*S,m.z+0.004*S), lo:loc(jaw,0,m.y-0.012*S,m.z+0.002*S), cl:loc(head,-0.028*S,m.y,m.z), cr:loc(head,0.028*S,m.y,m.z)};
   return {verts:n, S:+S.toFixed(3), seam:JL.seam||null, prof:JL.prof};
 }
 const ease=x=>x<0?0:x>1?1:1-Math.pow(1-x,3), back=x=>{x=Math.min(1,Math.max(0,x)); const c=1.9; return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
@@ -107,7 +108,9 @@ window.frame=(t,amp,vis)=>{
       cx.fillStyle=gr; cx.beginPath(); cx.ellipse(0,0,rx,ry,0,0,7); cx.fill(); cx.save(); cx.beginPath(); cx.ellipse(0,0,rx,ry,0,0,7); cx.clip();
       if(jawOpen>0.3&&vis!=='F'&&vis!=='E'){ cx.fillStyle='rgba(246,242,234,0.95)'; cx.fillRect(-rx*0.8,-ry,rx*1.6,ry*0.42); }
       if(jawOpen>0.45){ cx.fillStyle='#c05050'; cx.beginPath(); cx.ellipse(0,ry*0.62,rx*0.55,ry*0.42,0,0,7); cx.fill(); }
-      cx.restore(); cx.restore(); } }
+      cx.restore(); cx.restore(); }
+    if(JL.dpts){ for(const [lp,d,abv] of JL.dpts){ const [a,b]=proj(head.localToWorld(lp.clone())); cx.fillStyle=abv?`rgba(0,${Math.round(255*(1-d))},255,0.9)`:`rgba(255,${Math.round(255*(1-d))},0,0.9)`; cx.fillRect(a-1.5,b-1.5,3,3); }
+      const [a,b]=proj(head.localToWorld(JL.up.clone())); cx.strokeStyle='#0f0'; cx.lineWidth=2; cx.strokeRect(a-6,b-6,12,12); } }
   else if(head){ head.getWorldPosition(v); head.getWorldQuaternion(q);
     const m=new THREE.Vector3(...cfg.mouth).applyQuaternion(q).add(v); fwd.set(0,0,1).applyQuaternion(q);
     const facing=fwd.dot(cam.position.clone().sub(m).normalize()); const [sx,sy]=proj(m); const sc=cfg.mscale/cam.position.distanceTo(m);
