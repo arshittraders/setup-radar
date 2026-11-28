@@ -7,3 +7,5 @@ segs.json
 *.mp4
 mix.raw
 rhubarb/
+vo.wav
+vo.json
