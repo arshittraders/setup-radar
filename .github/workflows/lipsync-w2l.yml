@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: lipsync }
       - uses: actions/setup-python@v5
         with: { python-version: '3.10' }
       - name: Setup
@@ -25,17 +27,7 @@ jobs:
           pip -q install "numpy<2" opencv-python-headless==4.9.0.80 librosa==0.10.1 scipy tqdm numba
           sed -i 's/librosa.filters.mel(hp.sample_rate, hp.n_fft, n_mels=hp.num_mels,/librosa.filters.mel(sr=hp.sample_rate, n_fft=hp.n_fft, n_mels=hp.num_mels,/' audio.py
           sed -i 's/np.int)/int)/; s/dtype=np.int\b/dtype=int/' face_detection/detection/sfd/sfd_detector.py face_detection/detection/sfd/bbox.py 2>/dev/null || true
-          python3 - <<'PY'
-          p='inference.py'; s=open(p).read()
-          s=s.replace("""		if rect is None:
-			cv2.imwrite('temp/faulty_frame.jpg', image) # check this frame where the face was not detected.
-			raise ValueError('Face not detected! Ensure the video contains a face in all the frames.')
-""","""		if rect is None:
-			rect = last if 'last' in dir() and last is not None else [image.shape[1]//3, image.shape[0]//3, 2*image.shape[1]//3, image.shape[0]//2]
-		last = rect
-""")
-          open(p,'w').write(s); print('patched', 'last = rect' in s)
-          PY
+          python3 ../lipsync/w2l_patch.py inference.py
           mkdir -p checkpoints
           for u in https://huggingface.co/camenduru/Wav2Lip/resolve/main/checkpoints/wav2lip_gan.pth https://huggingface.co/Nekochu/Wav2Lip/resolve/main/wav2lip_gan.pth; do curl -sSfL -o checkpoints/wav2lip_gan.pth "$u" && break; done
           for u in https://huggingface.co/camenduru/Wav2Lip/resolve/main/face_detection/detection/sfd/s3fd.pth https://www.adrianbulat.com/downloads/python-fan/s3fd-619a316812.pth; do curl -sSfL -o face_detection/detection/sfd/s3fd.pth "$u" && break; done
