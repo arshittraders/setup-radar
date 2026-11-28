@@ -1,0 +1,71 @@
+<!doctype html><html><head><style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script></head>
+<body><canvas id="out" width="1080" height="1920"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const W=1080,H=1920, out=document.getElementById('out'), cx=out.getContext('2d');
+const ren=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+ren.setSize(W,H,false); ren.setPixelRatio(1); ren.outputColorSpace=THREE.SRGBColorSpace;
+ren.shadowMap.enabled=true; ren.shadowMap.type=THREE.PCFSoftShadowMap; ren.setClearColor(0,0);
+ren.toneMapping=THREE.ACESFilmicToneMapping; ren.toneMappingExposure=1.05;
+const scene=new THREE.Scene(), cam=new THREE.PerspectiveCamera(30,W/H,0.05,100);
+scene.add(new THREE.HemisphereLight(0xfff4e6,0x8a7560,1.6));
+const key=new THREE.DirectionalLight(0xffffff,2.2); key.position.set(1.5,3,2.5); key.castShadow=true; key.shadow.mapSize.set(2048,2048);
+Object.assign(key.shadow.camera,{left:-2,right:2,top:3,bottom:-1}); key.shadow.radius=6; scene.add(key);
+const rim=new THREE.DirectionalLight(0xfff0d0,0.9); rim.position.set(-2,2.5,-2); scene.add(rim);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(10,10),new THREE.ShadowMaterial({opacity:0.28})); ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+let mixer, acts={}, yawOff={}, hips, model, head, headfront, bg, cfg, T;
+window.setup=async(c)=>{ cfg=c;
+  bg=await new Promise(r=>{const i=new Image(); i.onload=()=>r(i); i.src=c.bg;});
+  const g=await new GLTFLoader().loadAsync(c.glb); model=g.scene; scene.add(model);
+  model.traverse(o=>{ if(o.isMesh){o.castShadow=true; o.frustumCulled=false;} if(o.name.replace(':','')==='mixamorigHead')head=o; if(o.name.replace(':','')==='mixamorigHips')hips=o; if(o.name==='headfront')headfront=o; });
+  const box=new THREE.Box3().setFromObject(model); const h=box.max.y-box.min.y; model.position.y-=box.min.y; model.rotation.y=(c.rotY??0);
+  mixer=new THREE.AnimationMixer(model); for(const a of g.animations){ acts[a.name]=a; }
+  // per-clip yaw: hips forward at clip mid vs Idle
+  const yawOf=(n)=>{ const a=mixer.clipAction(acts[n]); a.play(); a.setEffectiveWeight(1); a.time=acts[n].duration*0.3; mixer.update(0); model.updateMatrixWorld(true);
+    const qq=new THREE.Quaternion(); hips.getWorldQuaternion(qq); const f=new THREE.Vector3(0,0,1).applyQuaternion(qq); a.stop(); return Math.atan2(f.x,f.z); };
+  for(const n in acts) yawOff[n]=yawOf(n);
+  mixer.stopAllAction(); T=c.timeline; return {h, anims:Object.keys(acts), yawOff};
+};
+const clipActs={};
+function act(n){ if(!clipActs[n]){ clipActs[n]=mixer.clipAction(acts[n]); clipActs[n].play(); clipActs[n].setEffectiveWeight(0);} return clipActs[n]; }
+const v=new THREE.Vector3(), q=new THREE.Quaternion(), fwd=new THREE.Vector3();
+window.frame=(t,amp,cap)=>{
+  // timeline: [{anim,start,end}] crossfade 0.35s
+  const F=0.35; let ws={};
+  for(const s of T){ let w=0; if(t>=s.start-F&&t<=s.end+F){ w=Math.min(1,(t-(s.start-F))/F, (s.end+F-t)/F);} if(w>0){ ws[s.anim]=Math.max(ws[s.anim]||0,w); } }
+  let tot=Object.values(ws).reduce((a,b)=>a+b,0); if(tot<0.001){ ws={Idle:1}; tot=1; }
+  for(const n in acts){ const a=act(n); const w=(ws[n]||0)/tot; a.setEffectiveWeight(w); a.time=(t*(n==='Idle'?1:1))%acts[n].duration; }
+  let yw=0; for(const n in acts){ yw+=(ws[n]||0)/tot*yawOff[n]; }
+  model.rotation.y=(cfg.rotY??0)-yw+ (cfg.faceYaw||0);
+  mixer.update(0); model.updateMatrixWorld(true);
+  // camera: slow push-in, look at chest/face
+  const k=cfg.cam; const p=Math.min(1,t/(cfg.dur||30));
+  cam.position.set(k.x, k.y, k.z - p*k.push); cam.lookAt(0,k.ly,0); cam.updateMatrixWorld();
+  ren.render(scene,cam);
+  cx.drawImage(bg,0,0,W,H); cx.drawImage(ren.domElement,0,0);
+  // mouth overlay
+  if(head){ head.getWorldPosition(v); head.getWorldQuaternion(q);
+    const m=new THREE.Vector3(...cfg.mouth).applyQuaternion(q).add(v);
+    fwd.set(0,0,1).applyQuaternion(q); const toCam=cam.position.clone().sub(m).normalize(); const facing=fwd.dot(toCam);
+    const sp=m.clone().project(cam); const sx=(sp.x+1)/2*W, sy=(1-sp.y)/2*H;
+    const dist=cam.position.distanceTo(m); const sc=cfg.mscale/dist;
+    window.__dbg={sx,sy,facing,sc};
+    if(cfg.marks){ cfg.marks.forEach((mk,i)=>{ const mm=new THREE.Vector3(...mk).applyQuaternion(q).add(v).project(cam); cx.fillStyle=['#0f0','#f00','#00f','#ff0','#0ff','#f0f'][i%6]; cx.beginPath(); cx.arc((mm.x+1)/2*W,(1-mm.y)/2*H,5,0,7); cx.fill(); }); }
+    if(amp>0.04 && facing>0.35){ const o=Math.min(1,amp); const mw=sc*(0.55+0.15*o), mh=sc*(0.08+0.32*o);
+      cx.save(); cx.globalAlpha=Math.min(1,(facing-0.35)*4); cx.translate(sx,sy); cx.rotate(Math.atan2(-fwd.x*0,1)*0);
+      cx.fillStyle='#4a1414'; cx.beginPath(); cx.ellipse(0,mh*0.35,mw/2,mh/2,0,0,7); cx.fill();
+      if(o>0.35){ cx.fillStyle='#f4efe6'; cx.beginPath(); cx.ellipse(0,mh*0.35-mh*0.32,mw*0.36,mh*0.14,0,0,7); cx.fill(); }
+      cx.fillStyle='#c0504d'; cx.beginPath(); cx.ellipse(0,mh*0.35+mh*0.28,mw*0.3,mh*0.14,0,0,7); cx.fill();
+      cx.restore(); }
+  }
+  if(cap){ drawCap(cap); }
+  if(cfg.title && t<cfg.titleDur){ const a=Math.min(1,t/0.3,(cfg.titleDur-t)/0.3); cx.save(); cx.globalAlpha=a; cx.fillStyle='#ffd400'; const y=150; cx.font='900 92px Arial'; cx.textAlign='center'; const tw=cx.measureText(cfg.title).width+80; cx.beginPath(); cx.roundRect(W/2-tw/2,y-90,tw,124,28); cx.fill(); cx.fillStyle='#1a1a1a'; cx.fillText(cfg.title,W/2,y+4); cx.restore(); }
+  return out.toDataURL('image/jpeg',0.9);
+};
+function drawCap(c){ cx.save(); cx.font='900 66px "Noto Sans", Arial'; cx.textAlign='center'; const words=c.split(' '); const lines=[]; let l='';
+  for(const w of words){ const tt=l?l+' '+w:w; if(cx.measureText(tt).width>900){lines.push(l); l=w;} else l=tt; } if(l)lines.push(l);
+  const y0=1450; lines.forEach((ln,i)=>{ const y=y0+i*84; cx.lineWidth=14; cx.strokeStyle='#000'; cx.lineJoin='round'; cx.strokeText(ln,W/2,y); cx.fillStyle=i%2?'#fff':'#ffe14a'; cx.fillText(ln,W/2,y); }); cx.restore(); }
+window.ready=true;
+</script></body></html>

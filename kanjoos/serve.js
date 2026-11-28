@@ -1,0 +1,2 @@
+const http=require('http'),fs=require('fs'),path=require('path');const M={'.html':'text/html','.js':'text/javascript','.glb':'model/gltf-binary','.png':'image/png','.jpg':'image/jpeg'};
+http.createServer((q,r)=>{const p=path.join(__dirname,decodeURIComponent(q.url.split('?')[0]));fs.readFile(p,(e,d)=>{if(e){r.writeHead(404);return r.end();}r.writeHead(200,{'Content-Type':M[path.extname(p)]||'application/octet-stream'});r.end(d);});}).listen(8765);
