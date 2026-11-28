@@ -36,7 +36,7 @@ jobs:
         run: |
           curl -sSfL -o in.mp4 "${{ inputs.video_url }}"
           curl -sSfL -o v.mp3 "${{ inputs.voice_url }}"
-          L=$(python3 -c "print(int(float('${{ inputs.lead }}')*1000))")
+          L=$(python3 -c "print(max(1,int(float('${{ inputs.lead }}')*1000)))")
           ffmpeg -loglevel error -y -i v.mp3 -af "adelay=$L|$L,apad" -t $(ffprobe -v error -show_entries format=duration -of csv=p=0 in.mp4) -ar 16000 -ac 1 voice.wav
           ffmpeg -loglevel error -y -i in.mp4 -an -r 25 -c:v libx264 -crf 16 vid.mp4
       - name: Wav2Lip
@@ -45,5 +45,5 @@ jobs:
       - name: Mux + upload
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          ffmpeg -loglevel error -y -i ls.mp4 -i in.mp4 -map 0:v -map 1:a -c:v libx264 -crf 19 -pix_fmt yuv420p -r 30 -c:a aac -b:a 160k -shortest -movflags +faststart ${{ inputs.tag }}.mp4
+          ffmpeg -loglevel error -y -i ls.mp4 -i in.mp4 -map 0:v -map 1:a -vf "unsharp=5:5:0.6:5:5:0" -c:v libx264 -crf 19 -pix_fmt yuv420p -r 30 -c:a aac -b:a 160k -shortest -movflags +faststart ${{ inputs.tag }}.mp4
           gh release upload studio-debug ${{ inputs.tag }}.mp4 --clobber -R ${{ github.repository }}
