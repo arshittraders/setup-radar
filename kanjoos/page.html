@@ -116,10 +116,16 @@ window.frame=(t,amp,vis)=>{
     const WF={A:1,B:0.95,C:1,D:1.05,E:0.78,F:0.6,G:0.95,H:0.9,X:1}, wf=vis&&WF[vis]?WF[vis]:1, gap=Math.hypot(lo[0]-up[0],lo[1]-up[1]);
     if(facing>0.3&&jawOpen>0.06&&gap>2){ const cxm=(up[0]+lo[0])/2, cym=(up[1]+lo[1])/2, rx=Math.hypot(cr[0]-cl[0],cr[1]-cl[1])/2*wf*0.62, ry=gap*0.5, ang=Math.atan2(cr[1]-cl[1],cr[0]-cl[0]);
       cx.save(); cx.globalAlpha=Math.min(1,(facing-0.3)*4)*Math.min(1,(jawOpen-0.06)*6); cx.translate(cxm,cym); cx.rotate(ang);
-      const gr=cx.createRadialGradient(0,0,0,0,0,Math.max(rx,ry)); gr.addColorStop(0,'#1c0606'); gr.addColorStop(0.75,'#3e0f0d'); gr.addColorStop(1,'rgba(90,28,24,0.6)');
+      // colour-matched mouth: sample the model's own mouth/teeth colour under this spot (white teeth stay white, no black hole)
+      let sr=200,sg=190,sb=185; try{ const bw=Math.max(4,Math.round(rx*1.2)), bh=Math.max(3,Math.round(ry*0.9)); const px=cx.getImageData(Math.round(cxm-bw/2),Math.round(cym-bh/2),bw,bh).data; const L=[];
+        for(let i=0;i<px.length;i+=4) L.push([px[i]+px[i+1]+px[i+2],px[i],px[i+1],px[i+2]]); L.sort((a,b)=>b[0]-a[0]); const top=L.slice(0,Math.max(1,Math.floor(L.length*0.35)));
+        sr=top.reduce((a,c)=>a+c[1],0)/top.length; sg=top.reduce((a,c)=>a+c[2],0)/top.length; sb=top.reduce((a,c)=>a+c[3],0)/top.length; }catch(e){}
+      const lum=(0.299*sr+0.587*sg+0.114*sb)/255, teeth=lum>0.68, k=teeth?0.9:0.55, C=(f,a)=>`rgba(${Math.round(sr*f)},${Math.round(sg*f)},${Math.round(sb*f)},${a})`;
+      const gr=cx.createRadialGradient(0,0,0,0,0,Math.max(rx,ry)); gr.addColorStop(0,C(k,1)); gr.addColorStop(0.7,C(k*1.04,0.95)); gr.addColorStop(1,C(1,0));
       cx.fillStyle=gr; cx.beginPath(); cx.ellipse(0,0,rx,ry,0,0,7); cx.fill(); cx.save(); cx.beginPath(); cx.ellipse(0,0,rx,ry,0,0,7); cx.clip();
-      if(jawOpen>0.3&&vis!=='F'&&vis!=='E'){ cx.fillStyle='rgba(246,242,234,0.95)'; cx.fillRect(-rx*0.8,-ry,rx*1.6,ry*0.42); }
-      if(jawOpen>0.45){ cx.fillStyle='#c05050'; cx.beginPath(); cx.ellipse(0,ry*0.62,rx*0.55,ry*0.42,0,0,7); cx.fill(); }
+      if(teeth){ cx.strokeStyle=C(0.72,0.55); cx.lineWidth=Math.max(1.5,ry*0.12); cx.beginPath(); cx.moveTo(-rx*0.75,0); cx.quadraticCurveTo(0,ry*0.18,rx*0.75,0); cx.stroke(); }
+      else { if(jawOpen>0.3&&vis!=='F'&&vis!=='E'){ cx.fillStyle='rgba(246,242,234,0.9)'; cx.fillRect(-rx*0.8,-ry,rx*1.6,ry*0.38); }
+        if(jawOpen>0.5){ cx.fillStyle=C(0.8,0.8); cx.beginPath(); cx.ellipse(0,ry*0.62,rx*0.5,ry*0.38,0,0,7); cx.fill(); } }
       cx.restore(); cx.restore(); }
     if(JL.dpts){ for(const [lp,d,abv] of JL.dpts){ const [a,b]=proj(head.localToWorld(lp.clone())); cx.fillStyle=abv?`rgba(0,${Math.round(255*(1-d))},255,0.9)`:`rgba(255,${Math.round(255*(1-d))},0,0.9)`; cx.fillRect(a-1.5,b-1.5,3,3); }
       const [a,b]=proj(head.localToWorld(JL.up.clone())); cx.strokeStyle='#0f0'; cx.lineWidth=2; cx.strokeRect(a-6,b-6,12,12); } }
@@ -158,7 +164,8 @@ window.frame=(t,amp,vis)=>{
       cx.fillStyle='#f6c431'; cx.strokeStyle='#b8860b'; cx.lineWidth=5; cx.beginPath(); cx.arc(0,0,30,0,7); cx.fill(); cx.stroke(); cx.fillStyle='#8a5a00'; cx.font='900 34px Arial'; cx.textAlign='center'; cx.fillText('₹',0,12); cx.restore(); } }
   // captions: word-by-word pop, newest word yellow
   if(L&&t<=L.end+0.35){ const words=(L.cap||'').split(' '); const prog=Math.max(0,Math.min(1,(t-L.start)/Math.max(0.5,L.end-L.start-0.15)));
-    const nShow=Math.max(1,Math.ceil(prog*words.length)); drawCap(words.slice(0,nShow),(t-L.start)*words.length/Math.max(0.5,L.end-L.start)-(nShow-1)); }
+    if(L.wt&&L.wt.length===words.length){ let n=1; while(n<words.length&&t>=L.wt[n]) n++; drawCap(words.slice(0,n),(t-L.wt[n-1])/0.22); }
+    else { const nShow=Math.max(1,Math.ceil(prog*words.length)); drawCap(words.slice(0,nShow),(t-L.start)*words.length/Math.max(0.5,L.end-L.start)-(nShow-1)); } }
   // CTA
   if(L&&L.cta!=null){ const t0=L.start+(L.end-L.start)*L.cta, k=t-t0; if(k>0){ const s=back(k/0.35)*(1+0.05*Math.sin(k*8)); cx.save(); cx.translate(W/2,320); cx.scale(s,s);
     const g=cx.createLinearGradient(-260,0,260,0); g.addColorStop(0,'#ff3d6e'); g.addColorStop(1,'#ff8a00'); cx.fillStyle=g; cx.shadowColor='rgba(0,0,0,0.3)'; cx.shadowBlur=24; cx.beginPath(); cx.roundRect(-260,-62,520,124,62); cx.fill(); cx.shadowColor='transparent';

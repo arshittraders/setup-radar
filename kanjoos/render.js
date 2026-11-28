@@ -40,6 +40,11 @@ function buildAudio() {
   const mx = A.slice().sort((a, b) => a - b)[Math.floor(N * 0.97)] || 1; const B = A.map(a => Math.min(1, a / mx)); for (let k = 1; k < N; k++) B[k] = Math.max(B[k], B[k - 1] * 0.55); return B;
 }
 const A = buildAudio();
+// caption word timings from the real voice: words follow the voiced frames of their line (weighted by word length)
+tl.forEach(L => { const w = (L.cap || '').split(' '); const f0 = Math.floor(L.start * FPS), f1 = Math.min(N - 1, Math.ceil(L.end * FPS)); const vf = [];
+  for (let k = f0; k <= f1; k++) if (A[k] > 0.12) vf.push(k); if (vf.length < 3 || !w.length) return;
+  const wt = w.map(x => Math.max(2, x.replace(/[^A-Za-z0-9₹]/g, '').length)), tot = wt.reduce((a, b) => a + b, 0); let c = 0;
+  L.wt = w.map((x, i) => { const fr = c / tot; c += wt[i]; return vf[Math.min(vf.length - 1, Math.floor(fr * vf.length))] / FPS - 0.06; }); });
 // visemes per frame (Rhubarb, phonetic recognizer = works for Hindi). Missing binary → falls back to volume-only mouth.
 const V = new Array(N).fill('');
 try { const RB = process.env.RHUBARB || path.join(__dirname, 'rhubarb', 'rhubarb');
