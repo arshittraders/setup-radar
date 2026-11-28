@@ -2,26 +2,99 @@
  {
   "anim": "Talk_with_Hands_Open",
   "text": "Arre suno suno! Bijli ka bill aaya hai... poore do sau baarah rupaye!",
-  "cap": "Arre suno suno! Bijli ka bill... poore ₹212!"
+  "cap": "Arre suno suno! Bijli ka bill... poore ₹212!",
+  "shot": "med",
+  "ins": {
+   "img": "bill",
+   "at": 0.62
+  },
+  "sfx": [
+   {
+    "at": 0.62,
+    "cat": "paper"
+   },
+   {
+    "at": 0.9,
+    "cat": "coin",
+    "n": 1
+   }
+  ]
  },
  {
   "anim": "Headache_Relief",
   "text": "Haaye re... mera BP badh gaya!",
-  "cap": "Haaye re... mera BP badh gaya!"
+  "cap": "Haaye re... mera BP badh gaya!",
+  "shot": "med",
+  "fx": "bp",
+  "sfx": [
+   {
+    "at": 0.0,
+    "cat": "impact",
+    "g": 0.45
+   },
+   {
+    "at": 0.1,
+    "cat": "heart",
+    "g": 0.5
+   }
+  ]
  },
  {
   "anim": "Stand_Talking_Angry",
   "text": "Kisne chalaya pankha? Garmi lagti hai toh khidki kholo... hawa free hai!",
-  "cap": "Kisne chalaya pankha? Khidki kholo... hawa FREE hai!"
+  "cap": "Kisne chalaya pankha? Khidki kholo... hawa FREE hai!",
+  "shot": "close",
+  "ins": {
+   "img": "fan",
+   "at": 0.05
+  },
+  "sfx": [
+   {
+    "at": 0.05,
+    "cat": "whoosh",
+    "n": 1
+   }
+  ]
  },
  {
   "anim": "Talk_Passionately",
   "text": "Aur yeh AC? Yeh sirf mehmaanon ke liye hai... jo kabhi aate hi nahi!",
-  "cap": "Aur yeh AC? Sirf mehmaanon ke liye... jo kabhi aate hi nahi!"
+  "cap": "Aur yeh AC? Sirf mehmaanon ke liye... jo kabhi aate hi nahi!",
+  "shot": "wide",
+  "ins": {
+   "img": "ac",
+   "at": 0.0
+  },
+  "sfx": [
+   {
+    "at": 0.0,
+    "cat": "pop"
+   },
+   {
+    "at": 0.98,
+    "cat": "fail",
+    "g": 0.35
+   }
+  ]
  },
  {
   "anim": "Talk_with_Hands_Open",
   "text": "Main kanjoos nahi hoon beta, bas paisa bachata hoon. Follow karo... woh bhi free hai!",
-  "cap": "Main kanjoos nahi, bas paisa bachata hoon. Follow karo... FREE hai!"
+  "cap": "Main kanjoos nahi, bas paisa bachata hoon. Follow karo... FREE hai!",
+  "shot": "med",
+  "fx": "coins",
+  "cta": 0.62,
+  "sfx": [
+   {
+    "at": 0.35,
+    "cat": "coin",
+    "n": 2
+   },
+   {
+    "at": 0.62,
+    "cat": "ding",
+    "n": 1
+   }
+  ]
  }
 ]
