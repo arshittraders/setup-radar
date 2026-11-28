@@ -42,10 +42,20 @@ function buildJaw(){
   const W2H=p=>p.clone().sub(hp).applyQuaternion(hqi), H2W=p=>p.clone().applyQuaternion(hq).add(hp);
   const meshes=[]; model.traverse(o=>{ if(o.isSkinnedMesh) meshes.push(o); }); if(!meshes.length) return {err:'no skinned mesh'};
   const sk=meshes[0].skeleton, hi=sk.bones.indexOf(head); if(hi<0) return {err:'head not in skeleton'};
+  // auto-find the lip seam: front profile of the face near the centre line → the crease (local min of z) between the two lips
+  { const B=new Map(), st=0.002*S, tv0=new THREE.Vector3();
+    for(const me of meshes){ if(me.skeleton!==sk) continue; const si=me.geometry.attributes.skinIndex;
+      for(let i=0;i<si.count;i++){ me.getVertexPosition(i,tv0); tv0.applyMatrix4(me.matrixWorld); const p=W2H(tv0);
+        if(Math.abs(p.x)>0.008*S||Math.abs(p.y-m.y)>0.045*S||p.z<m.z-0.06*S) continue; const b=Math.round((p.y-m.y)/st); if(!(B.get(b)>p.z)) B.set(b,p.z); } }
+    const ks=[...B.keys()].sort((a,b)=>a-b), Z=k=>B.get(k); let best=null;
+    for(const k of ks){ if(Math.abs(k*st)>0.03*S) continue; const up=Math.max(...ks.filter(j=>j>k&&j<=k+8).map(Z),-1e9), dn=Math.max(...ks.filter(j=>j<k&&j>=k-8).map(Z),-1e9);
+      const depth=Math.min(up,dn)-Z(k); if(depth>0.0015*S&&(!best||depth>best.d)) best={k,d:depth}; }
+    JL.prof=ks.map(k=>[+(k*st).toFixed(4),+(Z(k)-m.z).toFixed(4)]);
+    if(best&&cfg.lipCut==null){ m.y=m.y+best.k*st; m.z=Math.max(...ks.filter(j=>Math.abs(j-best.k)<=3).map(Z)); JL.seam=[+m.y.toFixed(4),+m.z.toFixed(4),+best.d.toFixed(4)]; } }
   jaw=new THREE.Bone(); jaw.name='Jaw'; head.add(jaw); jaw.position.copy(head.worldToLocal(H2W(new THREE.Vector3(0,m.y-0.01*S,m.z-0.085*S)))); jaw.updateMatrix(); jaw.updateMatrixWorld(true);
   const Ij=new THREE.Matrix4().copy(jaw.matrix).invert().multiply(sk.boneInverses[hi]);
   const nsk=new THREE.Skeleton(sk.bones.concat([jaw]), sk.boneInverses.concat([Ij])), ji=nsk.bones.length-1;
-  const cut=m.y+(cfg.lipCut??0.002)*S; let n=0; const tv=new THREE.Vector3();
+  const cut=m.y+(cfg.lipCut??-0.001)*S; let n=0; const tv=new THREE.Vector3();
   for(const me of meshes){ if(me.skeleton!==sk) continue; const g=me.geometry, si=g.attributes.skinIndex, sw=g.attributes.skinWeight;
     for(let i=0;i<si.count;i++){ let hw=0; for(let k=0;k<4;k++) if(si.getComponent(i,k)===hi) hw+=sw.getComponent(i,k); if(hw<0.3) continue;
       me.getVertexPosition(i,tv); tv.applyMatrix4(me.matrixWorld); const p=W2H(tv);
@@ -55,8 +65,8 @@ function buildJaw(){
       si.setComponent(i,mk,ji); sw.setComponent(i,mk,Math.max(0,1-rest)); n++; }
     si.needsUpdate=true; sw.needsUpdate=true; me.bind(nsk,me.bindMatrix); }
   const loc=(o,x,y,z)=>o.worldToLocal(H2W(new THREE.Vector3(x,y,z)));
-  JL={up:loc(head,0,m.y+0.004*S,m.z+0.004*S), lo:loc(jaw,0,m.y-0.012*S,m.z+0.002*S), cl:loc(head,-0.028*S,m.y,m.z), cr:loc(head,0.028*S,m.y,m.z)};
-  return {verts:n, S:+S.toFixed(3)};
+  const prof=JL.prof, seam=JL.seam; JL={prof,seam,up:loc(head,0,m.y+0.004*S,m.z+0.004*S), lo:loc(jaw,0,m.y-0.012*S,m.z+0.002*S), cl:loc(head,-0.028*S,m.y,m.z), cr:loc(head,0.028*S,m.y,m.z)};
+  return {verts:n, S:+S.toFixed(3), seam:JL.seam||null, prof:JL.prof};
 }
 const ease=x=>x<0?0:x>1?1:1-Math.pow(1-x,3), back=x=>{x=Math.min(1,Math.max(0,x)); const c=1.9; return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
 const proj=(p)=>{ const s=p.clone().project(cam); return [(s.x+1)/2*W,(1-s.y)/2*H]; };
