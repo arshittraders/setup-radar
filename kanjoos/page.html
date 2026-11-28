@@ -42,16 +42,22 @@ function buildJaw(){
   const W2H=p=>p.clone().sub(hp).applyQuaternion(hqi), H2W=p=>p.clone().applyQuaternion(hq).add(hp);
   const meshes=[]; model.traverse(o=>{ if(o.isSkinnedMesh) meshes.push(o); }); if(!meshes.length) return {err:'no skinned mesh'};
   const sk=meshes[0].skeleton, hi=sk.bones.indexOf(head); if(hi<0) return {err:'head not in skeleton'};
-  // auto-find the lip seam: front profile of the face near the centre line → the crease (local min of z) between the two lips
-  { const B=new Map(), st=0.002*S, tv0=new THREE.Vector3();
+  // auto-find the lip seam: points of the face near the centre line, front-most per height → lips = crease or biggest gap
+  { const pts=[], tv0=new THREE.Vector3();
     for(const me of meshes){ if(me.skeleton!==sk) continue; const si=me.geometry.attributes.skinIndex;
       for(let i=0;i<si.count;i++){ me.getVertexPosition(i,tv0); tv0.applyMatrix4(me.matrixWorld); const p=W2H(tv0);
-        if(Math.abs(p.x)>0.008*S||Math.abs(p.y-m.y)>0.045*S||p.z<m.z-0.06*S) continue; const b=Math.round((p.y-m.y)/st); if(!(B.get(b)>p.z)) B.set(b,p.z); } }
-    const ks=[...B.keys()].sort((a,b)=>a-b), Z=k=>B.get(k); let best=null;
-    for(const k of ks){ if(Math.abs(k*st)>0.03*S) continue; const up=Math.max(...ks.filter(j=>j>k&&j<=k+8).map(Z),-1e9), dn=Math.max(...ks.filter(j=>j<k&&j>=k-8).map(Z),-1e9);
-      const depth=Math.min(up,dn)-Z(k); if(depth>0.0015*S&&(!best||depth>best.d)) best={k,d:depth}; }
-    JL.prof=ks.map(k=>[+(k*st).toFixed(4),+(Z(k)-m.z).toFixed(4)]);
-    if(best&&cfg.lipCut==null){ m.y=m.y+best.k*st; m.z=Math.max(...ks.filter(j=>Math.abs(j-best.k)<=3).map(Z)); JL.seam=[+m.y.toFixed(4),+m.z.toFixed(4),+best.d.toFixed(4)]; } }
+        if(Math.abs(p.x)<0.015*S&&Math.abs(p.y-m.y)<0.06*S) pts.push(p); } }
+    const zf=Math.max(...pts.map(p=>p.z)); const fr=pts.filter(p=>p.z>zf-0.035*S).sort((a,b)=>a.y-b.y);   // front surface only
+    let seamY=null, how='';
+    const st=0.0025*S, B=new Map(); for(const p of fr){ const b=Math.round((p.y-m.y)/st); if(!(B.get(b)>p.z)) B.set(b,p.z); }
+    const ks=[...B.keys()].sort((a,b)=>a-b); let best=null;
+    for(const k of ks){ if(Math.abs(k*st)>0.035*S) continue; const up=Math.max(...ks.filter(j=>j>k&&j<=k+5).map(j=>B.get(j)),-1e9), dn=Math.max(...ks.filter(j=>j<k&&j>=k-5).map(j=>B.get(j)),-1e9);
+      const d=Math.min(up,dn)-B.get(k); if(d>0.0015*S&&(!best||d>best.d)) best={k,d}; }
+    if(best){ seamY=m.y+best.k*st; how='crease'; }
+    else { let g=null; for(let i=1;i<fr.length;i++){ const a=fr[i-1].y, b=fr[i].y; if(Math.abs((a+b)/2-m.y)<0.035*S&&b-a>0.005*S&&(!g||b-a>g[1]-g[0])) g=[a,b]; } if(g){ seamY=(g[0]+g[1])/2; how='gap'; } }
+    JL.prof=ks.map(k=>[+(k*st).toFixed(4),+(B.get(k)-m.z).toFixed(4)]);
+    if(cfg.lipCut==null){ if(seamY!=null) m.y=seamY; const nz=fr.filter(p=>Math.abs(p.y-m.y)<0.012*S); m.z=(nz.length?Math.max(...nz.map(p=>p.z)):zf)-0.004*S;
+      JL.seam=[how,+m.y.toFixed(4),+m.z.toFixed(4)]; } }
   jaw=new THREE.Bone(); jaw.name='Jaw'; head.add(jaw); jaw.position.copy(head.worldToLocal(H2W(new THREE.Vector3(0,m.y-0.01*S,m.z-0.085*S)))); jaw.updateMatrix(); jaw.updateMatrixWorld(true);
   const Ij=new THREE.Matrix4().copy(jaw.matrix).invert().multiply(sk.boneInverses[hi]);
   const nsk=new THREE.Skeleton(sk.bones.concat([jaw]), sk.boneInverses.concat([Ij])), ji=nsk.bones.length-1;
