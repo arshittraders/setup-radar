@@ -5,7 +5,7 @@ const SFX = require(path.join(__dirname, '..', 'sfx', 'sfx.js'));
 const [, BG, OUT] = process.argv.slice(2); const FPS = 30, SR = 44100;
 const S = JSON.parse(fs.readFileSync(path.join(__dirname, 'script.json')));
 const dur = f => +cp.execSync(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${f}"`).toString();
-const LEAD = 0.3, TAIL = 0.8;
+const LEAD = 0.3, TAIL = 1.6;
 const segs = JSON.parse(fs.readFileSync(process.env.SEGS));
 const tl = segs.map((g, i) => ({ ...S[i], start: g[0] + LEAD, end: g[1] + LEAD, cap: S[i].cap || S[i].text }));
 const total = dur(process.env.FULL) + LEAD + TAIL, N = Math.ceil(total * FPS);
@@ -28,6 +28,7 @@ function buildAudio() {
   for (let i = 0; i < n; i++) { const t = i / SR; mix[i] *= Math.min(1, t / 0.4, (total - t) / 0.6); mix[i] += voice[i]; }
   tl.forEach((L, li) => (L.sfx || []).forEach((x, k) => SFX.place(mix, SR, L.start + (L.end - L.start) * x.at, x.cat, x.n ?? (li + k), x.g ?? 0.3, x.cat === 'whoosh' ? 0.25 : 0)));
   SFX.place(mix, SR, 0.05, 'whoosh', 0, 0.25, 0); // title
+  SFX.place(mix, SR, total - 1.3, 'pop', 1, 0.35, 0); // end card
   let pk = 0; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(mix[i])); const buf = Buffer.alloc(n * 2), g = pk > 0.98 ? 0.98 / pk : 1;
   for (let i = 0; i < n; i++) buf.writeInt16LE(Math.round(Math.max(-1, Math.min(1, mix[i] * g)) * 32767), i * 2);
   fs.writeFileSync('mix.raw', buf); cp.execSync(`ffmpeg -v error -y -f s16le -ar ${SR} -ac 1 -i mix.raw -af loudnorm=I=-14:TP=-1.5 -ar ${SR} voice.wav`); fs.unlinkSync('mix.raw');
@@ -41,7 +42,7 @@ if (process.env.MODE === 'audio') { console.log('frames total', N); process.exit
   const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } }); pg.on('pageerror', e => console.log('ERR', e.message));
   await pg.goto('http://localhost:8765/page.html'); await pg.waitForFunction('window.ready');
   const ins = {}; const ID = process.env.INS_DIR || 'ins'; for (const k of ['bill', 'fan', 'ac']) if (fs.existsSync(path.join(__dirname, ID, k + '.png'))) ins[k] = `/${ID}/${k}.png`;
-  await pg.evaluate(c => setup(c), { glb: '/' + (process.env.GLB || 'ku.glb'), bg: '/' + BG, timeline: tl, inserts: ins, faceYaw: 0.25, mouth: [0, 0.065, 0.12], mscale: 560, title: process.env.TITLE || 'KANJOOS UNCLE', titleDur: 2.2 });
+  await pg.evaluate(c => setup(c), { glb: '/' + (process.env.GLB || 'ku.glb'), bg: '/' + BG, timeline: tl, inserts: ins, faceYaw: 0.25, mouth: [0, 0.065, 0.12], mscale: 560, title: process.env.TITLE || 'KANJOOS UNCLE', titleDur: 2.2, endAt: total - 1.3 });
   const F0 = +(process.env.F0 || 0), F1 = Math.min(N, process.env.F1 ? +process.env.F1 : N), CH = !!process.env.F1;
   const ff = cp.spawn('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', ...(CH ? [] : ['-i', 'voice.wav']), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', ...(CH ? ['-an'] : ['-c:a', 'aac', '-b:a', '160k', '-shortest']), '-movflags', '+faststart', OUT], { stdio: ['pipe', 'inherit', 'inherit'] });
   const t0 = Date.now();
