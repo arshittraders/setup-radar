@@ -91,13 +91,19 @@ window.frame=(t,amp,vis)=>{
   if(jaw){ const OP={A:0,B:0.3,C:0.6,D:1,E:0.55,F:0.35,G:0.2,H:0.45,X:0}; const tgt=vis&&OP[vis]!=null?OP[vis]:Math.min(1,amp*1.3);
     jawOpen+=(tgt-jawOpen)*0.55; if(cfg.jawForce!=null) jawOpen=cfg.jawForce; jaw.rotation.x=jawOpen*(cfg.jawMax||0.2); }
   model.updateMatrixWorld(true);
+  if(cfg.trackYaw!==false&&hips){ const qh=new THREE.Quaternion(); hips.getWorldQuaternion(qh); const fh=new THREE.Vector3(0,0,1).applyQuaternion(qh); fh.y=0;
+    const err=Math.atan2(fh.x,fh.z)-(cfg.faceYaw||0); window.__yc=(window.__yc||0)+(-err*0.85-(window.__yc||0))*0.25;
+    model.rotation.y+=window.__yc; model.updateMatrixWorld(true); }
   // which line is on screen (shot switches at line start; before first line = wide intro)
   let li=-1; for(let i=0;i<T.length;i++){ if(t>=T[i].start-0.12) li=i; }
   const L=li>=0?T[li]:null, lt=L?t-(L.start-0.12):t, ld=L?(L.end-L.start+0.5):2;
   const sh=SHOTS[cfg.forceShot||(L?L.shot||'med':'wide')]; const push=ease(lt/Math.max(1,ld))*(L&&L.shot==='close'?0.22:L&&L.fx==='bp'?0.6:0.35);
   let shake=0; if(L&&L.fx==='bp'&&lt<1.4) shake=(1.4-lt)/1.4*0.025;
   const hx=Math.sin(t*0.9)*0.02+Math.sin(t*2.3)*0.008+(Math.random()-0.5)*shake, hy=Math.sin(t*1.3)*0.012+(Math.random()-0.5)*shake;
-  cam.fov=sh.fov; cam.updateProjectionMatrix(); cam.position.set(0.04+hx, sh.y+hy, sh.z-push); cam.lookAt(0+hx*0.5, sh.ly, 0); cam.updateMatrixWorld();
+  cam.fov=sh.fov; cam.updateProjectionMatrix(); let hp=new THREE.Vector3(0,1.5,0); if(head) head.getWorldPosition(hp); window.__hp=window.__hp||hp.clone(); window.__hp.lerp(hp,0.12); const HP=window.__hp;
+  const kind=cfg.forceShot||(L?L.shot||'med':'wide'), rel={wide:{dy:-0.62,z:4.7,ey:-0.4},med:{dy:-0.2,z:3.0,ey:-0.08},close:{dy:-0.02,z:1.9,ey:0.02}}[kind];
+  const pz=kind==='close'?Math.min(push,0.15):push;
+  cam.position.set(HP.x*0.6+0.04+hx, HP.y+rel.ey+hy, rel.z-pz); cam.lookAt(HP.x*0.6+hx*0.5, HP.y+rel.dy, 0); cam.updateMatrixWorld();
   ren.render(scene,cam);
   // background parallax: slightly bigger on close shots
   const bz=L&&L.shot==='close'?1.18:L&&L.shot==='wide'?1.0:1.08, bw=W*bz, bh=H*bz; cx.drawImage(bg,(W-bw)/2-hx*400,(H-bh)/2+hy*200,bw,bh);
@@ -115,7 +121,7 @@ window.frame=(t,amp,vis)=>{
       cx.restore(); cx.restore(); }
     if(JL.dpts){ for(const [lp,d,abv] of JL.dpts){ const [a,b]=proj(head.localToWorld(lp.clone())); cx.fillStyle=abv?`rgba(0,${Math.round(255*(1-d))},255,0.9)`:`rgba(255,${Math.round(255*(1-d))},0,0.9)`; cx.fillRect(a-1.5,b-1.5,3,3); }
       const [a,b]=proj(head.localToWorld(JL.up.clone())); cx.strokeStyle='#0f0'; cx.lineWidth=2; cx.strokeRect(a-6,b-6,12,12); } }
-  else if(head){ head.getWorldPosition(v); head.getWorldQuaternion(q);
+  else if(head&&cfg.lips!=='none'){ head.getWorldPosition(v); head.getWorldQuaternion(q);
     const m=new THREE.Vector3(...cfg.mouth).applyQuaternion(q).add(v); fwd.set(0,0,1).applyQuaternion(q);
     const facing=fwd.dot(cam.position.clone().sub(m).normalize()); const [sx,sy]=proj(m); const sc=cfg.mscale/cam.position.distanceTo(m);
     // mouth shape: Rhubarb viseme (A closed MBP, B slight, C open, D wide, E round, F pucker, G F/V teeth, H tongue, X rest) blended toward target
