@@ -1,0 +1,1462 @@
+[
+ {
+  "id": 1,
+  "title": "Bijli ka bill",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] अरे सुनो सुनो! बिजली का बिल आया है... पूरे दो सौ बारह रुपये!",
+    "cap": "Arre suno suno! Bijli ka bill... poore ₹212!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] हाय रे... मेरा बीपी बढ़ गया!",
+    "cap": "Haaye re... mera BP badh gaya!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "",
+    "hi": "[angry] किसने चलाया पंखा? गर्मी लगती है तो खिड़की खोलो... हवा फ्री है!",
+    "cap": "Kisne chalaya pankha? Khidki kholo... hawa FREE hai!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "wide",
+    "fx": "",
+    "hi": "[sarcastic] और ये एसी? ये सिर्फ़ मेहमानों के लिए है... जो कभी आते ही नहीं!",
+    "cap": "Aur yeh AC? Sirf mehmaanon ke liye... jo kabhi aate hi nahi!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "coins",
+    "hi": "[smug] मैं कंजूस नहीं हूँ बेटा, बस पैसा बचाता हूँ। फॉलो करो... वो भी फ्री है!",
+    "cap": "Main kanjoos nahi, bas paisa bachata hoon. Follow karo... FREE hai!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "bill",
+    "line": 0,
+    "desc": "bijli ka bill ₹212"
+   },
+   {
+    "img": "fan",
+    "line": 2,
+    "desc": "ceiling fan"
+   },
+   {
+    "img": "ac",
+    "line": 3,
+    "desc": "AC par taala"
+   }
+  ]
+ },
+ {
+  "id": 2,
+  "title": "Shaadi ka shagun",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] शर्मा जी के बेटे की शादी है! लिफ़ाफ़ा तैयार है।",
+    "cap": "Sharma ji ke bete ki shaadi! Lifaafa taiyaar hai."
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[whispers] अंदर एक सौ एक रुपये... और एक सिक्का भी मैंने ख़ुद चिपकाया है।",
+    "cap": "Andar ₹101... aur ek sikka bhi khud chipkaya hai."
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? खाना तीन सौ रुपये प्लेट का था?",
+    "cap": "Kya? Khaana ₹300 plate ka tha?"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "",
+    "hi": "[angry] फिर तो पूरे परिवार को ले जाऊँगा... हिसाब बराबर!",
+    "cap": "Phir toh poora parivaar le jaunga... hisaab barabar!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "coins",
+    "hi": "[smug] शगुन भी दिया, पेट भी भरा। फॉलो करो, टिप्स फ्री हैं!",
+    "cap": "Shagun bhi diya, pet bhi bhara. Follow karo, tips FREE!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "envelope",
+    "line": 0,
+    "desc": "shaadi ka lifaafa ₹101"
+   },
+   {
+    "img": "thali",
+    "line": 2,
+    "desc": "shaadi ki bhari thali"
+   }
+  ]
+ },
+ {
+  "id": 3,
+  "title": "Ek tea bag, teen chai",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] बेटा, आज मैं तुम्हें सिखाता हूँ असली बचत!",
+    "cap": "Beta, aaj sikhata hoon asli bachat!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] ये टी बैग... सुबह की चाय, दोपहर की चाय, और शाम की भी!",
+    "cap": "Yeh tea bag... subah, dopahar aur shaam ki chai!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] रंग नहीं आ रहा? तो इसे निचोड़ो! प्यार से नहीं, ज़ोर से!",
+    "cap": "Rang nahi aa raha? Nichodo! Pyaar se nahi, zor se!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] क्या? नया डिब्बा लाना पड़ेगा? पचास रुपये?",
+    "cap": "Kya? Naya dabba laana padega? ₹50?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] अगले महीने चाय बंद... गरम पानी ही पियो। फॉलो करो!",
+    "cap": "Agle mahine chai band... garam paani piyo. Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "teabag",
+    "line": 1,
+    "desc": "nichoda hua tea bag cup mein"
+   }
+  ]
+ },
+ {
+  "id": 4,
+  "title": "Toothpaste ka aakhri dum",
+  "lines": [
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "",
+    "hi": "[angry] किसने फेंका ये टूथपेस्ट? अभी तो इसमें दस दिन बाक़ी हैं!",
+    "cap": "Kisne phenka toothpaste? Abhi 10 din baaki hain!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] पहले बेलन से दबाओ... फिर कैंची से काटो!",
+    "cap": "Pehle belan se dabao... phir kainchi se kaato!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "",
+    "hi": "[whispers] देखो... अंदर पूरा ख़ज़ाना छुपा है।",
+    "cap": "Dekho... andar poora khazaana chhupa hai."
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] नया पेस्ट नब्बे रुपये का? दाँत ही निकलवा दो!",
+    "cap": "Naya paste ₹90 ka? Daant hi nikalwa do!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "coins",
+    "hi": "[smug] बचत भी, सफ़ेद दाँत भी। फॉलो करो, मुस्कान फ्री है!",
+    "cap": "Bachat bhi, safed daant bhi. Follow karo, muskaan FREE!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "toothpaste",
+    "line": 0,
+    "desc": "kata hua toothpaste tube"
+   }
+  ]
+ },
+ {
+  "id": 5,
+  "title": "Petrol bachao",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] पेट्रोल महँगा है? मेरे पास है जुगाड़!",
+    "cap": "Petrol mehenga? Mere paas hai jugaad!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "wide",
+    "fx": "",
+    "hi": "[smug] ढलान आते ही स्कूटर बंद... और नीचे तक मुफ़्त सवारी!",
+    "cap": "Dhalaan aate hi scooter band... muft sawaari!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "",
+    "hi": "[angry] चढ़ाई पर? धक्का लगाओ! सेहत भी बनेगी!",
+    "cap": "Chadhaai par? Dhakka lagao! Sehat bhi banegi!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] हाय... आज पंप वाले ने पूरे दस रुपये ज़्यादा ले लिए।",
+    "cap": "Haaye... pump wale ne ₹10 zyada le liye."
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "coins",
+    "hi": "[laughs] अब से साइकिल... और वो भी पड़ोसी की। फॉलो करो!",
+    "cap": "Ab se cycle... woh bhi padosi ki. Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "scooter",
+    "line": 1,
+    "desc": "dhalaan par scooter"
+   },
+   {
+    "img": "petrolpump",
+    "line": 3,
+    "desc": "petrol pump meter"
+   }
+  ]
+ },
+ {
+  "id": 6,
+  "title": "Restaurant ka bill",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] आज मैं सबको खाना खिलाऊँगा! ऑर्डर करो, जो चाहिए!",
+    "cap": "Aaj sabko khaana khilaunga! Order karo!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[whispers] बस... बिल आने से पहले मुझे वॉशरूम जाना है।",
+    "cap": "Bas... bill aane se pehle washroom jaana hai."
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? तुमने तीन मिठाइयाँ मँगा लीं?",
+    "cap": "Kya? Teen mithaiyaan mangwa li?"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "",
+    "hi": "[angry] बिल बाँट लो! जिसने जितना खाया, उतना भरे!",
+    "cap": "Bill baant lo! Jisne jitna khaaya, utna bhare!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "coins",
+    "hi": "[smug] मैंने तो सिर्फ़ पानी पिया था... फ्री वाला। फॉलो करो!",
+    "cap": "Maine toh sirf paani piya... FREE wala. Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "restbill",
+    "line": 3,
+    "desc": "restaurant ka lamba bill"
+   }
+  ]
+ },
+ {
+  "id": 7,
+  "title": "Birthday candle",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] पिंकी का बर्थडे है! केक आ गया!",
+    "cap": "Pinky ka birthday! Cake aa gaya!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "",
+    "hi": "[angry] रुको! मोमबत्ती मत फूँको... पिघल जाएगी!",
+    "cap": "Ruko! Candle mat phoonko... pighal jaayegi!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "med",
+    "fx": "",
+    "hi": "[smug] ये वही मोमबत्ती है जो मैंने दो हज़ार दस में ख़रीदी थी।",
+    "cap": "Yeh wahi candle hai jo 2010 mein khareedi thi."
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] और ये केक... तीन सौ का? आधा वापस कर आओ!",
+    "cap": "Aur yeh cake... ₹300 ka? Aadha wapas kar aao!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] हैप्पी बर्थडे टू यू... अगले साल भी यही मोमबत्ती! फॉलो करो!",
+    "cap": "Happy birthday... agle saal bhi yahi candle! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "candle",
+    "line": 2,
+    "desc": "purani pighli candle cake par"
+   }
+  ]
+ },
+ {
+  "id": 8,
+  "title": "Diwali ki lights",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] दिवाली आ गई! घर सजाना है!",
+    "cap": "Diwali aa gayi! Ghar sajaana hai!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] नई लाइट? क्यों? पिछले साल वाली है ना... तीन बल्ब जलते हैं।",
+    "cap": "Nayi light? Kyun? Pichhle saal wali hai... 3 bulb jalte hain!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] और रात दस बजे सब बंद! मीटर देख रहा है!",
+    "cap": "Raat 10 baje sab band! Meter dekh raha hai!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] पटाख़े? पाँच सौ रुपये के? मेरा दिल ही फट जाएगा!",
+    "cap": "Patakhe? ₹500 ke? Mera dil hi phat jaayega!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "coins",
+    "hi": "[laughs] मोबाइल में पटाख़ों की आवाज़ चला दो... प्रदूषण भी ज़ीरो! फॉलो करो!",
+    "cap": "Mobile mein patakhon ki awaaz chala do! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "lights",
+    "line": 1,
+    "desc": "aadhi jalti diwali lights"
+   }
+  ]
+ },
+ {
+  "id": 9,
+  "title": "Mehmaan aa gaye",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] अरे आइए आइए! बड़े दिनों बाद आए!",
+    "cap": "Arre aaiye aaiye! Bade dino baad aaye!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[whispers] बेटा... अच्छे वाले बिस्किट नहीं, सिर्फ़ मारी बिस्किट लाना।",
+    "cap": "Beta... achhe wale nahi, sirf saade biscuit laana."
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] और प्लेट में दो ही रखना! तीसरा दिखा तो डिब्बा ग़ायब!",
+    "cap": "Plate mein do hi rakhna! Teesra dikha toh dabba gayab!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? ये लोग खाना भी खाएँगे?",
+    "cap": "Kya? Yeh log khaana bhi khaayenge?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[smug] अरे हम तो बस निकल रहे थे... शादी में! फॉलो करो!",
+    "cap": "Arre hum toh bas nikal rahe the... shaadi mein! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "biscuit",
+    "line": 1,
+    "desc": "plate mein sirf 2 biscuit"
+   }
+  ]
+ },
+ {
+  "id": 10,
+  "title": "Mall ke free samples",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] आज लंच बाहर करेंगे! चलो मॉल!",
+    "cap": "Aaj lunch bahar! Chalo mall!"
+   },
+   {
+    "anim": "Walking",
+    "shot": "wide",
+    "fx": "",
+    "hi": "[smug] यहाँ पनीर का टुकड़ा, वहाँ जूस का गिलास...",
+    "cap": "Yahan paneer ka tukda, wahan juice ka glass..."
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[laughs] चार चक्कर लगाओ... पेट फ़ुल! पैसा ज़ीरो!",
+    "cap": "Chaar chakkar lagao... pet full! Paisa zero!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? सैंपल वाले ने मुझे पहचान लिया?",
+    "cap": "Kya? Sample wale ne pehchaan liya?"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[angry] कल मूँछ हटा के आऊँगा! फॉलो करो, आइडिया फ्री है!",
+    "cap": "Kal moonchh hata ke aaunga! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "samples",
+    "line": 1,
+    "desc": "toothpick par free samples"
+   }
+  ]
+ },
+ {
+  "id": 11,
+  "title": "Missed call system",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] बेटा, बात करनी हो तो फ़ोन मत करना!",
+    "cap": "Beta, baat karni ho toh phone mat karna!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] एक मिस्ड कॉल मतलब... मैं ठीक हूँ। दो मतलब... खाना बन गया।",
+    "cap": "Ek missed call... main theek hoon. Do... khaana ban gaya."
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] और तीन मिस्ड कॉल... मतलब बिल भरना है, तुम भरो!",
+    "cap": "Teen missed call... bill bharna hai, tum bharo!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] रिचार्ज ख़त्म? उन्नीस रुपये वाला डलवाओ... सिर्फ़ इनकमिंग!",
+    "cap": "Recharge khatam? ₹19 wala daalo... sirf incoming!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] मेरा नंबर सेव कर लो... पर कॉल मत करना! फॉलो करो!",
+    "cap": "Number save karo... par call mat karna! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "phone",
+    "line": 0,
+    "desc": "phone par missed calls"
+   }
+  ]
+ },
+ {
+  "id": 12,
+  "title": "Paani ki bachat",
+  "lines": [
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "",
+    "hi": "[angry] ये नल किसने खुला छोड़ा? पानी का भी बिल आता है!",
+    "cap": "Nal kisne khula chhoda? Paani ka bhi bill aata hai!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] मेरे घर का नियम... एक बाल्टी में नहाना!",
+    "cap": "Ghar ka niyam... ek baalti mein nahaana!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] और वही पानी... पौधों में! पौधे भी ख़ुश, मैं भी ख़ुश।",
+    "cap": "Wahi paani... paudhon mein! Paudhe bhi khush, main bhi."
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] वॉशिंग मशीन? उसमें तो पूरी नदी जाती है!",
+    "cap": "Washing machine? Usme toh poori nadi jaati hai!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "coins",
+    "hi": "[laughs] कपड़े पत्थर पे धोओ... जिम भी फ्री! फॉलो करो!",
+    "cap": "Kapde patthar pe dho... gym bhi FREE! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "bucket",
+    "line": 1,
+    "desc": "ek balti aur mug"
+   }
+  ]
+ },
+ {
+  "id": 13,
+  "title": "Gift wapas gift",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] गुप्ता जी का बर्थडे है! गिफ़्ट तैयार है।",
+    "cap": "Gupta ji ka birthday! Gift taiyaar hai."
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[whispers] ये वही गिफ़्ट है जो उन्होंने मुझे पिछले साल दिया था।",
+    "cap": "Yeh wahi gift hai jo unhone pichhle saal diya tha."
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] रैपर भी वही! फाड़ना मत, प्रेस करके रखा है!",
+    "cap": "Wrapper bhi wahi! Phaadna mat, press karke rakha hai!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? उन्होंने पहचान लिया?",
+    "cap": "Kya? Unhone pehchaan liya?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[smug] चलो... अगले साल किसी और को दे देंगे! फॉलो करो!",
+    "cap": "Chalo... agle saal kisi aur ko de denge! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "gift",
+    "line": 0,
+    "desc": "purana rangeen gift box"
+   }
+  ]
+ },
+ {
+  "id": 14,
+  "title": "Sabzi wale se dhaniya",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] सब्ज़ी लेने का असली हुनर सीखो!",
+    "cap": "Sabzi lene ka asli hunar seekho!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] पहले आधा घंटा मोल-भाव... फिर बोलो, भैया धनिया फ्री डालो!",
+    "cap": "Pehle aadha ghanta mol-bhaav... phir dhaniya FREE daalo!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] मिर्च भी डालो! और एक नींबू... ग्राहक भगवान है!",
+    "cap": "Mirch bhi daalo! Ek nimbu bhi... grahak bhagwaan hai!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? सब्ज़ी वाला अब मुझे देखकर दुकान बंद कर देता है?",
+    "cap": "Kya? Sabzi wala mujhe dekh kar dukaan band karta hai?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] कोई बात नहीं... दूसरी गली में नया आया है! फॉलो करो!",
+    "cap": "Koi baat nahi... doosri gali mein naya aaya hai! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "dhaniya",
+    "line": 1,
+    "desc": "thaili mein muft dhaniya mirch"
+   }
+  ]
+ },
+ {
+  "id": 15,
+  "title": "Online sale",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] मैंने एक जूता पसंद किया है ऑनलाइन!",
+    "cap": "Maine ek joota pasand kiya online!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] कार्ट में डाल दिया... छह महीने हो गए। सेल का इंतज़ार है।",
+    "cap": "Cart mein daala... 6 mahine ho gaye. Sale ka intezaar!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] दाम दस रुपये कम हुआ... फिर बीस बढ़ गया! धोखा!",
+    "cap": "Daam ₹10 kam hua... phir ₹20 badh gaya! Dhokha!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] और डिलीवरी चार्ज चालीस रुपये? जूता पैदल लेने जाऊँगा!",
+    "cap": "Delivery ₹40? Joota paidal lene jaunga!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] पुराने जूते पे टेप लगा लिया... नया जैसा! फॉलो करो!",
+    "cap": "Purane joote pe tape laga liya... naya jaisa! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "cart",
+    "line": 1,
+    "desc": "shopping cart icon with shoe"
+   }
+  ]
+ },
+ {
+  "id": 16,
+  "title": "Padosi ka WiFi",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] घर में वाई-फ़ाई लगवा लिया!",
+    "cap": "Ghar mein WiFi lagwa liya!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[whispers] पासवर्ड पड़ोसी का है... उनकी बेटी की शादी में गुलाब जामुन दिया था।",
+    "cap": "Password padosi ka hai... unki shaadi mein gulab jamun diya tha."
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] धीमा क्यों चल रहा है? पड़ोसी फ़िल्म देख रहा है क्या?",
+    "cap": "Slow kyun hai? Padosi film dekh raha hai kya?"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? उन्होंने पासवर्ड बदल दिया?",
+    "cap": "Kya? Unhone password badal diya?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[smug] कोई बात नहीं... कल फिर गुलाब जामुन ले जाऊँगा! फॉलो करो!",
+    "cap": "Koi baat nahi... kal phir gulab jamun! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "wifi",
+    "line": 0,
+    "desc": "WiFi signal icon"
+   }
+  ]
+ },
+ {
+  "id": 17,
+  "title": "Barber ka kharcha",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] लोग पूछते हैं, अंकल आप गंजे क्यों हैं?",
+    "cap": "Log poochhte hain, uncle aap ganje kyun hain?"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] क्योंकि बाल कटवाने के सौ रुपये लगते हैं!",
+    "cap": "Kyunki baal katwaane ke ₹100 lagte hain!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] ना कंघी, ना तेल, ना शैम्पू... सीधी बचत!",
+    "cap": "Na kanghi, na tel, na shampoo... seedhi bachat!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] पर ये बग़ल वाले बाल... इनको भी तेल चाहिए?",
+    "cap": "Par yeh side wale baal... inko bhi tel chahiye?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] चमकता सिर... रात में टॉर्च का काम भी करता है! फॉलो करो!",
+    "cap": "Chamakta sir... raat mein torch ka kaam! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "comb",
+    "line": 2,
+    "desc": "kanghi tel aur shampoo par cross"
+   }
+  ]
+ },
+ {
+  "id": 18,
+  "title": "Gym ki fees",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] बेटे ने बोला, पापा जिम जॉइन करो!",
+    "cap": "Bete ne bola, papa gym join karo!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] दो हज़ार रुपये महीना? पसीना बहाने के पैसे?",
+    "cap": "₹2000 mahina? Paseena bahaane ke paise?"
+   },
+   {
+    "anim": "Walking",
+    "shot": "wide",
+    "fx": "",
+    "hi": "[smug] मैं तो सब्ज़ी मंडी पैदल जाता हूँ... रोज़ पाँच किलोमीटर!",
+    "cap": "Main sabzi mandi paidal jaata hoon... roz 5 km!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[excited] वापसी में झोला उठाओ... वेट लिफ़्टिंग भी हो गई!",
+    "cap": "Wapsi mein jhola uthao... weight lifting bhi!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "coins",
+    "hi": "[laughs] फिटनेस भी, बचत भी! फॉलो करो, ट्रेनिंग फ्री है!",
+    "cap": "Fitness bhi, bachat bhi! Follow karo, training FREE!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "gym",
+    "line": 1,
+    "desc": "gym fees card ₹2000"
+   }
+  ]
+ },
+ {
+  "id": 19,
+  "title": "Thaili ka paisa",
+  "lines": [
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "",
+    "hi": "[angry] पाँच रुपये की थैली? दुकान है या लूट?",
+    "cap": "₹5 ki thaili? Dukaan hai ya loot?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] मेरे पास है जादुई थैला!",
+    "cap": "Mere paas hai jaadui thaila!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] ये थैला दो हज़ार पंद्रह से मेरे साथ है... तीन बार सिलवाया है।",
+    "cap": "Yeh thaila 2015 se saath hai... teen baar silwaya hai."
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] पर आज भूल गया... अब सामान हाथ में ले जाऊँगा।",
+    "cap": "Par aaj bhool gaya... ab haath mein le jaunga."
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "coins",
+    "hi": "[laughs] अंडे गिर गए... पर पाँच रुपये बच गए! फॉलो करो!",
+    "cap": "Ande gir gaye... par ₹5 bach gaye! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "bag",
+    "line": 2,
+    "desc": "purana silaai wala thaila"
+   }
+  ]
+ },
+ {
+  "id": 20,
+  "title": "Bank ka pen",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] बैंक जाना है... सबसे ज़रूरी काम!",
+    "cap": "Bank jaana hai... sabse zaroori kaam!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[whispers] पैसे निकालने नहीं... पेन लेने!",
+    "cap": "Paise nikaalne nahi... pen lene!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] धागे से बाँध के रखा है? कैंची लाया हूँ!",
+    "cap": "Dhaage se baandh ke rakha? Kainchi laaya hoon!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? गार्ड मुझे घूर रहा है?",
+    "cap": "Kya? Guard mujhe ghoor raha hai?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[smug] घर में पचास पेन हैं... एक भी ख़रीदा नहीं! फॉलो करो!",
+    "cap": "Ghar mein 50 pen... ek bhi khareeda nahi! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "pen",
+    "line": 0,
+    "desc": "dhaage se bandha pen"
+   }
+  ]
+ },
+ {
+  "id": 21,
+  "title": "Ketchup ke packet",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] मेरी अलमारी देखो... ख़ज़ाना!",
+    "cap": "Meri almaari dekho... khazaana!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] सौ केचप के पैकेट! हर पिज़्ज़ा वाले से दस-दस माँगे थे।",
+    "cap": "Sau ketchup packet! Har pizza wale se das-das maange!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] बाज़ार की बोतल? एक सौ बीस रुपये? कभी नहीं!",
+    "cap": "Bazaar ki bottle? ₹120? Kabhi nahi!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] पर ये वाले... दो हज़ार उन्नीस में एक्सपायर हो गए?",
+    "cap": "Par yeh wale... 2019 mein expire ho gaye?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] कोई बात नहीं... रंग तो अभी भी लाल है! फॉलो करो!",
+    "cap": "Koi baat nahi... rang toh abhi bhi laal hai! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "ketchup",
+    "line": 1,
+    "desc": "dher saare ketchup sachets"
+   }
+  ]
+ },
+ {
+  "id": 22,
+  "title": "Pocket money par byaaj",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] बच्चों को पॉकेट मनी देता हूँ... दस रुपये!",
+    "cap": "Bachchon ko pocket money deta hoon... ₹10!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] पर लोन की तरह... महीने के आख़िर में ग्यारह वापस!",
+    "cap": "Par loan ki tarah... mahine ke aakhir mein ₹11 wapas!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] एक रुपया ब्याज! बैंक भी इतना नहीं सिखाता!",
+    "cap": "Ek rupaya byaaj! Bank bhi itna nahi sikhaata!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? बच्चों ने मम्मी से शिकायत कर दी?",
+    "cap": "Kya? Bachchon ne mummy se shikaayat kar di?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] ठीक है... ब्याज माफ़! पर मूल वापस! फॉलो करो!",
+    "cap": "Theek hai... byaaj maaf! Par mool wapas! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "piggy",
+    "line": 1,
+    "desc": "gullak aur sikke"
+   }
+  ]
+ },
+ {
+  "id": 23,
+  "title": "Padosi ka akhbaar",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] सुबह की ताज़ा ख़बर... पढ़ना ज़रूरी है!",
+    "cap": "Subah ki taaza khabar... padhna zaroori hai!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[whispers] पड़ोसी के गेट से उठाओ... पढ़ो... और तह करके वापस!",
+    "cap": "Padosi ke gate se uthao... padho... tah karke wapas!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] आज उसने अख़बार अंदर रख लिया? कितना कंजूस है!",
+    "cap": "Aaj usne akhbaar andar rakh liya? Kitna kanjoos hai!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] अब ख़बर कहाँ से पढ़ूँ? टीवी तो बिजली खाता है!",
+    "cap": "Ab khabar kahan se padhoon? TV toh bijli khaata hai!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] चाय वाले के पास बैठ जाऊँगा... चाय उधार! फॉलो करो!",
+    "cap": "Chai wale ke paas baith jaunga... chai udhaar! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "newspaper",
+    "line": 1,
+    "desc": "tah kiya hua akhbaar"
+   }
+  ]
+ },
+ {
+  "id": 24,
+  "title": "Remote ki battery",
+  "lines": [
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "",
+    "hi": "[angry] रिमोट नहीं चल रहा? बैटरी मत बदलो!",
+    "cap": "Remote nahi chal raha? Battery mat badlo!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] पहले बैटरी को ज़ोर से घुमाओ!",
+    "cap": "Pehle battery ko zor se ghumao!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] फिर दाँत से दबाओ... फिर धूप में रखो... चालू!",
+    "cap": "Phir daant se dabao... phir dhoop mein rakho... chaalu!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] नई बैटरी बीस रुपये की? दस साल पुरानी भी चलती है!",
+    "cap": "Nayi battery ₹20 ki? 10 saal purani bhi chalti hai!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "coins",
+    "hi": "[laughs] वैसे भी चैनल बदलने उठ जाता हूँ... कसरत! फॉलो करो!",
+    "cap": "Waise bhi channel badalne uth jaata hoon! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "remote",
+    "line": 0,
+    "desc": "purana TV remote"
+   }
+  ]
+ },
+ {
+  "id": 25,
+  "title": "Garmi ka ilaaj",
+  "lines": [
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] उफ़्फ़... इतनी गर्मी!",
+    "cap": "Uff... itni garmi!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] पर एसी नहीं चलेगा! मेरे पास है देसी तरीक़ा!",
+    "cap": "Par AC nahi chalega! Desi tareeka hai!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] फ्रिज खोलो... और दो मिनट सामने खड़े हो जाओ!",
+    "cap": "Fridge kholo... aur 2 minute saamne khade raho!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] पर ज़्यादा नहीं! फ्रिज भी बिजली खाता है!",
+    "cap": "Par zyada nahi! Fridge bhi bijli khaata hai!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] फिर गीला तौलिया सिर पर... एसी फ्री! फॉलो करो!",
+    "cap": "Phir geela towel sir par... AC FREE! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "fridge",
+    "line": 2,
+    "desc": "khula fridge thandi hawa"
+   }
+  ]
+ },
+ {
+  "id": 26,
+  "title": "Hotel ka saaman",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] छुट्टी पे होटल गए थे... शानदार ट्रिप!",
+    "cap": "Chhutti pe hotel gaye the... shaandaar trip!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] साबुन, शैम्पू, कंघी, चाय के पैकेट... सब बैग में!",
+    "cap": "Saabun, shampoo, kanghi, chai ke packet... sab bag mein!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] तौलिया? नहीं नहीं... वो चोरी होती है, मैं ईमानदार हूँ!",
+    "cap": "Towel? Nahi nahi... woh chori hai, main imaandaar hoon!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? मिनी बार का पानी एक सौ रुपये का था?",
+    "cap": "Kya? Mini bar ka paani ₹100 ka tha?"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] अगली बार पानी घर से लाऊँगा! फॉलो करो!",
+    "cap": "Agli baar paani ghar se laaunga! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "toiletries",
+    "line": 1,
+    "desc": "hotel ke chhote shampoo saabun"
+   }
+  ]
+ },
+ {
+  "id": 27,
+  "title": "Shaadi ka khaana",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] आज शादी में जाना है... तीन दिन का खाना!",
+    "cap": "Aaj shaadi mein jaana hai... teen din ka khaana!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] नाश्ता नहीं किया... दोपहर का लंच भी छोड़ा... पेट तैयार है!",
+    "cap": "Naashta nahi... lunch bhi chhoda... pet taiyaar!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] पहले मिठाई, फिर पनीर, फिर मिठाई... लाइन मत तोड़ो!",
+    "cap": "Pehle mithaai, phir paneer, phir mithaai... line mat todo!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[sighs] हाय... अब हिला भी नहीं जाता।",
+    "cap": "Haaye... ab hila bhi nahi jaata."
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] कल के लिए डब्बा भी पैक करवा लिया! फॉलो करो!",
+    "cap": "Kal ke liye dabba bhi pack karwa liya! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "buffet",
+    "line": 2,
+    "desc": "shaadi ka buffet"
+   }
+  ]
+ },
+ {
+  "id": 28,
+  "title": "Movie ka ticket",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] नई फ़िल्म आई है! सब देख रहे हैं!",
+    "cap": "Nayi film aayi hai! Sab dekh rahe hain!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] टिकट तीन सौ रुपये? और पॉपकॉर्न चार सौ?",
+    "cap": "Ticket ₹300? Aur popcorn ₹400?"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] मैंने ट्रेलर देख लिया... पूरी कहानी समझ आ गई!",
+    "cap": "Maine trailer dekh liya... poori kahaani samajh aa gayi!"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] और बाक़ी रिव्यू वालों से सुन लूँगा... फ्री में!",
+    "cap": "Baaki review walon se sun loonga... FREE mein!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] एक साल बाद टीवी पे आएगी... तब देखेंगे! फॉलो करो!",
+    "cap": "Ek saal baad TV pe aayegi... tab dekhenge! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "ticket",
+    "line": 1,
+    "desc": "movie ticket aur popcorn"
+   }
+  ]
+ },
+ {
+  "id": 29,
+  "title": "Auto ka kiraya",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] स्टेशन जाना है! ऑटो वाले भैया!",
+    "cap": "Station jaana hai! Auto wale bhaiya!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? अस्सी रुपये? मैं तुम्हारा ऑटो ख़रीदने आया हूँ क्या?",
+    "cap": "Kya? ₹80? Auto khareedne aaya hoon kya?"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "close",
+    "fx": "",
+    "hi": "[angry] बीस में चलो! नहीं तो मैं पैदल ही पहुँच जाऊँगा!",
+    "cap": "₹20 mein chalo! Nahi toh paidal pahunch jaunga!"
+   },
+   {
+    "anim": "Running",
+    "shot": "wide",
+    "fx": "",
+    "hi": "[excited] रुको रुको! ट्रेन छूट रही है!",
+    "cap": "Ruko ruko! Train chhoot rahi hai!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] ट्रेन छूट गई... पर अस्सी रुपये बच गए! फॉलो करो!",
+    "cap": "Train chhoot gayi... par ₹80 bach gaye! Follow karo!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "auto",
+    "line": 0,
+    "desc": "auto rickshaw meter"
+   }
+  ]
+ },
+ {
+  "id": 30,
+  "title": "Naye saal ka resolution",
+  "lines": [
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "med",
+    "fx": "",
+    "hi": "[excited] नया साल! नया रेज़ोल्यूशन!",
+    "cap": "Naya saal! Naya resolution!"
+   },
+   {
+    "anim": "Talk_Passionately",
+    "shot": "close",
+    "fx": "",
+    "hi": "[smug] इस साल... कोई ख़र्चा नहीं! ज़ीरो! शून्य!",
+    "cap": "Is saal... koi kharcha nahi! Zero! Shoonya!"
+   },
+   {
+    "anim": "Headache_Relief",
+    "shot": "med",
+    "fx": "bp",
+    "hi": "[shocked] क्या? नया कैलेंडर ख़रीदना पड़ेगा?",
+    "cap": "Kya? Naya calendar khareedna padega?"
+   },
+   {
+    "anim": "Stand_Talking_Angry",
+    "shot": "med",
+    "fx": "",
+    "hi": "[angry] नहीं! पुराना वाला ही लगाओ... बस साल पेन से बदल दो!",
+    "cap": "Nahi! Purana hi lagao... bas saal pen se badal do!"
+   },
+   {
+    "anim": "Talk_with_Hands_Open",
+    "shot": "close",
+    "fx": "coins",
+    "hi": "[laughs] हैप्पी न्यू ईयर... बचत वाला! फॉलो करो, ये भी फ्री है!",
+    "cap": "Happy New Year... bachat wala! Follow karo, yeh bhi FREE!"
+   }
+  ],
+  "cards": [
+   {
+    "img": "calendar",
+    "line": 3,
+    "desc": "purana calendar pen se badla saal"
+   }
+  ]
+ }
+]
