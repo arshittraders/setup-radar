@@ -5,8 +5,9 @@ on:
     inputs:
       glb: { description: "locker file name contains", default: "Uncle_Moti" }
       voice: { description: "locker file name contains", default: "Danish_Khan" }
+      voice_url: { description: "optional direct mp3 link (e.g. ElevenLabs result) instead of the Locker voice", default: "" }
       bg: { description: "repo path of bg png", default: "kanjoos/bg/ku-room1.png" }
-      segs: { description: "json [[start,end],...]", default: "[[0,5.02],[5.68,8.36],[8.95,13.18],[13.68,17.84],[18.36,23.8]]" }
+      segs: { description: "json [[start,end],...] or auto (5 lines from silences)", default: "[[0,5.02],[5.68,8.36],[8.95,13.18],[13.68,17.84],[18.36,23.8]]" }
       tag: { description: "output name", default: "ku-fast" }
       script: { description: "kanjoos/<file> with lines (anim, shot, fx, cap, ins, sfx)", default: "script.json" }
       title: { description: "title + end card name", default: "KANJOOS UNCLE" }
@@ -29,11 +30,14 @@ jobs:
           curl -sSfL -o /tmp/rh.zip https://github.com/DanielSWolf/rhubarb-lip-sync/releases/download/v1.13.0/Rhubarb-Lip-Sync-1.13.0-Linux.zip && unzip -oq /tmp/rh.zip -d /tmp/rh && mv /tmp/rh/Rhubarb-Lip-Sync-1.13.0-Linux kanjoos/rhubarb
           cd kanjoos && npm i --no-save three@0.170.0 playwright@1.48.2 >/dev/null && npx playwright install chromium >/dev/null; wait; ffprobe -version | head -1
       - name: Assets
+        env: { VOICE_URL: '${{ inputs.voice_url }}' }
         run: |
           T=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=studio-worker" | jq -r .value)
           R=$(curl -sS -X POST https://ceoehwleopykotddcxxk.supabase.co/functions/v1/studio -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d "{\"action\":\"w_asset\",\"pats\":[\"${{ inputs.glb }}\",\"${{ inputs.voice }}\"]}")
-          cd kanjoos && curl -sSfL -o ku.glb "$(echo "$R" | jq -r '.urls["${{ inputs.glb }}"]')" && curl -sSfL -o voice.mp3 "$(echo "$R" | jq -r '.urls["${{ inputs.voice }}"]')"
+          cd kanjoos && curl -sSfL -o ku.glb "$(echo "$R" | jq -r '.urls["${{ inputs.glb }}"]')"
+          if [ -n "$VOICE_URL" ]; then curl -sSfL -o voice.mp3 "$VOICE_URL"; else curl -sSfL -o voice.mp3 "$(echo "$R" | jq -r '.urls["${{ inputs.voice }}"]')"; fi
           cp "../${{ inputs.bg }}" bg.png; echo '${{ inputs.segs }}' > segs.json; ls -la ku.glb voice.mp3
+          if [ "${{ inputs.segs }}" = "auto" ]; then python3 segs.py voice.mp3 5; fi
       - name: Render chunk
         run: |
           cd kanjoos && (node serve.js &) && sleep 1
