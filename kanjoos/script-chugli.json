@@ -1,0 +1,44 @@
+[
+ {
+  "anim": "Talk_Passionately",
+  "hi": "[whispers] अरे सुनो सुनो! किसी को बताना मत... पर मुझे सब पता है!",
+  "text": "Arre suno suno! Kisi ko batana mat... par mujhe sab pata hai!",
+  "cap": "Arre suno! Kisi ko batana mat... mujhe SAB pata hai!",
+  "shot": "close",
+  "sfx": [{ "at": 0.0, "cat": "whoosh", "n": 1 }, { "at": 0.7, "cat": "pop" }]
+ },
+ {
+  "anim": "Talk_with_Hands_Open",
+  "hi": "[excited] तीसरी मंज़िल वाले शर्मा जी के घर... आज दो दो पिज़्ज़ा आए!",
+  "text": "Teesri manzil wale Sharma ji ke ghar... aaj do do pizza aaye!",
+  "cap": "Sharma ji ke ghar... aaj DO-DO pizza aaye!",
+  "shot": "med",
+  "sfx": [{ "at": 0.55, "cat": "ding", "n": 1 }]
+ },
+ {
+  "anim": "Stand_Talking_Angry",
+  "hi": "[angry] और हमें? एक टुकड़ा भी नहीं पूछा! बताओ ज़रा!",
+  "text": "Aur humein? Ek tukda bhi nahi poocha! Batao zara!",
+  "cap": "Aur humein? Ek TUKDA bhi nahi poocha!",
+  "shot": "close",
+  "fx": "bp",
+  "sfx": [{ "at": 0.0, "cat": "impact", "g": 0.45 }]
+ },
+ {
+  "anim": "Headache_Relief",
+  "hi": "[sighs] हाय राम... अब पूरी सोसाइटी को फ़ोन करना पड़ेगा... एक एक करके!",
+  "text": "Haaye Ram... ab poori society ko phone karna padega... ek ek karke!",
+  "cap": "Haaye Ram... ab poori society ko phone karna padega!",
+  "shot": "wide",
+  "sfx": [{ "at": 0.5, "cat": "whoosh", "n": 2 }]
+ },
+ {
+  "anim": "Talk_with_Hands_Open",
+  "hi": "[sarcastic] मैं चुगली नहीं करती बेटा, बस न्यूज़ देती हूँ! फ़ॉलो करो... अगली खबर पक्की!",
+  "text": "Main chugli nahi karti beta, bas news deti hoon! Follow karo... agli khabar pakki!",
+  "cap": "Main chugli nahi karti, bas NEWS deti hoon! Follow karo!",
+  "shot": "med",
+  "cta": 0.62,
+  "sfx": [{ "at": 0.62, "cat": "ding", "n": 1 }]
+ }
+]
