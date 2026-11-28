@@ -12,7 +12,7 @@ permissions: { contents: write, id-token: write }
 jobs:
   r:
     runs-on: ubuntu-latest
-    strategy: { matrix: { i: [0,1,2,3,4,5,6,7,8,9,10,11] } }
+    strategy: { fail-fast: false, matrix: { i: [0,1,2,3,4,5,6,7,8,9,10,11] } }
     steps:
       - uses: actions/checkout@v4
         with: { sparse-checkout: kanjoos }
@@ -22,7 +22,8 @@ jobs:
         with: { path: ~/.cache/ms-playwright, key: pw-1.48.2-shell }
       - name: Install
         run: |
-          cd kanjoos && npm i --no-save three@0.170.0 playwright@1.48.2 >/dev/null && npx playwright install chromium >/dev/null
+          (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null) &
+          cd kanjoos && npm i --no-save three@0.170.0 playwright@1.48.2 >/dev/null && npx playwright install chromium >/dev/null; wait; ffprobe -version | head -1
       - name: Assets
         run: |
           T=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=studio-worker" | jq -r .value)
@@ -49,7 +50,7 @@ jobs:
       - name: Join + audio
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          sudo apt-get install -y -qq ffmpeg >/dev/null 2>&1 || true
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
           T=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=studio-worker" | jq -r .value)
           R=$(curl -sS -X POST https://ceoehwleopykotddcxxk.supabase.co/functions/v1/studio -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d "{\"action\":\"w_asset\",\"pats\":[\"${{ inputs.voice }}\"]}")
           cd kanjoos && curl -sSfL -o voice.mp3 "$(echo "$R" | jq -r '.urls["${{ inputs.voice }}"]')" && echo '${{ inputs.segs }}' > segs.json
