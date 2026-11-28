@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       glb: { description: "locker file name contains", default: "Uncle_Moti" }
+      glb2: { description: "optional 2nd glb (more motions), locker name contains", default: "" }
       voice: { description: "locker file name contains", default: "Danish_Khan" }
       voice_url: { description: "optional direct mp3 link (e.g. ElevenLabs result) instead of the Locker voice", default: "" }
       bg: { description: "repo path of bg png", default: "kanjoos/bg/ku-room1.png" }
@@ -35,8 +36,9 @@ jobs:
         env: { VOICE_URL: '${{ inputs.voice_url }}' }
         run: |
           T=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=studio-worker" | jq -r .value)
-          R=$(curl -sS -X POST https://ceoehwleopykotddcxxk.supabase.co/functions/v1/studio -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d "{\"action\":\"w_asset\",\"pats\":[\"${{ inputs.glb }}\",\"${{ inputs.voice }}\"]}")
+          R=$(curl -sS -X POST https://ceoehwleopykotddcxxk.supabase.co/functions/v1/studio -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d "{\"action\":\"w_asset\",\"pats\":[\"${{ inputs.glb }}\",\"${{ inputs.voice }}\"${{ inputs.glb2 != '' && format(',\"{0}\"', inputs.glb2) || '' }}]}")
           cd kanjoos && curl -sSfL -o ku.glb "$(echo "$R" | jq -r '.urls["${{ inputs.glb }}"]')"
+          if [ -n "${{ inputs.glb2 }}" ]; then curl -sSfL -o ku2.glb "$(echo "$R" | jq -r '.urls["${{ inputs.glb2 }}"]')"; fi
           if [ -n "$VOICE_URL" ]; then curl -sSfL -o voice.mp3 "$VOICE_URL"; else curl -sSfL -o voice.mp3 "$(echo "$R" | jq -r '.urls["${{ inputs.voice }}"]')"; fi
           cp "../${{ inputs.bg }}" bg.png; echo '${{ inputs.segs }}' > segs.json; ls -la ku.glb voice.mp3
           if [ "${{ inputs.segs }}" = "auto" ]; then python3 segs.py voice.mp3 5 "${{ inputs.script }}"; fi

@@ -25,6 +25,7 @@ window.setup=async(c)=>{ cfg=c; bg=await loadImg(c.bg);
   model.traverse(o=>{ if(o.isMesh){o.castShadow=true; o.frustumCulled=false;} const n=o.name.replace(':',''); if(n==='mixamorigHead')head=o; if(n==='mixamorigHips')hips=o; });
   const box=new THREE.Box3().setFromObject(model); model.position.y-=box.min.y;
   mixer=new THREE.AnimationMixer(model); for(const a of g.animations) acts[a.name]=a;
+  if(c.glb2){ try{ const g2=await new GLTFLoader().loadAsync(c.glb2); for(const a of g2.animations) if(!acts[a.name]) acts[a.name]=a; }catch(e){} }   // 2nd Meshy file = more motions (Meshy gives 20 per file)
   for(const n in acts){ const a=mixer.clipAction(acts[n]); a.play(); a.setEffectiveWeight(1); a.time=acts[n].duration*0.3; mixer.update(0); model.updateMatrixWorld(true);
     const qq=new THREE.Quaternion(); hips.getWorldQuaternion(qq); const f=new THREE.Vector3(0,0,1).applyQuaternion(qq); a.stop(); yawOff[n]=Math.atan2(f.x,f.z); }
   mixer.stopAllAction(); T=c.timeline; let jawInfo=null; if(c.lips==='3d'&&head) jawInfo=buildJaw(); return {anims:Object.keys(acts), jaw:jawInfo};
