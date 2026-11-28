@@ -51,10 +51,11 @@ function buildJaw(){
       for(let i=0;i<uv.count;i++){ me.getVertexPosition(i,tv0); tv0.applyMatrix4(me.matrixWorld); const p=W2H(tv0);
         if(Math.abs(p.x)>0.06*S||Math.abs(p.y-m.y)>0.1*S) continue; const [r,gg,b]=pix(mat.map,uv.getX(i),uv.getY(i)); p.lip=r>90&&r>gg*1.42&&r>b*1.3; pts.push(p); } }
     const zf=Math.max(...pts.map(p=>p.z)); let lips=pts.filter(p=>p.lip&&p.z>zf-0.06*S);
+    if(cfg.lipY!=null){ m.y=cfg.lipY; const nz=pts.filter(p=>Math.abs(p.x)<0.012*S&&Math.abs(p.y-m.y)<0.008*S); m.z=(nz.length?Math.max(...nz.map(p=>p.z)):m.z)-0.003*S; JL.wid=(cfg.lipW||0.035)*S; JL.seam=['manual',+m.y.toFixed(4),+m.z.toFixed(4)]; lips=[]; }
     { const ys=lips.map(p=>p.y).sort((a,b)=>a-b), cl=[]; let cur=[];   // keep the biggest y-cluster (drops nostrils / cheeks)
       for(const y of ys){ if(cur.length&&y-cur[cur.length-1]>0.007*S){ cl.push(cur); cur=[]; } cur.push(y); } if(cur.length) cl.push(cur);
       const big=cl.sort((a,b)=>b.length-a.length)[0]; if(big){ const a=big[0], b=big[big.length-1]; lips=lips.filter(p=>p.y>=a&&p.y<=b); } }
-    if(lips.length>=6){ const cxl=lips.filter(p=>Math.abs(p.x)<0.012*S), L=(cxl.length>=3?cxl:lips).map(p=>p.y).sort((a,b)=>a-b);
+    if(cfg.lipY!=null){} else if(lips.length>=6){ const cxl=lips.filter(p=>Math.abs(p.x)<0.012*S), L=(cxl.length>=3?cxl:lips).map(p=>p.y).sort((a,b)=>a-b);
       const lo=L[Math.floor(L.length*0.05)], hi=L[Math.ceil(L.length*0.95)-1]; let seamY=lo+(hi-lo)*0.45, g=0;   // biggest gap inside the band = the seam if any
       for(let k=1;k<L.length;k++) if(L[k]-L[k-1]>g&&L[k-1]>lo+(hi-lo)*0.15&&L[k]<hi-(hi-lo)*0.15){ g=L[k]-L[k-1]; seamY=(L[k]+L[k-1])/2; }
       const xs=lips.filter(p=>Math.abs(p.y-seamY)<0.015*S).map(p=>p.x).sort((a,b)=>a-b); JL.wid=xs.length>3?(xs[Math.ceil(xs.length*0.97)-1]-xs[Math.floor(xs.length*0.03)])/2:0.028*S;
