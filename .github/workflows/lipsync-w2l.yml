@@ -1,0 +1,46 @@
+name: Lipsync Wav2Lip (free, CPU)
+# Free open-source lip-sync on a GitHub runner. video_url + voice_url (voice-only mp3) → release studio-debug/<tag>.mp4
+on:
+  workflow_dispatch:
+    inputs:
+      video_url: { description: "rendered reel mp4 (no AI lipsync)" }
+      voice_url: { description: "voice-only mp3" }
+      lead: { description: "seconds of video before the voice starts", default: "0.3" }
+      tag: { default: "w2l" }
+      resize: { description: "face-detect resize factor", default: "2" }
+permissions: { contents: write }
+jobs:
+  w2l:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.10' }
+      - name: Setup
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          git clone -q --depth 1 https://github.com/Rudrabha/Wav2Lip.git w2l
+          cd w2l
+          pip -q install torch==2.2.2 torchvision==0.17.2 --index-url https://download.pytorch.org/whl/cpu
+          pip -q install "numpy<2" opencv-python-headless==4.9.0.80 librosa==0.10.1 scipy tqdm numba
+          sed -i 's/librosa.filters.mel(hp.sample_rate, hp.n_fft, n_mels=hp.num_mels,/librosa.filters.mel(sr=hp.sample_rate, n_fft=hp.n_fft, n_mels=hp.num_mels,/' audio.py
+          sed -i 's/np.int)/int)/; s/dtype=np.int\b/dtype=int/' face_detection/detection/sfd/sfd_detector.py face_detection/detection/sfd/bbox.py 2>/dev/null || true
+          mkdir -p checkpoints
+          for u in https://huggingface.co/camenduru/Wav2Lip/resolve/main/checkpoints/wav2lip_gan.pth https://huggingface.co/Nekochu/Wav2Lip/resolve/main/wav2lip_gan.pth; do curl -sSfL -o checkpoints/wav2lip_gan.pth "$u" && break; done
+          for u in https://huggingface.co/camenduru/Wav2Lip/resolve/main/face_detection/detection/sfd/s3fd.pth https://www.adrianbulat.com/downloads/python-fan/s3fd-619a316812.pth; do curl -sSfL -o face_detection/detection/sfd/s3fd.pth "$u" && break; done
+          ls -la checkpoints face_detection/detection/sfd/s3fd.pth
+      - name: Inputs
+        run: |
+          curl -sSfL -o in.mp4 "${{ inputs.video_url }}"
+          curl -sSfL -o v.mp3 "${{ inputs.voice_url }}"
+          L=$(python3 -c "print(int(float('${{ inputs.lead }}')*1000))")
+          ffmpeg -loglevel error -y -i v.mp3 -af "adelay=$L|$L,apad" -t $(ffprobe -v error -show_entries format=duration -of csv=p=0 in.mp4) -ar 16000 -ac 1 voice.wav
+          ffmpeg -loglevel error -y -i in.mp4 -an -r 25 -c:v libx264 -crf 16 vid.mp4
+      - name: Wav2Lip
+        run: |
+          cd w2l && time python inference.py --checkpoint_path checkpoints/wav2lip_gan.pth --face ../vid.mp4 --audio ../voice.wav --outfile ../ls.mp4 --resize_factor ${{ inputs.resize }} --pads 0 15 0 0 --face_det_batch_size 4 --wav2lip_batch_size 64 --nosmooth
+      - name: Mux + upload
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          ffmpeg -loglevel error -y -i ls.mp4 -i in.mp4 -map 0:v -map 1:a -c:v libx264 -crf 19 -pix_fmt yuv420p -r 30 -c:a aac -b:a 160k -shortest -movflags +faststart ${{ inputs.tag }}.mp4
+          gh release upload studio-debug ${{ inputs.tag }}.mp4 --clobber -R ${{ github.repository }}
