@@ -63,7 +63,7 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   let seed = 1; const rn = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
   // soft ambient pad (two detuned sines, very quiet)
   const MUSIC = FMT !== 'hypno' && process.env.MUSIC !== '0';
-  if (MUSIC) music(a, N, process.env.BRAND || '', SEED); else for (let i = 0; i < N; i++) { const t = i / SR; a[i] += 0.025 * Math.sin(2 * Math.PI * 110 * t) * (0.6 + 0.4 * Math.sin(t * 0.5)) + 0.02 * Math.sin(2 * Math.PI * 164.8 * t); }
+  if (MUSIC) music(a, N, process.env.BRAND || '', SEED); else if (process.env.DRONE !== '0') for (let i = 0; i < N; i++) { const t = i / SR; a[i] += 0.025 * Math.sin(2 * Math.PI * 110 * t) * (0.6 + 0.4 * Math.sin(t * 0.5)) + 0.02 * Math.sin(2 * Math.PI * 164.8 * t); }
   let lastTick = -1;
   for (const e of events) {
     const t = e.f / FPS;
@@ -112,7 +112,7 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   enc.stdin.end(); await new Promise((r) => enc.on('close', r)); await br.close();
   let dur = (f + 1) / FPS; const wav = OUT.replace(/\.mp4$/, '.wav'); fs.writeFileSync(wav, synth(events, dur));
   // OVERFLOW hook: open with a 2 s glimpse of the packed arena (looks like the maximum)… then cut back to 1 ball. The real ending goes way beyond it.
-  if (FMT === 'overflow' && HOOK_F !== null) {
+  if (FMT === 'overflow' && HOOK_F !== null && process.env.HOOK !== '0') {
     const tp = Math.max(0, HOOK_F / FPS + 0.4).toFixed(2), te = (Number(tp) + 2).toFixed(2), tmp = OUT.replace(/\.mp4$/, '.h.mp4'), tw = OUT.replace(/\.mp4$/, '.h.wav');
     execFileSync('ffmpeg', ['-y', '-v', 'error', '-ss', tp, '-t', '2', '-i', vid, '-i', vid, '-ss', tp, '-t', '2', '-i', wav, '-i', wav, '-filter_complex',   // separate inputs → no huge frame buffering
       `[0:v]setpts=PTS-STARTPTS,fade=t=out:st=1.8:d=0.2:color=white[hv];[1:v]fade=t=in:st=0:d=0.25:color=white[mv];[hv][mv]concat=n=2:v=1:a=0[v];` +
@@ -127,7 +127,7 @@ function synth(events, dur) {   // all sound made in code: ticks, thuds, pops, w
   const dt = (t, y, size, col) => `drawtext=fontfile=${FONT}:text='${t}':fontsize=${size}:fontcolor=${col}:x=(w-text_w)/2:y=${y}:enable='gte(t,${D})'`;
   const vf = `[0:v]tpad=stop_mode=clone:stop_duration=${END},drawbox=x=0:y=1470:w=iw:h=450:color=black@0.8:t=fill:enable='gte(t,${D})',${dt(L[0], 1510, 62, 'white')},${dt(L[1], 1595, 50, '0xffd23f')},drawbox=x=110:y=1690:w=860:h=125:color=0xff2d55@1:t=fill:enable='gte(t,${D})',${dt(L[2], 1724, 60, 'white')}[v]`;
   const af = ding ? `[1:a]apad=pad_dur=${END}[a1];[2:a]adelay=${Math.round(dur * 1000)}|${Math.round(dur * 1000)},volume=0.6[a2];[a1][a2]amix=inputs=2:duration=first:normalize=0[a]` : `[1:a]apad=pad_dur=${END}[a]`;
-  const OWN_END = ['follow', 'oddone'].includes(FMT);   // these pages draw their own question/CTA ending
+  const OWN_END = ['follow', 'oddone'].includes(FMT) || process.env.ENDCARD === '0';   // ENDCARD=0: long episodes (no per-clip end card)   // these pages draw their own question/CTA ending
   try {
     if (OWN_END) throw new Error('own ending');
     execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', vid, '-i', wav, ...(ding ? ['-i', ding] : []), '-filter_complex', vf + ';' + af, '-map', '[v]', '-map', '[a]', '-t', (dur + END).toFixed(2), '-c:v', 'libx264', '-preset', 'medium', '-crf', '21', '-maxrate', '5500k', '-bufsize', '11M', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', OUT]);

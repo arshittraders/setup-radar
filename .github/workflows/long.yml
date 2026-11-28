@@ -1,0 +1,111 @@
+name: Long Episode Render (8-10 min, 16:9)
+# Every 3 h: claim one queued Studio job of kind "long" → render 14 physics chapters in parallel (ballsim, no per-clip
+# end card / music) → long/compose.py joins them into a 1920x1080 episode with rule panels, progress bar, code-made
+# music bed, intro/outro + YouTube chapters → upload to Studio (w_upload / w_done). Posting is done by Studio (YouTube only).
+# Sample mode (manual run with sample=<seed>, or push to branch long-episodes): no Studio job; a small preview
+# (contact sheet + 20 s low-res clip + chapters) is committed to branch "long-previews" so it can be checked.
+on:
+  schedule:
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+    inputs:
+      sample: { description: 'sample seed (empty = take a queued Studio job)', required: false, default: '' }
+  push:
+    branches: [long-episodes]
+    paths: ['long/**', '.github/workflows/long.yml']
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: long-render
+  cancel-in-progress: false
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      go: ${{ steps.p.outputs.go }}
+      job_id: ${{ steps.p.outputs.job_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - id: p
+        run: |
+          mkdir -p work; SAMPLE="${{ inputs.sample }}"
+          if [ "${{ github.event_name }}" = "push" ] && [ -z "$SAMPLE" ]; then SAMPLE=$(( ${{ github.run_id }} % 99991 + 1 )); fi
+          JOB=""; EP=1; NEXT=WEDNESDAY; BRAND="PHYSICS ROYALE ARENA"; SEED="$SAMPLE"
+          if [ -z "$SAMPLE" ]; then
+            node long/studio_io.js claim > work/claim.json || echo '{"job":null}' > work/claim.json
+            JOB=$(jq -r '.job.id // empty' work/claim.json)
+            [ -z "$JOB" ] && { echo "no queued long job"; echo "go=0" >> $GITHUB_OUTPUT; exit 0; }
+            SEED=$(jq -r '.job.plan.seed // 7' work/claim.json); EP=$(jq -r '.job.plan.episode // 1' work/claim.json)
+            NEXT=$(jq -r '.job.plan.next_label // "WEDNESDAY"' work/claim.json); BRAND=$(jq -r '.job.plan.brand // "PHYSICS ROYALE ARENA"' work/claim.json)
+          fi
+          python3 long/plan.py "$SEED" "$EP" "$NEXT" > work/plan.json
+          echo "$BRAND" > work/brand.txt; jq -c '[.chapters[].format]' work/plan.json
+          echo "go=1" >> $GITHUB_OUTPUT; echo "job_id=$JOB" >> $GITHUB_OUTPUT
+      - if: steps.p.outputs.go == '1'
+        uses: actions/upload-artifact@v4
+        with: { name: long-work, path: work, retention-days: 1 }
+
+  chapter:
+    needs: prep
+    if: needs.prep.outputs.go == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix: { i: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/download-artifact@v4
+        with: { name: long-work, path: work }
+      - name: Render chapter ${{ matrix.i }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          npm i --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+          F=$(jq -r ".chapters[${{ matrix.i }}].format" work/plan.json); mkdir -p ch
+          MUSIC=0 DRONE=0 ENDCARD=0 HOOK=0 BRAND="$(cat work/brand.txt)" node ballsim/render.js ch/ch_${{ matrix.i }}.mp4 "$F" | tail -n 2
+      - uses: actions/upload-artifact@v4
+        with: { name: 'ch-${{ matrix.i }}', path: ch, retention-days: 1, compression-level: 0 }
+
+  finish:
+    needs: [prep, chapter]
+    if: always() && needs.prep.outputs.go == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/download-artifact@v4
+        with: { name: long-work, path: work }
+      - uses: actions/download-artifact@v4
+        with: { pattern: 'ch-*', path: ch, merge-multiple: true }
+      - name: Compose episode
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-dejavu-core >/dev/null && pip install -q numpy
+          ls ch | wc -l
+          python3 long/compose.py work/plan.json ch out "$(cat work/brand.txt)"
+      - name: Hand to Studio
+        if: needs.prep.outputs.job_id != ''
+        run: node long/studio_io.js done "${{ needs.prep.outputs.job_id }}" out
+      - name: Mark Studio job failed
+        if: failure() && needs.prep.outputs.job_id != ''
+        run: node long/studio_io.js fail "${{ needs.prep.outputs.job_id }}" "long render failed (run ${{ github.run_id }})"
+      - name: Preview → branch long-previews (contact sheet + 20 s clip + chapters)
+        if: success()
+        continue-on-error: true
+        run: |
+          P=prev-${{ github.run_id }}; mkdir -p /tmp/p/$P
+          D=$(jq -r .duration out/meta.json)
+          ffmpeg -y -v error -i out/out.mp4 -vf "fps=1/$(python3 -c "print(max(1,int($D/12)))"),scale=480:-1,tile=4x3" -frames:v 1 /tmp/p/$P/sheet.jpg
+          ffmpeg -y -v error -ss 3 -t 20 -i out/out.mp4 -vf scale=640:-2 -c:v libx264 -crf 30 -preset veryfast -c:a aac -b:a 64k /tmp/p/$P/clip.mp4
+          cp out/chapters.txt out/meta.json out/thumb.jpg /tmp/p/$P/
+          git config user.name "long-bot"; git config user.email "long-bot@users.noreply.github.com"
+          git fetch -q origin long-previews && git checkout -q long-previews || git checkout -q --orphan long-previews
+          git rm -rq --cached . >/dev/null 2>&1 || true; find . -mindepth 1 -maxdepth 1 ! -name .git ! -name 'prev-*' -exec rm -rf {} +
+          cp -r /tmp/p/$P . && git add $P && git commit -qm "preview $P [skip ci]" && git push -q origin long-previews
