@@ -101,7 +101,7 @@ window.frame=(t,amp,vis)=>{
   let shake=0; if(L&&L.fx==='bp'&&lt<1.4) shake=(1.4-lt)/1.4*0.025;
   const hx=Math.sin(t*0.9)*0.02+Math.sin(t*2.3)*0.008+(Math.random()-0.5)*shake, hy=Math.sin(t*1.3)*0.012+(Math.random()-0.5)*shake;
   cam.fov=sh.fov; cam.updateProjectionMatrix(); let hp=new THREE.Vector3(0,1.5,0); if(head) head.getWorldPosition(hp); window.__hp=window.__hp||hp.clone(); window.__hp.lerp(hp,0.12); const HP=window.__hp;
-  const kind=cfg.forceShot||(L?L.shot||'med':'wide'), rel={wide:{dy:-0.62,z:4.7,ey:-0.4},med:{dy:-0.2,z:3.0,ey:-0.08},close:{dy:-0.02,z:1.9,ey:0.02}}[kind];
+  const kind=cfg.forceShot||(L?L.shot||'med':'wide'), rel={wide:{dy:-0.62,z:4.7,ey:-0.4},med:{dy:-0.2,z:3.0,ey:-0.08},close:{dy:-0.05,z:2.25,ey:0.02}}[kind];
   const pz=kind==='close'?Math.min(push,0.15):push;
   cam.position.set(HP.x*0.6+0.04+hx, HP.y+rel.ey+hy, rel.z-pz); cam.lookAt(HP.x*0.6+hx*0.5, HP.y+rel.dy, 0); cam.updateMatrixWorld();
   ren.render(scene,cam);
