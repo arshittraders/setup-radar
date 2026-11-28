@@ -114,10 +114,10 @@ window.frame=(t,amp,vis)=>{
   if(jaw){ const P=o=>proj(o), up=P(head.localToWorld(JL.up.clone())), lo=P(jaw.localToWorld(JL.lo.clone())), cl=P(head.localToWorld(JL.cl.clone())), cr=P(head.localToWorld(JL.cr.clone()));
     head.getWorldQuaternion(q); fwd.set(0,0,1).applyQuaternion(q); head.getWorldPosition(v); const facing=fwd.dot(cam.position.clone().sub(v).normalize());
     const WF={A:1,B:0.95,C:1,D:1.05,E:0.78,F:0.6,G:0.95,H:0.9,X:1}, wf=vis&&WF[vis]?WF[vis]:1, gap=Math.hypot(lo[0]-up[0],lo[1]-up[1]);
-    if(facing>0.3&&jawOpen>0.06&&gap>2){ const cxm=(up[0]+lo[0])/2, cym=(up[1]+lo[1])/2, rx=Math.hypot(cr[0]-cl[0],cr[1]-cl[1])/2*wf*0.62, ry=gap*0.5, ang=Math.atan2(cr[1]-cl[1],cr[0]-cl[0]);
+    if(facing>0.3&&jawOpen>0.06&&gap>2){ const cxm=(up[0]+lo[0])/2, cym=(up[1]+lo[1])/2, rx=Math.hypot(cr[0]-cl[0],cr[1]-cl[1])/2*wf*(cfg.mouthFill?0.9:0.62), ry=gap*(cfg.mouthFill?0.68:0.5), ang=Math.atan2(cr[1]-cl[1],cr[0]-cl[0]);
       cx.save(); cx.globalAlpha=Math.min(1,(facing-0.3)*4)*Math.min(1,(jawOpen-0.06)*6); cx.translate(cxm,cym); cx.rotate(ang);
       // colour-matched mouth: sample the model's own mouth/teeth colour under this spot (white teeth stay white, no black hole)
-      let sr=200,sg=190,sb=185; try{ const bw=Math.max(4,Math.round(rx*1.2)), bh=Math.max(3,Math.round(ry*0.9)); const px=cx.getImageData(Math.round(cxm-bw/2),Math.round(cym-bh/2),bw,bh).data; const L=[];
+      let sr=200,sg=190,sb=185; try{ const bw=Math.max(4,Math.round(rx*1.4)), bh=Math.max(3,Math.round(gap*0.6+4)); const px=cx.getImageData(Math.round(up[0]-bw/2),Math.round(up[1]-bh),bw,bh).data; const L=[];
         for(let i=0;i<px.length;i+=4) L.push([px[i]+px[i+1]+px[i+2],px[i],px[i+1],px[i+2]]); L.sort((a,b)=>b[0]-a[0]); const top=L.slice(0,Math.max(1,Math.floor(L.length*0.35)));
         sr=top.reduce((a,c)=>a+c[1],0)/top.length; sg=top.reduce((a,c)=>a+c[2],0)/top.length; sb=top.reduce((a,c)=>a+c[3],0)/top.length; }catch(e){}
       const lum=(0.299*sr+0.587*sg+0.114*sb)/255, teeth=lum>0.68, k=teeth?0.9:0.55, C=(f,a)=>`rgba(${Math.round(sr*f)},${Math.round(sg*f)},${Math.round(sb*f)},${a})`;
