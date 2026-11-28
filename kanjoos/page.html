@@ -76,7 +76,7 @@ function buildJaw(){
       si.setComponent(i,mk,ji); sw.setComponent(i,mk,Math.max(0,1-rest)); n++; }
     si.needsUpdate=true; sw.needsUpdate=true; me.bind(nsk,me.bindMatrix); }
   const loc=(o,x,y,z)=>o.worldToLocal(H2W(new THREE.Vector3(x,y,z)));
-  const seam=JL.seam, dpts=JL.dpts, wid=JL.wid||0.028*S, band=JL.band; JL={seam,dpts,band,up:loc(head,0,m.y+0.004*S,m.z+0.004*S), lo:loc(jaw,0,m.y-0.012*S,m.z+0.002*S), cl:loc(head,-wid,m.y,m.z-0.01*S), cr:loc(head,wid,m.y,m.z-0.01*S)};
+  const seam=JL.seam, dpts=JL.dpts, wid=JL.wid||0.028*S, band=JL.band; JL={seam,dpts,band,up:loc(head,0,m.y+0.0015*S,m.z), lo:loc(jaw,0,m.y-0.0015*S,m.z), cl:loc(head,-wid,m.y,m.z-0.01*S), cr:loc(head,wid,m.y,m.z-0.01*S)};
   return {verts:n, S:+S.toFixed(3), seam:JL.seam||null, band:JL.band||null};
 }
 const ease=x=>x<0?0:x>1?1:1-Math.pow(1-x,3), back=x=>{x=Math.min(1,Math.max(0,x)); const c=1.9; return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
@@ -106,7 +106,7 @@ window.frame=(t,amp,vis)=>{
   if(jaw){ const P=o=>proj(o), up=P(head.localToWorld(JL.up.clone())), lo=P(jaw.localToWorld(JL.lo.clone())), cl=P(head.localToWorld(JL.cl.clone())), cr=P(head.localToWorld(JL.cr.clone()));
     head.getWorldQuaternion(q); fwd.set(0,0,1).applyQuaternion(q); head.getWorldPosition(v); const facing=fwd.dot(cam.position.clone().sub(v).normalize());
     const WF={A:1,B:0.95,C:1,D:1.05,E:0.78,F:0.6,G:0.95,H:0.9,X:1}, wf=vis&&WF[vis]?WF[vis]:1, gap=Math.hypot(lo[0]-up[0],lo[1]-up[1]);
-    if(facing>0.3&&jawOpen>0.06&&gap>2){ const cxm=(up[0]+lo[0])/2, cym=(up[1]+lo[1])/2, rx=Math.hypot(cr[0]-cl[0],cr[1]-cl[1])/2*wf*0.82, ry=gap*0.55, ang=Math.atan2(cr[1]-cl[1],cr[0]-cl[0]);
+    if(facing>0.3&&jawOpen>0.06&&gap>2){ const cxm=(up[0]+lo[0])/2, cym=(up[1]+lo[1])/2, rx=Math.hypot(cr[0]-cl[0],cr[1]-cl[1])/2*wf*0.62, ry=gap*0.5, ang=Math.atan2(cr[1]-cl[1],cr[0]-cl[0]);
       cx.save(); cx.globalAlpha=Math.min(1,(facing-0.3)*4)*Math.min(1,(jawOpen-0.06)*6); cx.translate(cxm,cym); cx.rotate(ang);
       const gr=cx.createRadialGradient(0,0,0,0,0,Math.max(rx,ry)); gr.addColorStop(0,'#1c0606'); gr.addColorStop(0.75,'#3e0f0d'); gr.addColorStop(1,'rgba(90,28,24,0.6)');
       cx.fillStyle=gr; cx.beginPath(); cx.ellipse(0,0,rx,ry,0,0,7); cx.fill(); cx.save(); cx.beginPath(); cx.ellipse(0,0,rx,ry,0,0,7); cx.clip();
