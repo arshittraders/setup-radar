@@ -1,0 +1,21 @@
+name: Kanjoos voices
+on:
+  workflow_dispatch:
+    inputs:
+      voice: { description: "openai voice", default: "ash" }
+permissions:
+  contents: write
+  id-token: write
+jobs:
+  tts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: node kanjoos/tts.js ku
+        env: { KU_VOICE: "${{ inputs.voice }}" }
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          cd ku && zip -q ../ku-voice-${{ inputs.voice }}.zip *.mp3 && cd ..
+          gh release upload studio-debug ku-voice-${{ inputs.voice }}.zip --clobber
