@@ -1,0 +1,44 @@
+[
+ {
+  "anim": "Scheming_Hand_Rub",
+  "hi": "[mischievously] अरे भाई, प्रॉब्लम कोई भी हो... जग्गू के पास जुगाड़ है!",
+  "text": "Arre bhai, problem koi bhi ho... Jaggu ke paas jugaad hai!",
+  "cap": "Arre bhai, problem koi bhi ho... Jaggu ke paas JUGAAD hai!",
+  "shot": "close",
+  "sfx": [{ "at": 0.0, "cat": "whoosh", "n": 1 }, { "at": 0.7, "cat": "pop" }]
+ },
+ {
+  "anim": "Talk_with_Hands_Open",
+  "hi": "[excited] टीवी का रिमोट नहीं चल रहा? दो थप्पड़ मारो... चल पड़ेगा!",
+  "text": "TV ka remote nahi chal raha? Do thappad maaro... chal padega!",
+  "cap": "Remote nahi chal raha? Do THAPPAD maaro... chal padega!",
+  "shot": "med",
+  "sfx": [{ "at": 0.6, "cat": "impact", "g": 0.4 }]
+ },
+ {
+  "anim": "Stand_Talking_Angry",
+  "hi": "[annoyed] मैकेनिक ने पाँच सौ माँगे? पाँच सौ! मैं टेप से जोड़ दूँगा, दस रुपये में!",
+  "text": "Mechanic ne paanch sau maange? Paanch sau! Main tape se jod dunga, das rupaye mein!",
+  "cap": "Mechanic ne 500 maange?! Main TAPE se jod dunga, 10 rupaye mein!",
+  "shot": "close",
+  "fx": "bp",
+  "sfx": [{ "at": 0.0, "cat": "impact", "g": 0.45 }]
+ },
+ {
+  "anim": "Shrug",
+  "hi": "[laughs] अब पंखा थोड़ा उल्टा घूमता है... पर हवा तो आती है ना!",
+  "text": "Ab pankha thoda ulta ghoomta hai... par hawa toh aati hai na!",
+  "cap": "Ab pankha thoda ULTA ghoomta hai... par hawa toh aati hai na!",
+  "shot": "wide",
+  "sfx": [{ "at": 0.5, "cat": "whoosh", "n": 2 }]
+ },
+ {
+  "anim": "Half_Squat_with_Thumb_Up",
+  "hi": "[proudly] इंजीनियरिंग नहीं, जुगाड़ पढ़ा है मैंने! फ़ॉलो करो... अगला जुगाड़ पक्का!",
+  "text": "Engineering nahi, jugaad padha hai maine! Follow karo... agla jugaad pakka!",
+  "cap": "Engineering nahi, JUGAAD padha hai maine! Follow karo!",
+  "shot": "med",
+  "cta": 0.62,
+  "sfx": [{ "at": 0.62, "cat": "ding", "n": 1 }]
+ }
+]
