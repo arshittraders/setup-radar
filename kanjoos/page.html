@@ -27,10 +27,37 @@ window.setup=async(c)=>{ cfg=c; bg=await loadImg(c.bg);
   mixer=new THREE.AnimationMixer(model); for(const a of g.animations) acts[a.name]=a;
   for(const n in acts){ const a=mixer.clipAction(acts[n]); a.play(); a.setEffectiveWeight(1); a.time=acts[n].duration*0.3; mixer.update(0); model.updateMatrixWorld(true);
     const qq=new THREE.Quaternion(); hips.getWorldQuaternion(qq); const f=new THREE.Vector3(0,0,1).applyQuaternion(qq); a.stop(); yawOff[n]=Math.atan2(f.x,f.z); }
-  mixer.stopAllAction(); T=c.timeline; return {anims:Object.keys(acts)};
+  mixer.stopAllAction(); T=c.timeline; let jawInfo=null; if(c.lips==='3d'&&head) jawInfo=buildJaw(); return {anims:Object.keys(acts), jaw:jawInfo};
 };
 const clipActs={}; function act(n){ if(!clipActs[n]){ clipActs[n]=mixer.clipAction(acts[n]); clipActs[n].play(); clipActs[n].setEffectiveWeight(0);} return clipActs[n]; }
 const v=new THREE.Vector3(), q=new THREE.Quaternion(), fwd=new THREE.Vector3();
+// ---- 3D lips: Meshy rigs have no jaw → add a Jaw bone under Head and move lower-lip/chin vertices onto it (smooth falloff).
+// The real chin + lower lip then open/close with the voice (Rhubarb visemes); only the dark inside of the mouth is painted, exactly
+// between the real upper lip and the moving lower lip. Region sizes scale with the mouth offset (tuned on Kanjoos Uncle).
+let jaw=null, jawOpen=0, JL={};
+const sm=(a,b,x)=>{ const t=Math.min(1,Math.max(0,(x-a)/(b-a))); return t*t*(3-2*t); };
+function buildJaw(){
+  const S=new THREE.Vector3(...cfg.mouth).length()/0.145, m=new THREE.Vector3(...cfg.mouth);
+  model.updateMatrixWorld(true); const hp=new THREE.Vector3(), hq=new THREE.Quaternion(); head.getWorldPosition(hp); head.getWorldQuaternion(hq); const hqi=hq.clone().invert();
+  const W2H=p=>p.clone().sub(hp).applyQuaternion(hqi), H2W=p=>p.clone().applyQuaternion(hq).add(hp);
+  const meshes=[]; model.traverse(o=>{ if(o.isSkinnedMesh) meshes.push(o); }); if(!meshes.length) return {err:'no skinned mesh'};
+  const sk=meshes[0].skeleton, hi=sk.bones.indexOf(head); if(hi<0) return {err:'head not in skeleton'};
+  jaw=new THREE.Bone(); jaw.name='Jaw'; head.add(jaw); jaw.position.copy(head.worldToLocal(H2W(new THREE.Vector3(0,m.y-0.01*S,m.z-0.085*S)))); jaw.updateMatrix(); jaw.updateMatrixWorld(true);
+  const Ij=new THREE.Matrix4().copy(jaw.matrix).invert().multiply(sk.boneInverses[hi]);
+  const nsk=new THREE.Skeleton(sk.bones.concat([jaw]), sk.boneInverses.concat([Ij])), ji=nsk.bones.length-1;
+  const cut=m.y+(cfg.lipCut??0.002)*S; let n=0; const tv=new THREE.Vector3();
+  for(const me of meshes){ if(me.skeleton!==sk) continue; const g=me.geometry, si=g.attributes.skinIndex, sw=g.attributes.skinWeight;
+    for(let i=0;i<si.count;i++){ let hw=0; for(let k=0;k<4;k++) if(si.getComponent(i,k)===hi) hw+=sw.getComponent(i,k); if(hw<0.3) continue;
+      me.getVertexPosition(i,tv); tv.applyMatrix4(me.matrixWorld); const p=W2H(tv);
+      const w=(1-sm(-0.004*S,0.004*S,p.y-cut))*sm(m.y-0.13*S,m.y-0.085*S,p.y)*(1-sm(0.05*S,0.085*S,Math.abs(p.x)))*sm(m.z-0.10*S,m.z-0.055*S,p.z);
+      if(w<0.02) continue; let mk=0; for(let k=1;k<4;k++) if(sw.getComponent(i,k)<sw.getComponent(i,mk)) mk=k;
+      for(let k=0;k<4;k++) sw.setComponent(i,k,sw.getComponent(i,k)*(1-w)); let rest=0; for(let k=0;k<4;k++) if(k!==mk) rest+=sw.getComponent(i,k);
+      si.setComponent(i,mk,ji); sw.setComponent(i,mk,Math.max(0,1-rest)); n++; }
+    si.needsUpdate=true; sw.needsUpdate=true; me.bind(nsk,me.bindMatrix); }
+  const loc=(o,x,y,z)=>o.worldToLocal(H2W(new THREE.Vector3(x,y,z)));
+  JL={up:loc(head,0,m.y+0.004*S,m.z+0.004*S), lo:loc(jaw,0,m.y-0.012*S,m.z+0.002*S), cl:loc(head,-0.028*S,m.y,m.z), cr:loc(head,0.028*S,m.y,m.z)};
+  return {verts:n, S:+S.toFixed(3)};
+}
 const ease=x=>x<0?0:x>1?1:1-Math.pow(1-x,3), back=x=>{x=Math.min(1,Math.max(0,x)); const c=1.9; return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
 const proj=(p)=>{ const s=p.clone().project(cam); return [(s.x+1)/2*W,(1-s.y)/2*H]; };
 window.frame=(t,amp,vis)=>{
@@ -39,11 +66,14 @@ window.frame=(t,amp,vis)=>{
   const LS=T[T.length-1]; if(t>LS.end){ ws={}; ws[LS.anim]=1; }
   let tot=Object.values(ws).reduce((a,b)=>a+b,0); if(tot<0.001){ ws={Idle:1}; tot=1; }
   let yw=0; for(const n in acts){ const a=act(n); const w=(ws[n]||0)/tot; a.setEffectiveWeight(w); a.time=t%acts[n].duration; yw+=w*yawOff[n]; }
-  model.rotation.y=-yw+(cfg.faceYaw||0); mixer.update(0); model.updateMatrixWorld(true);
+  model.rotation.y=-yw+(cfg.faceYaw||0); mixer.update(0);
+  if(jaw){ const OP={A:0,B:0.3,C:0.6,D:1,E:0.55,F:0.35,G:0.2,H:0.45,X:0}; const tgt=vis&&OP[vis]!=null?OP[vis]:Math.min(1,amp*1.3);
+    jawOpen+=(tgt-jawOpen)*0.55; if(cfg.jawForce!=null) jawOpen=cfg.jawForce; jaw.rotation.x=jawOpen*(cfg.jawMax||0.2); }
+  model.updateMatrixWorld(true);
   // which line is on screen (shot switches at line start; before first line = wide intro)
   let li=-1; for(let i=0;i<T.length;i++){ if(t>=T[i].start-0.12) li=i; }
   const L=li>=0?T[li]:null, lt=L?t-(L.start-0.12):t, ld=L?(L.end-L.start+0.5):2;
-  const sh=SHOTS[L?L.shot||'med':'wide']; const push=ease(lt/Math.max(1,ld))*(L&&L.shot==='close'?0.22:L&&L.fx==='bp'?0.6:0.35);
+  const sh=SHOTS[cfg.forceShot||(L?L.shot||'med':'wide')]; const push=ease(lt/Math.max(1,ld))*(L&&L.shot==='close'?0.22:L&&L.fx==='bp'?0.6:0.35);
   let shake=0; if(L&&L.fx==='bp'&&lt<1.4) shake=(1.4-lt)/1.4*0.025;
   const hx=Math.sin(t*0.9)*0.02+Math.sin(t*2.3)*0.008+(Math.random()-0.5)*shake, hy=Math.sin(t*1.3)*0.012+(Math.random()-0.5)*shake;
   cam.fov=sh.fov; cam.updateProjectionMatrix(); cam.position.set(0.04+hx, sh.y+hy, sh.z-push); cam.lookAt(0+hx*0.5, sh.ly, 0); cam.updateMatrixWorld();
@@ -52,7 +82,17 @@ window.frame=(t,amp,vis)=>{
   const bz=L&&L.shot==='close'?1.18:L&&L.shot==='wide'?1.0:1.08, bw=W*bz, bh=H*bz; cx.drawImage(bg,(W-bw)/2-hx*400,(H-bh)/2+hy*200,bw,bh);
   cx.drawImage(ren.domElement,0,0);
   // mouth
-  if(head){ head.getWorldPosition(v); head.getWorldQuaternion(q);
+  if(jaw){ const P=o=>proj(o), up=P(head.localToWorld(JL.up.clone())), lo=P(jaw.localToWorld(JL.lo.clone())), cl=P(head.localToWorld(JL.cl.clone())), cr=P(head.localToWorld(JL.cr.clone()));
+    head.getWorldQuaternion(q); fwd.set(0,0,1).applyQuaternion(q); head.getWorldPosition(v); const facing=fwd.dot(cam.position.clone().sub(v).normalize());
+    const WF={A:1,B:0.95,C:1,D:1.05,E:0.78,F:0.6,G:0.95,H:0.9,X:1}, wf=vis&&WF[vis]?WF[vis]:1, gap=Math.hypot(lo[0]-up[0],lo[1]-up[1]);
+    if(facing>0.3&&jawOpen>0.06&&gap>2){ const cxm=(up[0]+lo[0])/2, cym=(up[1]+lo[1])/2, rx=Math.hypot(cr[0]-cl[0],cr[1]-cl[1])/2*wf*0.82, ry=gap*0.55, ang=Math.atan2(cr[1]-cl[1],cr[0]-cl[0]);
+      cx.save(); cx.globalAlpha=Math.min(1,(facing-0.3)*4)*Math.min(1,(jawOpen-0.06)*6); cx.translate(cxm,cym); cx.rotate(ang);
+      const gr=cx.createRadialGradient(0,0,0,0,0,Math.max(rx,ry)); gr.addColorStop(0,'#1c0606'); gr.addColorStop(0.75,'#3e0f0d'); gr.addColorStop(1,'rgba(90,28,24,0.6)');
+      cx.fillStyle=gr; cx.beginPath(); cx.ellipse(0,0,rx,ry,0,0,7); cx.fill(); cx.save(); cx.beginPath(); cx.ellipse(0,0,rx,ry,0,0,7); cx.clip();
+      if(jawOpen>0.3&&vis!=='F'&&vis!=='E'){ cx.fillStyle='rgba(246,242,234,0.95)'; cx.fillRect(-rx*0.8,-ry,rx*1.6,ry*0.42); }
+      if(jawOpen>0.45){ cx.fillStyle='#c05050'; cx.beginPath(); cx.ellipse(0,ry*0.62,rx*0.55,ry*0.42,0,0,7); cx.fill(); }
+      cx.restore(); cx.restore(); } }
+  else if(head){ head.getWorldPosition(v); head.getWorldQuaternion(q);
     const m=new THREE.Vector3(...cfg.mouth).applyQuaternion(q).add(v); fwd.set(0,0,1).applyQuaternion(q);
     const facing=fwd.dot(cam.position.clone().sub(m).normalize()); const [sx,sy]=proj(m); const sc=cfg.mscale/cam.position.distanceTo(m);
     // mouth shape: Rhubarb viseme (A closed MBP, B slight, C open, D wide, E round, F pucker, G F/V teeth, H tongue, X rest) blended toward target

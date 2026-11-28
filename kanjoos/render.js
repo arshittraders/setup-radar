@@ -51,7 +51,12 @@ if (process.env.MODE === 'audio') { console.log('frames total', N); process.exit
   const pg = await br.newPage({ viewport: { width: 1080, height: 1920 } }); pg.on('pageerror', e => console.log('ERR', e.message));
   await pg.goto('http://localhost:8765/page.html'); await pg.waitForFunction('window.ready');
   const ins = {}; const ID = process.env.INS_DIR || 'ins'; for (const k of ['bill', 'fan', 'ac']) if (fs.existsSync(path.join(__dirname, ID, k + '.png'))) ins[k] = `/${ID}/${k}.png`;
-  await pg.evaluate(c => setup(c), { glb: '/' + (process.env.GLB || 'ku.glb'), bg: '/' + BG, timeline: tl, inserts: ins, faceYaw: 0.25, mouth: process.env.MOUTH ? JSON.parse(process.env.MOUTH) : [0, 0.076, 0.124], mscale: +(process.env.MSCALE || 470), title: process.env.TITLE || 'KANJOOS UNCLE', titleDur: 2.2, endAt: total - 1.3, wm: process.env.WM ?? '© Studio Kiwtech', tagline: process.env.TAGLINE || 'Roz nayi kanjoosi' });
+  await pg.evaluate(c => setup(c), { glb: '/' + (process.env.GLB || 'ku.glb'), bg: '/' + BG, timeline: tl, inserts: ins, faceYaw: 0.25, mouth: process.env.MOUTH ? JSON.parse(process.env.MOUTH) : [0, 0.076, 0.124], mscale: +(process.env.MSCALE || 470), title: process.env.TITLE || 'KANJOOS UNCLE', titleDur: 2.2, endAt: total - 1.3, wm: process.env.WM ?? '© Studio Kiwtech', tagline: process.env.TAGLINE || 'Roz nayi kanjoosi',
+    lips: process.env.LIPS || '', jawMax: +(process.env.JAWMAX || 0.2), lipCut: process.env.LIPCUT ? +process.env.LIPCUT : undefined, jawForce: process.env.JAWFORCE ? +process.env.JAWFORCE : null, forceShot: process.env.FORCESHOT || '' }).then(r => console.log('setup', JSON.stringify(r)));
+  if (process.env.STILLS) {   // debug: a few frames as jpg (times in seconds), then exit
+    for (const ts of process.env.STILLS.split(',')) { const k = Math.min(N - 1, Math.round(+ts * FPS)); const u = await pg.evaluate(([a, b, c]) => frame(a, b, c), [k / FPS, A[k], V[k]]);
+      fs.writeFileSync(`still_${ts}.jpg`, Buffer.from(u.slice(23), 'base64')); console.log('still', ts, V[k] || '-', A[k].toFixed(2)); }
+    await br.close(); return; }
   const F0 = +(process.env.F0 || 0), F1 = Math.min(N, process.env.F1 ? +process.env.F1 : N), CH = !!process.env.F1;
   const ff = cp.spawn('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', ...(CH ? [] : ['-i', 'voice.wav']), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', ...(CH ? ['-an'] : ['-c:a', 'aac', '-b:a', '160k', '-shortest']), '-movflags', '+faststart', OUT], { stdio: ['pipe', 'inherit', 'inherit'] });
   const t0 = Date.now();

@@ -1,0 +1,45 @@
+name: Kanjoos stills (debug)
+# A few frames of a 3D character reel as jpg → release studio-debug/<tag>_<t>.jpg. For checking mouth / jaw / camera quickly.
+on:
+  workflow_dispatch:
+    inputs:
+      glb: { description: "locker file name contains", default: "Uncle_Moti" }
+      voice: { description: "locker voice name contains (ignored if voice_url)", default: "Danish_Khan" }
+      voice_url: { description: "direct mp3 link", default: "" }
+      script: { default: "script.json" }
+      stills: { description: "times in seconds, comma separated", default: "1,3,6" }
+      env: { description: "extra env, space separated K=V (LIPS=3d JAWFORCE=1 FORCESHOT=close MOUTH=[..] LIPCUT=.. JAWMAX=..)", default: "LIPS=3d" }
+      tag: { default: "still" }
+permissions: { contents: write, id-token: write }
+jobs:
+  s:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: "kanjoos\nsfx" }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/cache@v4
+        with: { path: ~/.cache/ms-playwright, key: pw-1.48.2-shell }
+      - name: Install
+        run: |
+          (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null) &
+          curl -sSfL -o /tmp/rh.zip https://github.com/DanielSWolf/rhubarb-lip-sync/releases/download/v1.13.0/Rhubarb-Lip-Sync-1.13.0-Linux.zip && unzip -oq /tmp/rh.zip -d /tmp/rh && mv /tmp/rh/Rhubarb-Lip-Sync-1.13.0-Linux kanjoos/rhubarb
+          cd kanjoos && npm i --no-save three@0.170.0 playwright@1.48.2 >/dev/null && npx playwright install chromium >/dev/null; wait; ffprobe -version | head -1
+      - name: Assets
+        env: { VOICE_URL: '${{ inputs.voice_url }}' }
+        run: |
+          T=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=studio-worker" | jq -r .value)
+          R=$(curl -sS -X POST https://ceoehwleopykotddcxxk.supabase.co/functions/v1/studio -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d "{\"action\":\"w_asset\",\"pats\":[\"${{ inputs.glb }}\",\"${{ inputs.voice }}\"]}")
+          cd kanjoos && curl -sSfL -o ku.glb "$(echo "$R" | jq -r '.urls["${{ inputs.glb }}"]')"
+          if [ -n "$VOICE_URL" ]; then curl -sSfL -o voice.mp3 "$VOICE_URL"; else curl -sSfL -o voice.mp3 "$(echo "$R" | jq -r '.urls["${{ inputs.voice }}"]')"; fi
+          cp bg/ku-room1.png bg.png; ls -la ku.glb voice.mp3
+          python3 segs.py voice.mp3 5 "${{ inputs.script }}"
+      - name: Stills
+        env: { GH_TOKEN: "${{ github.token }}", EXTRA: "${{ inputs.env }}" }
+        run: |
+          cd kanjoos && (node serve.js &) && sleep 1
+          export $EXTRA
+          SCRIPT='${{ inputs.script }}' FULL=voice.mp3 SEGS=segs.json STILLS='${{ inputs.stills }}' node render.js x bg.png x.mp4
+          for f in still_*.jpg; do cp "$f" "../${{ inputs.tag }}_${f#still_}"; done; cd ..; ls ${{ inputs.tag }}_*.jpg
+          gh release upload studio-debug ${{ inputs.tag }}_*.jpg --clobber
