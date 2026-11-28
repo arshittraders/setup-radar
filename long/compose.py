@@ -34,6 +34,10 @@ for c in have:
     if tot + c['dur'] > MAX_T:
         continue
     use.append(c); tot += c['dur']
+seen = {}
+for c in use:   # "Round 2" only when round 1 is really in this episode (a chapter can be skipped)
+    seen[c['format']] = seen.get(c['format'], 0) + 1
+    c['short'] = c['short'].split(' (Round')[0] + (f" (Round {seen[c['format']]})" if seen[c['format']] > 1 else '')
 print(f'{len(use)}/{len(have)} chapters, {tot / 60:.1f} min')
 if len(use) < int(os.environ.get('LONG_MINCH', 6)):
     sys.exit('too few chapters rendered')
